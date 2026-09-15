@@ -6,3 +6,8 @@ node_modules/
 target/
 *.log
 *.tmp
+
+# IDE caches
+.metals/
+.snapshots/
+.bsp/
