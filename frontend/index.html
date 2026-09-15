@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion Store</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; }
+        h1 { color: #333; }
+        .product-list { display: flex; gap: 20px; }
+        .product-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 200px; }
+    </style>
+</head>
+<body>
+
+    <h1>Chào mừng đến với Fashion Store</h1>
+    <p>Giao diện HTML/CSS cơ bản gọi API từ Spring Boot</p>
+
+    <!-- Nơi hiển thị dữ liệu từ Backend -->
+    <div class="product-list" id="products">
+        <p>Đang tải dữ liệu...</p>
+    </div>
+
+    <script>
+        // Mẫu code Javascript gọi API từ Spring Boot
+        /*
+        fetch('http://localhost:8080/api/products')
+            .then(response => response.json())
+            .then(data => {
+                // Xử lý hiển thị data ra HTML ở đây
+                console.log(data);
+            });
+        */
+    </script>
+</body>
+</html>
