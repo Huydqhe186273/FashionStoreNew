@@ -31,28 +31,27 @@ Sau đó mở thư mục `FashionStoreNew` bằng VS Code.
 **(💡 MẸO QUAN TRỌNG CHO BACKEND)**: Vì project Java nằm trong thư mục `backend`, để extension của VS Code nhận diện được các thư viện Maven mà không bị báo lỗi đỏ, bạn **nên mở riêng thư mục `backend`** thành một Workspace (File -> Open Folder -> Chọn thư mục `backend`).
 
 ### Bước 2: Khởi tạo Database trên máy cá nhân
-1. Mở **SQL Server Management Studio (SSMS)** và đăng nhập.
-2. Chạy file script SQL của nhóm (nếu có trong thư mục `/database`) để tạo bảng và dữ liệu mẫu.
-3. Đảm bảo bạn đã có Database tên là `FashionStoreDB`.
-4. **Lưu ý quan trọng**: Đảm bảo tài khoản `sa` của SQL Server đã được cấp quyền và bạn nhớ mật khẩu của nó.
+1. Mở **SQL Server Management Studio (SSMS)** và đăng nhập bằng tài khoản (thường là `sa`).
+2. Trong dự án, mở file **`database/DB`** (bạn có thể mở bằng Notepad/VS Code, copy toàn bộ nội dung, dán vào New Query trong SSMS).
+3. Ấn **Execute** (hoặc F5) để chạy lệnh. Code sẽ tự động tạo Database tên là `FashionStoreDB`, tạo tất cả các bảng và chèn sẵn dữ liệu mẫu.
 
 ### Bước 3: Cấu hình kết nối Backend - Database
-1. Trong VS Code, mở file theo đường dẫn: 
-   `backend/src/main/resources/application.yml`
-2. Tìm đến phần `datasource`.
-3. Sửa lại mật khẩu `sa` cho đúng với mật khẩu SQL Server trên máy của bạn:
+1. Trong VS Code, mở file: `backend/src/main/resources/application.yml`
+2. Kiểm tra dòng `url: jdbc:sqlserver://localhost;instanceName=...`. Nếu tên instance SQL Server trên máy bạn không phải là `MSSQLSERVER01`, hãy sửa lại cho đúng (hoặc xoá đoạn `;instanceName=MSSQLSERVER01` nếu bạn cài đặt mặc định).
+3. Sửa `username` và `password` cho đúng với mật khẩu máy bạn:
    ```yaml
    username: sa
    password: <mật_khẩu_của_bạn_ở_đây>
    ```
-*(Lưu ý: Không commit file application.yml lên git nếu bạn đã điền mật khẩu thật của mình. Hãy cẩn thận khi dùng lệnh git add).*
+*(Lưu ý: Không commit file application.yml lên git nếu bạn đã điền mật khẩu thật của mình).*
 
-### Bước 4: Chạy dự án Backend
-- Đảm bảo bạn đang mở thư mục `backend` (chứ không phải thư mục gốc `FashionStoreNew`) bằng VS Code.
-- Chờ một lát để VS Code tải các thư viện Maven (nhìn góc dưới cùng bên phải sẽ thấy thanh loading).
+### Bước 4: Chạy và kiểm tra dự án Backend
+- Đảm bảo bạn đang mở thư mục `backend` bằng VS Code. Chờ một lát để VS Code tải các thư viện Maven xong.
 - Tìm đến file `backend/src/main/java/com/example/myapp/MyAppApplication.java`.
-- Bấm chữ **Run** màu nhỏ xíu hiện ở ngay phía trên hàm `main()`, hoặc bấm nút Play ở góc trên cùng bên phải.
-- Mở trình duyệt gõ: `http://localhost:8080/api/hello` để kiểm tra. Nếu hiện chữ Xin chào là thành công!
+- Bấm chữ **Run** màu nhỏ xíu hiện ở ngay phía trên hàm `main()`, hoặc nút Play ở góc trên cùng bên phải.
+- **✅ KIỂM TRA 1 (Kết nối Database):** Nhìn xuống cửa sổ Terminal/Console ở dưới. Nếu cấu hình đúng, bạn sẽ thấy một khung thông báo nổi bật: 
+  **"✅ KẾT NỐI DATABASE THÀNH CÔNG VÀ ỨNG DỤNG ĐÃ CHẠY LÊN!"**
+- **✅ KIỂM TRA 2 (Chạy Ứng dụng):** Mở trình duyệt gõ: `http://localhost:8080/api/hello`. Nếu hiện chữ Xin chào là thành công!
 
 ---
 **Quy trình làm việc nhóm (Git Workflow)**

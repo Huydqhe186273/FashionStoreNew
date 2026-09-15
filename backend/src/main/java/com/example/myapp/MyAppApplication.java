@@ -7,7 +7,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class MyAppApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(MyAppApplication.class, args);
+		org.springframework.boot.SpringApplication.run(MyAppApplication.class, args);
+	}
+
+	@org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
+	public void logDatabaseConnectionSuccess() {
+		System.out.println("\n=========================================================");
+		System.out.println("✅ KẾT NỐI DATABASE THÀNH CÔNG VÀ ỨNG DỤNG ĐÃ CHẠY LÊN!");
+		System.out.println("=========================================================\n");
 	}
 
 }
