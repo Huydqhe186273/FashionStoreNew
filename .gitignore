@@ -1,0 +1,8 @@
+# Ignore at root level
+.vscode/
+node_modules/
+.env
+.env.*
+target/
+*.log
+*.tmp
