@@ -1,20 +1,21 @@
 spring:
   datasource:
-    # URL kết nối đã được sửa để trỏ tới instance MSSQLSERVER01 của máy DAOHUY
-    url: jdbc:sqlserver://localhost;instanceName=MSSQLSERVER01;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;
+    url: jdbc:sqlserver://CUONG;instanceName=MSSQLSERVER02;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;
     # Điền tài khoản đăng nhập SQL Server (thường là sa)
     username: sa
-    # Điền mật khẩu SQL Server của bạn
-    password: sa
+    password: 12345
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
   jpa:
     hibernate:
       ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
 server:
   port: 8080
