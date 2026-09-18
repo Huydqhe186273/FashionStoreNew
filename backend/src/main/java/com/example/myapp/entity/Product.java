@@ -1,51 +1,38 @@
 package com.example.myapp.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
-@Data
 @Entity
 @Table(name = "Products")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ProductId")
-    private Integer productId;
+    private Integer ProductId;
+    private String Name;
+    private String Description;
+    private BigDecimal BasePrice;
+    private BigDecimal DiscountPrice;
+    private String Status = "active";
+    private Integer ViewCount = 0;
+    private Integer SoldCount = 0;
+    private LocalDateTime CreatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CategoryId", nullable = false)
-    private Category category;
-
-    @Column(name = "Name", nullable = false, length = 200)
-    private String name;
-
-    @Column(name = "Description")
-    private String description;
-
-    @Column(name = "BasePrice", nullable = false)
-    private BigDecimal basePrice;
-
-    @Column(name = "DiscountPrice")
-    private BigDecimal discountPrice;
-
-    @Column(name = "Status", nullable = false, length = 20)
-    private String status;
-
-    @Column(name = "ViewCount", nullable = false)
-    private Integer viewCount;
-
-    @Column(name = "SoldCount", nullable = false)
-    private Integer soldCount;
-
-    @Column(name = "CreatedAt", nullable = false)
-    private LocalDateTime createdAt;
-    
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ProductVariant> variants;
-
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ProductImage> images;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "CategoryId", nullable = false, foreignKey = @ForeignKey(name = "FK_Products_Categories"))
+    private Category Category;
+    @OneToMany(mappedBy = "Product")
+    private List<ProductVariant> ProductVariants = new ArrayList<>();
+    @OneToMany(mappedBy = "Product")
+    private List<ProductImage> ProductImages = new ArrayList<>();
 }

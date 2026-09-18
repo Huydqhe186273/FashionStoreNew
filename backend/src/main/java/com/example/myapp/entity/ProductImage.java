@@ -1,24 +1,23 @@
 package com.example.myapp.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
 @Entity
 @Table(name = "ProductImages")
+@Getter
+@Setter
+@NoArgsConstructor
 public class ProductImage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ImageId")
-    private Integer imageId;
+    private Integer ImageId;
+    private String ImageUrl;
+    private Boolean IsPrimary = false;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ProductId", nullable = false)
-    private Product product;
-
-    @Column(name = "ImageUrl", nullable = false, length = 500)
-    private String imageUrl;
-
-    @Column(name = "IsPrimary", nullable = false)
-    private Boolean isPrimary;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "ProductId", nullable = false, foreignKey = @ForeignKey(name = "FK_Images_Products"))
+    private Product Product;
 }
