@@ -1,30 +1,32 @@
 package com.example.myapp.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.ArrayList;
 import java.util.List;
 
-@Data
 @Entity
 @Table(name = "Categories")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "CategoryId")
-    private Integer categoryId;
+    private Integer CategoryId;
+    private String Name;
+    private String Gender;
+    private String Season;
 
-    @Column(name = "Name", nullable = false, length = 100)
-    private String name;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ParentId", foreignKey = @ForeignKey(name = "FK_Categories_Parent"))
+    private Category Parent;
 
-    @Column(name = "ParentId")
-    private Integer parentId;
-
-    @Column(name = "Gender", length = 20)
-    private String gender;
-
-    @Column(name = "Season", length = 20)
-    private String season;
-    
-    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
-    private List<Product> products;
+    @OneToMany(mappedBy = "Parent")
+    private List<Category> Children = new ArrayList<>();
+    @OneToMany(mappedBy = "Category")
+    private List<Product> Products = new ArrayList<>();
 }

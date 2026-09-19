@@ -1,5 +1,6 @@
 package com.example.myapp;
 
+import com.example.myapp.config.DatabaseInitializer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -7,7 +8,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class MyAppApplication {
 
 	public static void main(String[] args) {
-		org.springframework.boot.SpringApplication.run(MyAppApplication.class, args);
+		try {
+			DatabaseInitializer.initialize(
+					"jdbc:sqlserver://CUONG;instanceName=MSSQLSERVER02;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;",
+					"sa",
+					"12345");
+		} catch (Exception exception) {
+			throw new IllegalStateException("Unable to create or verify FashionStoreDB", exception);
+		}
+		SpringApplication.run(MyAppApplication.class, args);
 	}
 
 	@org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
