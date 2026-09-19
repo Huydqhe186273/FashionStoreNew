@@ -1,30 +1,25 @@
 package com.example.myapp.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
 @Entity
 @Table(name = "ProductVariants")
+@Getter
+@Setter
+@NoArgsConstructor
 public class ProductVariant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "VariantId")
-    private Integer variantId;
+    private Integer VariantId;
+    private String Size;
+    private String Color;
+    private Integer StockQuantity = 0;
+    private String Sku;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ProductId", nullable = false)
-    private Product product;
-
-    @Column(name = "Size", nullable = false, length = 20)
-    private String size;
-
-    @Column(name = "Color", nullable = false, length = 50)
-    private String color;
-
-    @Column(name = "StockQuantity", nullable = false)
-    private Integer stockQuantity;
-
-    @Column(name = "Sku", nullable = false, length = 50)
-    private String sku;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "ProductId", nullable = false, foreignKey = @ForeignKey(name = "FK_Variants_Products"))
+    private Product Product;
 }
