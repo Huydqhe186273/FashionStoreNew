@@ -1,41 +1,15 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fashion Store</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; }
-        h1 { color: #333; }
-        .product-list { display: flex; gap: 20px; }
-        .product-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 200px; }
-    </style>
-</head>
-<body>
-
-    <h1>Chào mừng đến với Fashion Store</h1>
-    <p>Giao diện HTML/CSS cơ bản gọi API từ Spring Boot</p>
-    <div style="margin: 20px 0;">
-        <a href="view/admin/admin-dashboard.html" style="display: inline-block; padding: 12px 24px; background: #6366f1; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);">
-            📊 Mở trang Admin Dashboard (Tổng Quan Doanh Thu / Đơn Hàng / Sản Phẩm)
-        </a>
-    </div>
-
-    <!-- Nơi hiển thị dữ liệu từ Backend -->
-    <div class="product-list" id="products">
-        <p>Đang tải dữ liệu...</p>
-    </div>
-
-    <script>
-        // Mẫu code Javascript gọi API từ Spring Boot
-        /*
-        fetch('http://localhost:8080/api/products')
-            .then(response => response.json())
-            .then(data => {
-                // Xử lý hiển thị data ra HTML ở đây
-                console.log(data);
-            });
-        */
-    </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fashion Store - Admin Dashboard SPA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
