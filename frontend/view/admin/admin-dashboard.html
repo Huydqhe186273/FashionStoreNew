@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion Store - Admin Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js for smooth SVG/Canvas graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS Styles from style/css -->
+    <link rel="stylesheet" href="../../style/css/admin-dashboard.css">
+</head>
+<body>
+
+    <div class="loading-overlay" id="loadingSpinner">
+        <div style="text-align: center;">
+            <div style="font-size: 1.5rem; margin-bottom: 10px;">⚡ Đang tải dữ liệu Overview...</div>
+            <div style="color: var(--text-muted);">Kết nối API Spring Boot Backend</div>
+        </div>
+    </div>
+
+    <!-- Navigation Sidebar -->
+    <aside>
+        <div>
+            <div class="brand-logo">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                </div>
+                <div>
+                    <div class="brand-title">Fashion Store</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">Admin Workspace</div>
+                </div>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item active">
+                    <a href="admin-dashboard.html">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        Tổng quan (Dashboard)
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="manage-users.html">
+                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        Quản lý Khách Hàng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="manage-staff.html">
+                        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+                        Quản lý Nhân Viên
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="manage-categories.html">
+                        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+                        Quản lý Danh Mục
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="manage-products.html">
+                        <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        Quản lý Sản Phẩm
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="user-profile">
+            <div class="user-avatar">AD</div>
+            <div class="user-info">
+                <div class="name">Admin System</div>
+                <div class="role">admin@fashionstore.vn</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main>
+        <header>
+            <div class="header-title">
+                <h1>Báo cáo Tổng quan Admin</h1>
+                <p>Theo dõi các chỉ số kinh doanh Doanh thu, Đơn hàng, Sản phẩm & Khách hàng realtime</p>
+            </div>
+            <div class="header-actions">
+                <div class="status-badge" id="apiStatusBadge">
+                    <span class="status-dot"></span>
+                    Backend Live Connected
+                </div>
+                <button class="btn-refresh" onclick="fetchDashboardData()">
+                    <svg style="width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2;" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l5.64 5.64A9 9 0 0020.49 15"/></svg>
+                    Làm mới
+                </button>
+            </div>
+        </header>
+
+        <!-- KPI Cards Grid -->
+        <div class="kpi-grid">
+            <!-- Revenue KPI -->
+            <div class="kpi-card revenue">
+                <div class="kpi-header">
+                    <span class="kpi-title">Tổng Doanh Thu</span>
+                    <div class="kpi-icon" style="color: #6366f1;">
+                        <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpiRevenue">0 ₫</div>
+                <div class="kpi-subtext">
+                    <span class="trend-up">↑ 18.4%</span> so với tháng trước
+                </div>
+            </div>
+
+            <!-- Orders KPI -->
+            <div class="kpi-card orders">
+                <div class="kpi-header">
+                    <span class="kpi-title">Tổng Đơn Hàng</span>
+                    <div class="kpi-icon" style="color: #3b82f6;">
+                        <svg viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpiOrders">0</div>
+                <div class="kpi-subtext">
+                    <span class="trend-up">↑ 12.2%</span> tỉ lệ hoàn thành cao
+                </div>
+            </div>
+
+            <!-- Products KPI -->
+            <div class="kpi-card products">
+                <div class="kpi-header">
+                    <span class="kpi-title">Sản Phẩm Kinh Doanh</span>
+                    <div class="kpi-icon" style="color: #10b981;">
+                        <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpiProducts">0</div>
+                <div class="kpi-subtext">
+                    Đang lưu kho: <span id="kpiStock" style="color: var(--text-main); font-weight: 700;">0</span> sp
+                </div>
+            </div>
+
+            <!-- Users KPI -->
+            <div class="kpi-card users">
+                <div class="kpi-header">
+                    <span class="kpi-title">Khách Hàng & User</span>
+                    <div class="kpi-icon" style="color: #f59e0b;">
+                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpiUsers">0</div>
+                <div class="kpi-subtext">
+                    Customer: <span id="kpiCustomers" style="color: var(--text-main); font-weight: 700;">0</span> | Staff: <span id="kpiStaff" style="color: var(--text-main); font-weight: 700;">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Charts & Order Status Breakdown -->
+        <div class="dashboard-section">
+            <!-- Revenue Trend Chart -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Biểu đồ Biến động Doanh Thu theo Tháng</div>
+                        <div class="panel-subtitle">Tổng hợp doanh thu các tháng từ hệ thống đơn hàng thành công</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="revenueChartCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Order Status Breakdown -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Phân Loại Trạng Thái Đơn Hàng</div>
+                        <div class="panel-subtitle">Tỉ lệ tiến độ xử lý đơn hàng</div>
+                    </div>
+                </div>
+                
+                <div class="status-breakdown-list">
+                    <div class="status-item">
+                        <div class="status-info">
+                            <span>🕒 Chờ xác nhận (Pending)</span>
+                            <span id="cntPending">0</span>
+                        </div>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill fill-pending" id="barPending" style="width: 0%"></div></div>
+                    </div>
+
+                    <div class="status-item">
+                        <div class="status-info">
+                            <span>✔ Đã xác nhận (Confirmed)</span>
+                            <span id="cntConfirmed">0</span>
+                        </div>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill fill-confirmed" id="barConfirmed" style="width: 0%"></div></div>
+                    </div>
+
+                    <div class="status-item">
+                        <div class="status-info">
+                            <span>🚚 Đang giao hàng (Shipping)</span>
+                            <span id="cntShipping">0</span>
+                        </div>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill fill-shipping" id="barShipping" style="width: 0%"></div></div>
+                    </div>
+
+                    <div class="status-item">
+                        <div class="status-info">
+                            <span>✅ Đã giao thành công (Delivered)</span>
+                            <span id="cntDelivered">0</span>
+                        </div>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill fill-delivered" id="barDelivered" style="width: 0%"></div></div>
+                    </div>
+
+                    <div class="status-item">
+                        <div class="status-info">
+                            <span>❌ Đã hủy (Cancelled)</span>
+                            <span id="cntCancelled">0</span>
+                        </div>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill fill-cancelled" id="barCancelled" style="width: 0%"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Tables Grid (Recent Orders & Top Products) -->
+        <div class="tables-grid">
+            <!-- Recent Orders Table -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Đơn Hàng Mới Nhất</div>
+                        <div class="panel-subtitle">10 đơn hàng được tạo gần đây trên hệ thống</div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã Đơn</th>
+                                <th>Khách Hàng</th>
+                                <th>Tổng Tiền</th>
+                                <th>Trạng Thái</th>
+                                <th>Thời Gian</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentOrdersTbody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">Đang tải dữ liệu...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top Selling Products -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Top Sản Phẩm Bán Chạy</div>
+                        <div class="panel-subtitle">Sản phẩm có lượng bán ra cao nhất</div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Sản Phẩm</th>
+                                <th>Đã Bán</th>
+                                <th>Đơn Giá</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topProductsTbody">
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 24px;">Đang tải dữ liệu...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Custom JS Logic from style/js -->
+    <script src="../../style/js/admin-dashboard.js"></script>
+</body>
+</html>
