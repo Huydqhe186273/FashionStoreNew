@@ -1,4 +1,4 @@
-package com.example.myapp.rest;
+package com.example.myapp.controller;
 
 import com.example.myapp.model.DashboardOverviewDTO;
 import com.example.myapp.service.DashboardService;
