@@ -1,4 +1,4 @@
-package com.example.myapp.rest;
+package com.example.myapp.controller;
 
 import com.example.myapp.model.UpdateUserRequestDTO;
 import com.example.myapp.model.UserDTO;
