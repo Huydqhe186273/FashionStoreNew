@@ -13,11 +13,10 @@ public class MyAppApplication {
 	public static void main(String[] args) {
 		try {
 			DatabaseInitializer.initialize(
-					"jdbc:sqlserver://CUONG;instanceName=MSSQLSERVER02;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;",
+					"jdbc:sqlserver://localhost;instanceName=MSSQLSERVER01;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;",
 					"sa",
-					"12345");
-		}
-		catch (Exception exception) {
+					"sa");
+		} catch (Exception exception) {
 			throw new IllegalStateException("Unable to create or verify FashionStoreDB", exception);
 		}
 		SpringApplication.run(MyAppApplication.class, args);
