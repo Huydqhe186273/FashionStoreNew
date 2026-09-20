@@ -25,6 +25,7 @@ public class DashboardService {
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
+    // Tổng hợp KPI, trạng thái đơn hàng, thống kê người dùng/sản phẩm và dữ liệu biểu đồ cho dashboard.
     public DashboardOverviewDTO getDashboardOverview() {
         // KPI Metrics
         BigDecimal totalRevenue = orderRepository.sumTotalRevenue();
@@ -116,6 +117,7 @@ public class DashboardService {
                 .build();
     }
 
+    // Tạo dữ liệu doanh thu cho đủ 12 tháng; tháng không có đơn hàng sẽ có doanh thu và số đơn bằng 0.
     private List<RevenueChartDTO> buildMonthlyRevenueChart() {
         List<RevenueChartDTO> chart = new ArrayList<>();
         List<Object[]> stats = orderRepository.findMonthlyRevenueStats();

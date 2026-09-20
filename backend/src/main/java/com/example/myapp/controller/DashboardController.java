@@ -18,6 +18,7 @@ public class DashboardController {
     private final DashboardService dashboardService;
 
     @GetMapping("/overview")
+    // Xử lý GET /api/admin/dashboard/overview để trả toàn bộ dữ liệu tổng quan dashboard.
     public ResponseEntity<DashboardOverviewDTO> getOverview() {
         DashboardOverviewDTO overview = dashboardService.getDashboardOverview();
         return ResponseEntity.ok(overview);

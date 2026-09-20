@@ -22,12 +22,14 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
 
     @Transactional(readOnly = true)
+    // Lấy danh sách sản phẩm theo các điều kiện tìm kiếm tùy chọn.
     public List<ProductDTO> getProducts(String keyword, Integer categoryId, String status) {
         List<Product> products = productRepository.searchProducts(keyword, categoryId, status);
         return products.stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
+    // Lấy chi tiết một sản phẩm theo ID; báo lỗi nếu không tìm thấy.
     public ProductDTO getProductById(Integer id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm ID: " + id));
@@ -35,6 +37,7 @@ public class ProductService {
     }
 
     @Transactional
+    // Tạo sản phẩm mới, gán danh mục và khởi tạo các chỉ số lượt xem/lượt bán bằng 0.
     public ProductDTO createProduct(CreateProductRequestDTO dto) {
         Category category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại"));
@@ -55,6 +58,7 @@ public class ProductService {
     }
 
     @Transactional
+    // Cập nhật những thuộc tính có giá trị trong request của sản phẩm hiện có.
     public ProductDTO updateProduct(Integer id, CreateProductRequestDTO dto) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm ID: " + id));
@@ -76,6 +80,7 @@ public class ProductService {
     }
 
     @Transactional
+    // Đảo trạng thái hiển thị sản phẩm giữa active và inactive.
     public ProductDTO toggleProductStatus(Integer id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm ID: " + id));
@@ -90,6 +95,7 @@ public class ProductService {
         return mapToDTO(saved);
     }
 
+    // Chuyển entity Product sang ProductDTO, kèm thông tin danh mục nếu có.
     private ProductDTO mapToDTO(Product p) {
         return ProductDTO.builder()
                 .productId(p.getProductId())
