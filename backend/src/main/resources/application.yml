@@ -1,9 +1,8 @@
 spring:
   datasource:
-    url: jdbc:sqlserver://CUONG;instanceName=MSSQLSERVER02;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;
-    # Điền tài khoản đăng nhập SQL Server (thường là sa)
+    url: jdbc:sqlserver://localhost;instanceName=MSSQLSERVER01;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;
     username: sa
-    password: 12345
+    password: sa
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
   jpa:
