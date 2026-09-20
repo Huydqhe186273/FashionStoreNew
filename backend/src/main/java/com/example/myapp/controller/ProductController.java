@@ -18,6 +18,7 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
+    // Xử lý GET /api/admin/products để tìm/lọc danh sách sản phẩm.
     public ResponseEntity<List<ProductDTO>> getProducts(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer categoryId,
@@ -26,16 +27,19 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
+    // Xử lý GET /api/admin/products/{id} để trả chi tiết sản phẩm.
     public ResponseEntity<ProductDTO> getProductById(@PathVariable("id") Integer id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
     @PostMapping
+    // Xử lý POST /api/admin/products để tạo sản phẩm mới.
     public ResponseEntity<ProductDTO> createProduct(@RequestBody CreateProductRequestDTO dto) {
         return ResponseEntity.ok(productService.createProduct(dto));
     }
 
     @PutMapping("/{id}")
+    // Xử lý PUT /api/admin/products/{id} để cập nhật sản phẩm.
     public ResponseEntity<ProductDTO> updateProduct(
             @PathVariable("id") Integer id,
             @RequestBody CreateProductRequestDTO dto) {
@@ -43,6 +47,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}/status")
+    // Xử lý PUT /api/admin/products/{id}/status để bật hoặc tắt sản phẩm.
     public ResponseEntity<ProductDTO> toggleProductStatus(@PathVariable("id") Integer id) {
         return ResponseEntity.ok(productService.toggleProductStatus(id));
     }
