@@ -6,6 +6,7 @@ import ManageUsers from './pages/ManageUsers';
 import ManageStaff from './pages/ManageStaff';
 import ManageCategories from './pages/ManageCategories';
 import ManageProducts from './pages/ManageProducts';
+import Cart from './pages/Cart';
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/staff" element={<ManageStaff />} />
         <Route path="/categories" element={<ManageCategories />} />
         <Route path="/products" element={<ManageProducts />} />
+        <Route path="/cart" element={<Cart />} />
       </Routes>
     </Router>
   );
