@@ -31,12 +31,24 @@ public class CustomerProductController {
             @RequestParam(required = false) String color,
             @RequestParam(required = false) String variantSize,
             @RequestParam(required = false) Boolean inStockOnly,
+            // ===== Smart quality filters =====
+            @RequestParam(required = false) Boolean hasImage,
+            @RequestParam(required = false) Boolean hasDescription,
+            @RequestParam(required = false) Boolean hasDiscount,
+            @RequestParam(required = false) Integer minDiscountPercent,
+            @RequestParam(required = false) Integer minSoldCount,
+            @RequestParam(required = false) Integer minViewCount,
+            @RequestParam(required = false) Integer minSizeCount,
+            @RequestParam(required = false) Integer minColorCount,
             @RequestParam(required = false, defaultValue = "newest") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String sortDir,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "12") int size) {
         return ResponseEntity.ok(customerProductService.getProducts(
-                keyword, categoryId, gender, minPrice, maxPrice, color, variantSize, inStockOnly, sortBy, sortDir, page, size));
+                keyword, categoryId, gender, minPrice, maxPrice, color, variantSize,
+                inStockOnly, hasImage, hasDescription, hasDiscount,
+                minDiscountPercent, minSoldCount, minViewCount, minSizeCount, minColorCount,
+                sortBy, sortDir, page, size));
     }
 
     @GetMapping("/products/{id}")

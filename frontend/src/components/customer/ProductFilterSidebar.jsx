@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { getAllCategories } from '../../services/customerCategoryService';
-import { getFilterFacets } from '../../services/customerProductService';
+import { getFilterFacets } from '../../services/filterService';
 
 const flattenCategories = (nodes, depth = 0) => {
   const result = [];
@@ -14,27 +14,18 @@ const flattenCategories = (nodes, depth = 0) => {
 };
 
 /* -----------------------------------------------------------------
-   SMART FILTER SIDEBAR
+   SMART FILTER SIDEBAR (v2 — quality-aware)
 
-   Improvements over the previous hardcoded version:
+   Now exposes six new chip groups so shoppers can drill into
+   "real" products that have images, descriptions, discounts,
+   variants, and popularity — instead of placeholder rows.
 
-   1.  Sizes / colors / genders are loaded from /api/customer/filters
-       so the panel only shows values that ACTUALLY exist in the
-       catalogue (no more dead "S" pills when nothing is in stock).
-
-   2.  Each option shows a count badge "Đỏ (12)" so the shopper
-       sees how many results they'll get before clicking.
-
-   3.  A new "Khoảng giá" section renders 5 preset price buckets
-       (Dưới 200k, 200k-500k, 500k-1tr, 1tr-2tr, Trên 2tr) as
-       quick-pick chips — much faster than typing two numbers.
-
-   4.  A free-text min/max price input still sits below the chips
-       for power-users who want an exact range. Both inputs and
-       chips stay in sync; clearing one clears the other.
-
-   5.  A "Có sẵn" (in stock only) toggle is added so shoppers
-       don't waste time scrolling through out-of-stock items.
+   1. Quality flags       (3 chips)  : Có ảnh, Có mô tả, Còn hàng
+   2. Discount % chips    (4 chips)  : ≥10%, ≥30%, ≥50%, ≥70%
+   3. Popularity chips    (3 chips)  : Bán chạy, Hot, Top
+   4. Size-count chips    (3 chips)  : 1 size, 2-3 sizes, ≥4 sizes
+   5. Color-count chips   (3 chips)  : 1 màu, 2-3 màu, ≥4 màu
+   6. Đầy đủ thông số     (1 chip)   : hoàn thiện (ảnh+mô tả+≥1 size)
    ----------------------------------------------------------------- */
 
 const PRICE_PRESETS = [
@@ -43,6 +34,20 @@ const PRICE_PRESETS = [
   { id: '500-1000',   label: '500k – 1tr',    min: 500000,  max: 1000000 },
   { id: '1000-2000',  label: '1tr – 2tr',     min: 1000000, max: 2000000 },
   { id: '2000',       label: 'Trên 2tr',      min: 2000000, max: null    },
+];
+
+/** Preset chips for "đầy đủ size" — min distinct sizes threshold. */
+const SIZE_COUNT_PRESETS = [
+  { id: 'size-1', label: '1 size',     minSizeCount: 1 },
+  { id: 'size-2', label: '2–3 sizes',  minSizeCount: 2 },
+  { id: 'size-4', label: '≥4 sizes',   minSizeCount: 4 },
+];
+
+/** Preset chips for "đầy đủ màu" — min distinct colors threshold. */
+const COLOR_COUNT_PRESETS = [
+  { id: 'color-1', label: '1 màu',     minColorCount: 1 },
+  { id: 'color-2', label: '2–3 màu',   minColorCount: 2 },
+  { id: 'color-4', label: '≥4 màu',    minColorCount: 4 },
 ];
 
 function detectActivePreset(minPrice, maxPrice) {
@@ -67,7 +72,7 @@ export default function ProductFilterSidebar({ filters, onChange }) {
     return () => { mounted = false; };
   }, []);
 
-  // Aggregated facets (sizes, colors, genders, price buckets)
+  // Aggregated facets (sizes, colors, genders, price buckets, smart facets)
   useEffect(() => {
     let mounted = true;
     setLoadingFacets(true);
@@ -88,13 +93,21 @@ export default function ProductFilterSidebar({ filters, onChange }) {
     color: '',
     size: '',
     inStockOnly: false,
+    hasImage: false,
+    hasDescription: false,
+    hasDiscount: false,
+    completeOnly: false,
+    minDiscountPercent: null,
+    minSoldCount: null,
+    minSizeCount: null,
+    minColorCount: null,
   });
 
   const toggleSize = (s) => update({ size: filters.size === s ? '' : s });
   const toggleColor = (c) => update({ color: filters.color === c ? '' : c });
+  const toggleBool = (key) => update({ [key]: !filters[key] });
 
   const applyPricePreset = (preset) => {
-    // If the same preset is clicked again, clear it.
     if (detectActivePreset(filters.minPrice, filters.maxPrice) === preset.id) {
       update({ minPrice: '', maxPrice: '' });
       return;
@@ -102,6 +115,31 @@ export default function ProductFilterSidebar({ filters, onChange }) {
     update({
       minPrice: preset.min === 0 ? '' : String(preset.min),
       maxPrice: preset.max === null ? '' : String(preset.max),
+    });
+  };
+
+  const applyDiscountBucket = (b) => {
+    update({
+      minDiscountPercent:
+        filters.minDiscountPercent === b.minPercent ? null : b.minPercent,
+    });
+  };
+
+  const applyPopularityBucket = (b) => {
+    update({
+      minSoldCount: filters.minSoldCount === b.minCount ? null : b.minCount,
+    });
+  };
+
+  const applySizeCountPreset = (p) => {
+    update({
+      minSizeCount: filters.minSizeCount === p.minSizeCount ? null : p.minSizeCount,
+    });
+  };
+
+  const applyColorCountPreset = (p) => {
+    update({
+      minColorCount: filters.minColorCount === p.minColorCount ? null : p.minColorCount,
     });
   };
 
@@ -122,13 +160,25 @@ export default function ProductFilterSidebar({ filters, onChange }) {
     (filters.minPrice || filters.maxPrice ? 1 : 0) +
     (filters.color ? 1 : 0) +
     (filters.size ? 1 : 0) +
-    (filters.inStockOnly ? 1 : 0);
+    (filters.inStockOnly ? 1 : 0) +
+    (filters.hasImage ? 1 : 0) +
+    (filters.hasDescription ? 1 : 0) +
+    (filters.hasDiscount ? 1 : 0) +
+    (filters.completeOnly ? 1 : 0) +
+    (filters.minDiscountPercent ? 1 : 0) +
+    (filters.minSoldCount ? 1 : 0) +
+    (filters.minSizeCount ? 1 : 0) +
+    (filters.minColorCount ? 1 : 0);
+
+  // Helpers for rendering chips with counts (defensive: backend may not
+  // yet expose the smart facet on older builds).
+  const safe = (v, d = 0) => (typeof v === 'number' ? v : d);
 
   return (
     <aside className="filter-sidebar">
       <div className="filter-sidebar-header">
         <h3>
-          Bộ lọc
+          Bộ lọc thông minh
           {activeFilterCount > 0 && (
             <span className="filter-active-count">{activeFilterCount}</span>
           )}
@@ -199,6 +249,117 @@ export default function ProductFilterSidebar({ filters, onChange }) {
               <span>{opt.label}</span>
               <span className="filter-pill-count">{opt.count}</span>
             </label>
+          ))}
+        </div>
+      </div>
+
+      {/* === Chất lượng sản phẩm (smart chips) === */}
+      <div className="filter-group-block">
+        <h4>
+          Chất lượng sản phẩm
+          {!loadingFacets && facets && (
+            <span className="filter-group-meta" title="Số sản phẩm hoàn thiện">
+              ({safe(facets.productsComplete)} hoàn thiện)
+            </span>
+          )}
+        </h4>
+        <div className="filter-quality-chips">
+          <button
+            type="button"
+            className={`filter-quality-chip ${filters.hasImage ? 'active' : ''}`}
+            onClick={() => toggleBool('hasImage')}
+            disabled={!loadingFacets && safe(facets?.productsWithImages) === 0}
+            title="Sản phẩm có ít nhất một hình ảnh"
+          >
+            <span className="filter-quality-icon">🖼</span>
+            <span className="filter-quality-label">Có hình ảnh</span>
+            {!loadingFacets && (
+              <span className="filter-pill-count">{safe(facets?.productsWithImages)}</span>
+            )}
+          </button>
+          <button
+            type="button"
+            className={`filter-quality-chip ${filters.hasDescription ? 'active' : ''}`}
+            onClick={() => toggleBool('hasDescription')}
+            disabled={!loadingFacets && safe(facets?.productsWithDescription) === 0}
+            title="Sản phẩm có mô tả chi tiết"
+          >
+            <span className="filter-quality-icon">📝</span>
+            <span className="filter-quality-label">Có mô tả</span>
+            {!loadingFacets && (
+              <span className="filter-pill-count">{safe(facets?.productsWithDescription)}</span>
+            )}
+          </button>
+          <button
+            type="button"
+            className={`filter-quality-chip ${filters.inStockOnly ? 'active' : ''}`}
+            onClick={() => toggleBool('inStockOnly')}
+            disabled={!loadingFacets && safe(facets?.productsInStock) === 0}
+            title="Sản phẩm còn hàng"
+          >
+            <span className="filter-quality-icon">📦</span>
+            <span className="filter-quality-label">Còn hàng</span>
+            {!loadingFacets && (
+              <span className="filter-pill-count">{safe(facets?.productsInStock)}</span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* === Đầy đủ thông số (1 chip tổng hợp) === */}
+      <div className="filter-group-block">
+        <button
+          type="button"
+          className={`filter-complete-chip ${filters.completeOnly ? 'active' : ''}`}
+          onClick={() => toggleBool('completeOnly')}
+          disabled={!loadingFacets && safe(facets?.productsComplete) === 0}
+          title="Sản phẩm có ảnh + mô tả + ít nhất 1 biến thể size"
+        >
+          <span className="filter-quality-icon">✓</span>
+          <span className="filter-quality-label">Đầy đủ thông số</span>
+          {!loadingFacets && (
+            <span className="filter-pill-count">{safe(facets?.productsComplete)}</span>
+          )}
+        </button>
+      </div>
+
+      {/* === Giảm giá theo % === */}
+      <div className="filter-group-block">
+        <h4>Mức giảm giá</h4>
+        <div className="filter-discount-chips">
+          {(facets?.discountBuckets || []).map((b) => (
+            <button
+              key={b.minPercent}
+              type="button"
+              disabled={b.count === 0 && !loadingFacets}
+              className={`filter-discount-chip ${filters.minDiscountPercent === b.minPercent ? 'active' : ''}`}
+              onClick={() => applyDiscountBucket(b)}
+              title={`Sản phẩm ${b.label.toLowerCase()} (${b.count} sp)`}
+            >
+              <span>{b.label}</span>
+              {!loadingFacets && <span className="filter-pill-count">{b.count}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* === Độ phổ biến === */}
+      <div className="filter-group-block">
+        <h4>Độ phổ biến</h4>
+        <div className="filter-popularity-chips">
+          {(facets?.popularityBuckets || []).map((b) => (
+            <button
+              key={b.minCount}
+              type="button"
+              disabled={b.count === 0 && !loadingFacets}
+              className={`filter-popularity-chip ${filters.minSoldCount === b.minCount ? 'active' : ''}`}
+              onClick={() => applyPopularityBucket(b)}
+              title={`Sản phẩm đã bán ≥ ${b.minCount} (${b.count} sp)`}
+            >
+              <span className="filter-quality-icon">🔥</span>
+              <span>{b.label}</span>
+              {!loadingFacets && <span className="filter-pill-count">{b.count}</span>}
+            </button>
           ))}
         </div>
       </div>
@@ -280,6 +441,20 @@ export default function ProductFilterSidebar({ filters, onChange }) {
             <span className="filter-empty">Không có size nào</span>
           )}
         </div>
+        {/* Size-count chips */}
+        <div className="filter-size-count-chips">
+          {SIZE_COUNT_PRESETS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              className={`filter-quality-chip ${filters.minSizeCount === p.minSizeCount ? 'active' : ''}`}
+              onClick={() => applySizeCountPreset(p)}
+              title={`Sản phẩm có ≥${p.minSizeCount} size khác nhau`}
+            >
+              <span>{p.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* === Màu sắc === */}
@@ -313,18 +488,20 @@ export default function ProductFilterSidebar({ filters, onChange }) {
             <span className="filter-empty">Không có màu nào</span>
           )}
         </div>
-      </div>
-
-      {/* === Có sẵn (in stock only) === */}
-      <div className="filter-group-block">
-        <label className="filter-toggle">
-          <input
-            type="checkbox"
-            checked={!!filters.inStockOnly}
-            onChange={(e) => update({ inStockOnly: e.target.checked })}
-          />
-          <span>Chỉ hiện sản phẩm còn hàng</span>
-        </label>
+        {/* Color-count chips */}
+        <div className="filter-color-count-chips">
+          {COLOR_COUNT_PRESETS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              className={`filter-quality-chip ${filters.minColorCount === p.minColorCount ? 'active' : ''}`}
+              onClick={() => applyColorCountPreset(p)}
+              title={`Sản phẩm có ≥${p.minColorCount} màu khác nhau`}
+            >
+              <span>{p.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </aside>
   );
