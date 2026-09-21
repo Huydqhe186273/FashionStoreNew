@@ -18,16 +18,35 @@ export const getProductVariants = async (id) => {
   return response.data;
 };
 
-export const searchProducts = async (keyword, page = 0, size = 12) => {
-  const response = await api.get('/customer/products/search', {
-    params: { keyword, page, size },
-  });
+export const searchProducts = async (params = {}) => {
+  const cleaned = Object.fromEntries(
+    Object.entries(params).filter(([, v]) => v !== null && v !== undefined && v !== '')
+  );
+  const response = await api.get('/customer/products/search', { params: cleaned });
   return response.data;
 };
 
-export const getProductsByCategory = async (categoryId, page = 0, size = 12) => {
-  const response = await api.get(`/customer/products/category/${categoryId}`, {
-    params: { page, size },
-  });
+export const getProductsByCategory = async (categoryId, params = {}) => {
+  const cleaned = Object.fromEntries(
+    Object.entries(params).filter(([, v]) => v !== null && v !== undefined && v !== '')
+  );
+  const response = await api.get(`/customer/products/category/${categoryId}`, { params: cleaned });
+  return response.data;
+};
+
+// ===== Recommendation sections =====
+
+export const getNewProducts = async (limit = 10) => {
+  const response = await api.get('/customer/products/new', { params: { limit } });
+  return response.data;
+};
+
+export const getBestsellers = async (limit = 10) => {
+  const response = await api.get('/customer/products/bestsellers', { params: { limit } });
+  return response.data;
+};
+
+export const getDiscountedProducts = async (limit = 10) => {
+  const response = await api.get('/customer/products/discounts', { params: { limit } });
   return response.data;
 };

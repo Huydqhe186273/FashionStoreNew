@@ -39,7 +39,7 @@ export default function ProductSearchPage() {
   const [filters, setFilters] = useState({ categoryId: null, gender: '', minPrice: '', maxPrice: '', color: '', size: '' });
   const [sortBy, setSortBy] = useState('newest');
   const [page, setPage] = useState(0);
-  const [pageSize] = useState(12);
+  const [size] = useState(12);
   const [products, setProducts] = useState([]);
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -59,7 +59,18 @@ export default function ProductSearchPage() {
       if (!keyword) { setProducts([]); setTotalElements(0); setTotalPages(1); return; }
       setLoading(true);
       try {
-        const data = await searchProducts(keyword, page, pageSize);
+        const data = await searchProducts({
+          keyword,
+          categoryId: filters.categoryId || null,
+          minPrice: filters.minPrice || null,
+          maxPrice: filters.maxPrice || null,
+          color: filters.color || null,
+          variantSize: filters.size || null,
+          sortBy,
+          sortDir: 'desc',
+          page,
+          size,
+        });
         if (cancelled) return;
         setProducts(data.content || []);
         setTotalElements(data.totalElements || 0);
@@ -70,9 +81,9 @@ export default function ProductSearchPage() {
         console.warn('searchProducts fallback:', err);
         const filtered = filterMock(mockProducts, filters, keyword);
         const total = filtered.length;
-        const tp = Math.max(1, Math.ceil(total / pageSize));
-        const from = page * pageSize;
-        setProducts(filtered.slice(from, from + pageSize));
+        const tp = Math.max(1, Math.ceil(total / size));
+        const from = page * size;
+        setProducts(filtered.slice(from, from + size));
         setTotalElements(total);
         setTotalPages(tp);
         setIsLive(false);
@@ -83,7 +94,7 @@ export default function ProductSearchPage() {
     load();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyword, page]);
+  }, [keyword, page, sortBy, filters.categoryId, filters.minPrice, filters.maxPrice, filters.color, filters.size]);
 
   return (
     <div className="shop-page">

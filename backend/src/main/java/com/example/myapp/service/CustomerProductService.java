@@ -72,12 +72,12 @@ public class CustomerProductService {
                 })
                 .filter(p -> {
                     if (color == null || color.isBlank()) return true;
-                    return productVariantRepository.findByProduct_ProductId(p.getProductId()).stream()
+                    return productVariantRepository.findByProductId(p.getProductId()).stream()
                             .anyMatch(v -> color.equalsIgnoreCase(v.getColor()));
                 })
                 .filter(p -> {
                     if (variantSize == null || variantSize.isBlank()) return true;
-                    return productVariantRepository.findByProduct_ProductId(p.getProductId()).stream()
+                    return productVariantRepository.findByProductId(p.getProductId()).stream()
                             .anyMatch(v -> variantSize.equalsIgnoreCase(v.getSize()));
                 })
                 .sorted(buildComparator(sortBy, sortDir))
@@ -117,13 +117,28 @@ public class CustomerProductService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponseDTO<CustomerProductDTO> searchProducts(String keyword, int page, int size) {
-        return getProducts(keyword, null, null, null, null, null, null, "newest", "desc", page, size);
+    public PageResponseDTO<CustomerProductDTO> searchProducts(
+            String keyword,
+            Integer categoryId,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            String color,
+            String variantSize,
+            String sortBy,
+            String sortDir,
+            int page,
+            int size) {
+        return getProducts(keyword, categoryId, null, minPrice, maxPrice, color, variantSize, sortBy, sortDir, page, size);
     }
 
     @Transactional(readOnly = true)
-    public PageResponseDTO<CustomerProductDTO> getProductsByCategory(Integer categoryId, int page, int size) {
-        return getProducts(null, categoryId, null, null, null, null, null, "newest", "desc", page, size);
+    public PageResponseDTO<CustomerProductDTO> getProductsByCategory(
+            Integer categoryId,
+            String sortBy,
+            String sortDir,
+            int page,
+            int size) {
+        return getProducts(null, categoryId, null, null, null, null, null, sortBy, sortDir, page, size);
     }
 
     @Transactional(readOnly = true)
@@ -167,7 +182,7 @@ public class CustomerProductService {
 
     @Transactional(readOnly = true)
     public List<VariantInfoDTO> getProductVariants(Integer productId) {
-        return productVariantRepository.findByProduct_ProductId(productId).stream()
+        return productVariantRepository.findByProductId(productId).stream()
                 .map(this::toVariantInfo)
                 .collect(Collectors.toList());
     }
@@ -192,12 +207,12 @@ public class CustomerProductService {
 
     private CustomerProductDTO mapToDTO(Product p, boolean includeVariants) {
         List<ProductVariant> variants = includeVariants
-                ? productVariantRepository.findByProduct_ProductId(p.getProductId())
+                ? productVariantRepository.findByProductId(p.getProductId())
                 : List.of();
 
         List<String> images = new ArrayList<>();
         String primary = null;
-        List<ProductImage> imgs = productImageRepository.findByProduct_ProductId(p.getProductId());
+        List<ProductImage> imgs = productImageRepository.findByProductId(p.getProductId());
         for (ProductImage img : imgs) {
             if (img.getImageUrl() != null) images.add(img.getImageUrl());
             if (Boolean.TRUE.equals(img.getIsPrimary()) && img.getImageUrl() != null) {
@@ -273,7 +288,7 @@ public class CustomerProductService {
                 cmp = Comparator.comparing((Product p) -> priceOf(p), Comparator.nullsLast(BigDecimal::compareTo));
                 break;
             case "price_desc":
-                cmp = Comparator.comparing((Product p) -> priceOf(p), Comparator.nullsLast(BigDecimal::compareTo)).reversed();
+                cmp = Comparator.comparing((Product p) -> priceOf(p), Comparator.nullsLast(BigDecimal::compareTo));
                 break;
             case "bestseller":
                 cmp = Comparator.comparing(Product::getSoldCount, Comparator.nullsLast(Comparator.naturalOrder()));
@@ -299,5 +314,42 @@ public class CustomerProductService {
         if (p.getBasePrice() == null || p.getDiscountPrice() == null) return BigDecimal.ZERO;
         if (p.getBasePrice().compareTo(BigDecimal.ZERO) == 0) return BigDecimal.ZERO;
         return p.getBasePrice().subtract(p.getDiscountPrice());
+    }
+
+    // ===== Recommendation lists =====
+
+    @Transactional(readOnly = true)
+    public List<CustomerProductDTO> getNewProducts(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 50));
+        return productRepository.findAll().stream()
+                .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
+                .sorted(Comparator.comparing(Product::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                .limit(safeLimit)
+                .map(p -> mapToDTO(p, false))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CustomerProductDTO> getBestsellers(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 50));
+        return productRepository.findAll().stream()
+                .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
+                .sorted(Comparator.comparing(Product::getSoldCount, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                .limit(safeLimit)
+                .map(p -> mapToDTO(p, false))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CustomerProductDTO> getDiscountedProducts(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 50));
+        return productRepository.findAll().stream()
+                .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
+                .filter(p -> p.getDiscountPrice() != null && p.getBasePrice() != null
+                        && p.getDiscountPrice().compareTo(p.getBasePrice()) < 0)
+                .sorted(Comparator.comparing(this::discountValue, Comparator.nullsLast(BigDecimal::compareTo)).reversed())
+                .limit(safeLimit)
+                .map(p -> mapToDTO(p, false))
+                .collect(Collectors.toList());
     }
 }

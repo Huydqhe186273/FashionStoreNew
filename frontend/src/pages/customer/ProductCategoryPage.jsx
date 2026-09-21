@@ -25,38 +25,46 @@ export default function ProductCategoryPage() {
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(0);
-  const [pageSize] = useState(12);
+  const [size] = useState(12);
   const [sortBy, setSortBy] = useState('newest');
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
 
+  // Load category only when id changes
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    const catId = Number(id);
-    Promise.all([
-      getCategoryById(id).catch((err) => { console.warn('getCategoryById fallback:', err); return mockCategory(id); }),
-      getProductsByCategory(id, 0, 100).catch((err) => { console.warn('getProductsByCategory fallback:', err); return { content: mockProductsForCategory(catId), totalElements: mockProductsForCategory(catId).length, totalPages: 1 }; }),
-    ]).then(([cat, pageData]) => {
-      if (cancelled) return;
-      setCategory(cat);
-      setProducts(pageData.content || []);
-      setTotalElements(pageData.totalElements || (pageData.content || []).length);
-      setTotalPages(pageData.totalPages || 1);
-      setIsLive(true);
-    }).finally(() => { if (!cancelled) setLoading(false); });
+    getCategoryById(id)
+      .then((cat) => { if (!cancelled) setCategory(cat); })
+      .catch((err) => { console.warn('getCategoryById fallback:', err); if (!cancelled) setCategory(mockCategory(id)); });
     return () => { cancelled = true; };
   }, [id]);
 
-  const sortedProducts = [...products].sort((a, b) => {
-    switch (sortBy) {
-      case 'price_asc': return Number(a.finalPrice) - Number(b.finalPrice);
-      case 'price_desc': return Number(b.finalPrice) - Number(a.finalPrice);
-      case 'bestseller': return (b.soldCount || 0) - (a.soldCount || 0);
-      case 'discount': return (b.discountPercent || 0) - (a.discountPercent || 0);
-      default: return 0;
-    }
-  });
+  // Re-fetch products whenever id, page, or sortBy changes
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getProductsByCategory(id, { sortBy, sortDir: 'desc', page, size })
+      .then((data) => {
+        if (cancelled) return;
+        setProducts(data.content || []);
+        setTotalElements(data.totalElements || 0);
+        setTotalPages(data.totalPages || 1);
+        setIsLive(true);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.warn('getProductsByCategory fallback:', err);
+        const all = mockProductsForCategory(Number(id));
+        const from = page * size;
+        setProducts(all.slice(from, from + size));
+        setTotalElements(all.length);
+        setTotalPages(Math.max(1, Math.ceil(all.length / size)));
+        setIsLive(false);
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [id, page, sortBy]);
 
   if (loading && !category) return <div className="shop-loading-page">Đang tải danh mục…</div>;
   if (!category) return <div className="shop-empty"><span>😕</span><p>Không tìm thấy danh mục.</p><Link to="/shop" className="shop-empty-reset">Về trang sản phẩm</Link></div>;
@@ -84,19 +92,20 @@ export default function ProductCategoryPage() {
         <div className="shop-toolbar">
           <div className="shop-toolbar-info">
             {isLive ? <span className="shop-live-badge">● Trực tiếp</span> : <span className="shop-offline-badge">● Chế độ demo</span>}
+            {loading && <span className="shop-loading">Đang tải…</span>}
           </div>
           <div className="shop-toolbar-sort">
             <label>Sắp xếp:</label>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setPage(0); }}>
               {SORT_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
         </div>
 
-        {sortedProducts.length === 0 && !loading ? (
+        {products.length === 0 && !loading ? (
           <div className="shop-empty"><span>📦</span><p>Danh mục này hiện chưa có sản phẩm.</p><Link to="/shop" className="shop-empty-reset">Về trang sản phẩm</Link></div>
         ) : (
-          <div className="shop-grid">{sortedProducts.map((p) => <ProductCard key={p.productId} product={p} />)}</div>
+          <div className="shop-grid">{products.map((p) => <ProductCard key={p.productId} product={p} />)}</div>
         )}
 
         {totalPages > 1 && (
