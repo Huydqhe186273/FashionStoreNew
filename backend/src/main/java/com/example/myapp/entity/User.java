@@ -18,6 +18,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer UserId;
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String FullName;
     private String Email;
     private String PasswordHash;

@@ -11,10 +11,13 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
 
-    long countByStatus(String status);
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.Status = :status")
+    long countByStatus(@Param("status") String status);
 
+    @Query("SELECT p FROM Product p ORDER BY p.SoldCount DESC LIMIT 5")
     List<Product> findTop5ByOrderBySoldCountDesc();
 
+    @Query("SELECT p FROM Product p ORDER BY p.SoldCount DESC LIMIT 10")
     List<Product> findTop10ByOrderBySoldCountDesc();
 
     @Query("SELECT COALESCE(SUM(pv.StockQuantity), 0) FROM ProductVariant pv")

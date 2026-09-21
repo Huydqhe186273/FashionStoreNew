@@ -300,5 +300,18 @@ INSERT INTO Categories (Name, Gender) VALUES
 (N'Áo khoác', 'unisex'),
 (N'Giày', 'unisex'),
 (N'Phụ kiện', 'unisex');
+GO
 
+
+-- Tạo sản phẩm mẫu
+INSERT INTO Products (CategoryId, Name, BasePrice, Status, ViewCount, SoldCount) 
+VALUES (1, N'Áo phông nam siêu cấp vip pro', 150000, 'active', 0, 0);
+GO
+
+-- Tạo các biến thể mẫu (Đen và Trắng)
+INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) 
+VALUES (1, 'M', N'Đen', 100, 'APN-M-DEN');
+
+INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) 
+VALUES (1, 'L', N'Trắng', 50, 'APN-L-TRANG');
 GO
