@@ -2,7 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../../components/customer/ProductCard';
 import ProductFilterSidebar from '../../components/customer/ProductFilterSidebar';
-import { getProducts } from '../../services/customerProductService';
+import {
+  getProducts,
+  getNewProducts,
+  getBestsellers,
+  getDiscountedProducts,
+} from '../../services/customerProductService';
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Mới nhất' },
@@ -63,13 +68,17 @@ export default function ProductListPage() {
   });
   const [sortBy, setSortBy] = useState('newest');
   const [page, setPage] = useState(0);
-  const [pageSize] = useState(12);
+  const [size] = useState(12);
 
   const [products, setProducts] = useState(mockProducts);
   const [totalElements, setTotalElements] = useState(mockProducts.length);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isLive, setIsLive] = useState(false);
+
+  const [newArrivals, setNewArrivals] = useState([]);
+  const [bestSellers, setBestSellers] = useState([]);
+  const [discounted, setDiscounted] = useState([]);
 
   useEffect(() => {
     const kw = searchParams.get('keyword') || '';
@@ -95,7 +104,7 @@ export default function ProductListPage() {
           variantSize: filters.size || null,
           sortBy,
           page,
-          pageSize,
+          size,
         });
         if (cancelled) return;
         setProducts(data.content || []);
@@ -108,9 +117,9 @@ export default function ProductListPage() {
         const filtered = filterMock(mockProducts, filters);
         const sorted = sortMock(filtered, sortBy);
         const total = sorted.length;
-        const tp = Math.max(1, Math.ceil(total / pageSize));
-        const from = page * pageSize;
-        setProducts(sorted.slice(from, from + pageSize));
+        const tp = Math.max(1, Math.ceil(total / size));
+        const from = page * size;
+        setProducts(sorted.slice(from, from + size));
         setTotalElements(total);
         setTotalPages(tp);
         setIsLive(false);
@@ -122,6 +131,23 @@ export default function ProductListPage() {
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, sortBy, page]);
+
+  // Load recommendation lists once on mount (only when no filter/keyword)
+  useEffect(() => {
+    if (filters.keyword || filters.categoryId || filters.gender || filters.minPrice || filters.maxPrice || filters.color || filters.size) return;
+    let cancelled = false;
+    Promise.all([
+      getNewProducts(8).catch(() => []),
+      getBestsellers(8).catch(() => []),
+      getDiscountedProducts(8).catch(() => []),
+    ]).then(([fresh, hot, deals]) => {
+      if (cancelled) return;
+      setNewArrivals(Array.isArray(fresh) ? fresh : []);
+      setBestSellers(Array.isArray(hot) ? hot : []);
+      setDiscounted(Array.isArray(deals) ? deals : []);
+    });
+    return () => { cancelled = true; };
+  }, [filters]);
 
   const handleFilterChange = (next) => {
     setFilters(next);
@@ -144,6 +170,35 @@ export default function ProductListPage() {
         <h1>{banner}</h1>
         <p>{totalElements} sản phẩm</p>
       </div>
+
+      {!filters.keyword && !filters.categoryId && !filters.gender && !filters.minPrice && !filters.maxPrice && !filters.color && !filters.size && (newArrivals.length > 0 || bestSellers.length > 0 || discounted.length > 0) && (
+        <div className="shop-recommendations">
+          {newArrivals.length > 0 && (
+            <section className="shop-rec-block">
+              <h2 className="shop-rec-title">Sản phẩm mới</h2>
+              <div className="shop-rec-row">
+                {newArrivals.map((p) => <ProductCard key={p.productId} product={p} />)}
+              </div>
+            </section>
+          )}
+          {bestSellers.length > 0 && (
+            <section className="shop-rec-block">
+              <h2 className="shop-rec-title">Bán chạy</h2>
+              <div className="shop-rec-row">
+                {bestSellers.map((p) => <ProductCard key={p.productId} product={p} />)}
+              </div>
+            </section>
+          )}
+          {discounted.length > 0 && (
+            <section className="shop-rec-block">
+              <h2 className="shop-rec-title">Đang giảm giá</h2>
+              <div className="shop-rec-row">
+                {discounted.map((p) => <ProductCard key={p.productId} product={p} />)}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
 
       <div className="shop-body">
         <ProductFilterSidebar filters={filters} onChange={handleFilterChange} />

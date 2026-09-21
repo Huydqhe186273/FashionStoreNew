@@ -32,9 +32,9 @@ public class CustomerProductController {
             @RequestParam(required = false, defaultValue = "newest") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String sortDir,
             @RequestParam(required = false, defaultValue = "0") int page,
-            @RequestParam(required = false, defaultValue = "12") int pageSize) {
+            @RequestParam(required = false, defaultValue = "12") int size) {
         return ResponseEntity.ok(customerProductService.getProducts(
-                keyword, categoryId, gender, minPrice, maxPrice, color, variantSize, sortBy, sortDir, page, pageSize));
+                keyword, categoryId, gender, minPrice, maxPrice, color, variantSize, sortBy, sortDir, page, size));
     }
 
     @GetMapping("/products/{id}")
@@ -50,17 +50,27 @@ public class CustomerProductController {
     @GetMapping("/products/search")
     public ResponseEntity<PageResponseDTO<CustomerProductDTO>> searchProducts(
             @RequestParam("keyword") String keyword,
+            @RequestParam(required = false) Integer categoryId,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) String color,
+            @RequestParam(required = false) String variantSize,
+            @RequestParam(required = false, defaultValue = "newest") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortDir,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "12") int size) {
-        return ResponseEntity.ok(customerProductService.searchProducts(keyword, page, size));
+        return ResponseEntity.ok(customerProductService.searchProducts(
+                keyword, categoryId, minPrice, maxPrice, color, variantSize, sortBy, sortDir, page, size));
     }
 
     @GetMapping("/products/category/{id}")
     public ResponseEntity<PageResponseDTO<CustomerProductDTO>> getProductsByCategory(
             @PathVariable("id") Integer id,
+            @RequestParam(required = false, defaultValue = "newest") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortDir,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "12") int size) {
-        return ResponseEntity.ok(customerProductService.getProductsByCategory(id, page, size));
+        return ResponseEntity.ok(customerProductService.getProductsByCategory(id, sortBy, sortDir, page, size));
     }
 
     @GetMapping("/categories")
@@ -72,5 +82,25 @@ public class CustomerProductController {
     @GetMapping("/categories/{id}")
     public ResponseEntity<CustomerCategoryDTO> getCategoryById(@PathVariable("id") Integer id) {
         return ResponseEntity.ok(customerProductService.getCategoryById(id));
+    }
+
+    // ===== Recommendation sections =====
+
+    @GetMapping("/products/new")
+    public ResponseEntity<List<CustomerProductDTO>> getNewProducts(
+            @RequestParam(required = false, defaultValue = "10") int limit) {
+        return ResponseEntity.ok(customerProductService.getNewProducts(limit));
+    }
+
+    @GetMapping("/products/bestsellers")
+    public ResponseEntity<List<CustomerProductDTO>> getBestsellers(
+            @RequestParam(required = false, defaultValue = "10") int limit) {
+        return ResponseEntity.ok(customerProductService.getBestsellers(limit));
+    }
+
+    @GetMapping("/products/discounts")
+    public ResponseEntity<List<CustomerProductDTO>> getDiscountedProducts(
+            @RequestParam(required = false, defaultValue = "10") int limit) {
+        return ResponseEntity.ok(customerProductService.getDiscountedProducts(limit));
     }
 }
