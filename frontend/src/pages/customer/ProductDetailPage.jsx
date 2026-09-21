@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getProductById } from '../../services/customerProductService';
 import ProductCard from '../../components/customer/ProductCard';
+import FavoriteButton from '../../components/customer/FavoriteButton';
+import ReviewList from '../../components/customer/ReviewList';
+import ReviewForm from '../../components/customer/ReviewForm';
 
 const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="%23222a3a"/><text x="50%" y="50%" fill="%23667085" font-family="sans-serif" font-size="28" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>';
 
@@ -50,6 +53,7 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [reviewRefreshKey, setReviewRefreshKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -157,7 +161,10 @@ export default function ProductDetailPage() {
 
         <div className="product-detail-info">
           <div className="product-detail-category">{product.categoryName}</div>
-          <h1 className="product-detail-name">{product.name}</h1>
+          <div className="product-detail-name-row">
+            <h1 className="product-detail-name">{product.name}</h1>
+            <FavoriteButton productId={product.productId} className="product-detail-favorite" />
+          </div>
 
           <div className="product-detail-meta">
             <span>Đã bán {product.soldCount ?? 0}</span>
@@ -230,6 +237,13 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      <ReviewList productId={product.productId} refreshKey={reviewRefreshKey} />
+      <ReviewForm
+        productId={product.productId}
+        orderItemId={null}
+        onSubmitted={() => setReviewRefreshKey((k) => k + 1)}
+      />
 
       <section className="product-detail-related">
         <h2>Sản phẩm liên quan</h2>
