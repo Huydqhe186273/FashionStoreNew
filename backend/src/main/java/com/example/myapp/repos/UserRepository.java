@@ -7,14 +7,24 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
 
-    long countByRole(String role);
+    @Query("SELECT u FROM User u WHERE u.Email = :email")
+    Optional<User> findByEmail(@Param("email") String email);
 
-    long countByStatus(String status);
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.Email = :email")
+    boolean existsByEmail(@Param("email") String email);
 
+    @Query("SELECT COUNT(u) FROM User u WHERE u.Role = :role")
+    long countByRole(@Param("role") String role);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.Status = :status")
+    long countByStatus(@Param("status") String status);
+
+    @Query("SELECT u FROM User u ORDER BY u.CreatedAt DESC LIMIT 5")
     List<User> findTop5ByOrderByCreatedAtDesc();
 
     @Query("SELECT u FROM User u WHERE " +

@@ -10,9 +10,9 @@ public class MyAppApplication {
 	public static void main(String[] args) {
 		try {
 			DatabaseInitializer.initialize(
-					"jdbc:sqlserver://CUONG;instanceName=MSSQLSERVER02;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;",
+					"jdbc:sqlserver://localhost:1433;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;",
 					"sa",
-					"12345");
+					"123456");
 		} catch (Exception exception) {
 			throw new IllegalStateException("Unable to create or verify FashionStoreDB", exception);
 		}
