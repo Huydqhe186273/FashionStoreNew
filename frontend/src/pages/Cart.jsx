@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getCart, addToCart, updateQuantity, removeItem, createPaymentLink } from '../services/cartService';
+import { getCart, addToCart, updateQuantity, removeItem, createPaymentLink, createAddress, createOrder, verifyPayment } from '../services/cartService';
 
 export default function Cart() {
   const [cartData, setCartData] = useState(null);
@@ -7,7 +7,20 @@ export default function Cart() {
   const [adding, setAdding] = useState(false);
   const [updatingItemId, setUpdatingItemId] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null); // Lưu thông tin item đang chuẩn bị xóa
+  const [address, setAddress] = useState({
+    recipientName: '',
+    phone: '',
+    addressLine: '',
+    city: ''
+  });
   const userId = 1; // Mặc định dùng userId 1 để test
+
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (type, text) => {
+    setToastMessage({ type, text });
+    setTimeout(() => setToastMessage(null), 3000);
+  };
 
   const loadCart = async () => {
     try {
@@ -24,16 +37,21 @@ export default function Cart() {
   useEffect(() => {
     loadCart();
     
-    // Đọc tham số từ URL khi từ trang PayOS quay về
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
+    const orderId = urlParams.get('orderId');
     
-    if (paymentStatus === 'success') {
-      alert("Thanh toán thành công! Mã đơn hàng của bạn đã được ghi nhận.");
-      // Xóa param khỏi URL để tránh báo lại khi F5
-      window.history.replaceState({}, document.title, window.location.pathname);
+    if (paymentStatus === 'success' && orderId) {
+      verifyPayment(orderId).then(res => {
+        showToast('success', res.message);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        loadCart();
+      }).catch(err => {
+        showToast('error', "Có lỗi khi xác minh thanh toán.");
+        window.history.replaceState({}, document.title, window.location.pathname);
+      });
     } else if (paymentStatus === 'cancel') {
-      alert("Bạn đã hủy thanh toán.");
+      showToast('error', "Bạn đã hủy thanh toán.");
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
@@ -45,7 +63,7 @@ export default function Cart() {
       setCartData(updatedCart);
     } catch (error) {
       console.error("Lỗi thêm sản phẩm:", error);
-      alert('Thêm sản phẩm thất bại. Có thể do hết hàng hoặc chưa có Variant ID ' + variantId + ' trong Database.');
+      showToast('error', 'Thêm sản phẩm thất bại. Có thể do hết hàng hoặc chưa có Variant ID ' + variantId + ' trong Database.');
     } finally {
       setAdding(false);
     }
@@ -59,7 +77,7 @@ export default function Cart() {
       setCartData(updatedCart);
     } catch (error) {
       console.error("Lỗi cập nhật số lượng:", error);
-      alert('Cập nhật thất bại. Có thể do hết hàng trong kho.');
+      showToast('error', 'Cập nhật thất bại. Có thể do hết hàng trong kho.');
     } finally {
       setUpdatingItemId(null);
     }
@@ -76,9 +94,10 @@ export default function Cart() {
       setUpdatingItemId(itemToDelete.cartItemId);
       const updatedCart = await removeItem(userId, itemToDelete.cartItemId);
       setCartData(updatedCart);
+      showToast('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
     } catch (error) {
       console.error("Lỗi xóa sản phẩm:", error);
-      alert('Xóa sản phẩm thất bại.');
+      showToast('error', 'Xóa sản phẩm thất bại.');
     } finally {
       setUpdatingItemId(null);
       setItemToDelete(null); // Đóng modal
@@ -91,20 +110,31 @@ export default function Cart() {
 
   const handleCheckout = async () => {
     if (!cartData || !cartData.items || cartData.items.length === 0) {
-      alert("Giỏ hàng của bạn đang trống!");
+      showToast('error', "Giỏ hàng của bạn đang trống!");
+      return;
+    }
+    if (!address.recipientName || !address.phone || !address.addressLine || !address.city) {
+      showToast('error', "Vui lòng điền đầy đủ thông tin địa chỉ giao hàng!");
       return;
     }
     try {
       setLoading(true);
-      const data = await createPaymentLink(userId);
+      // 1. Tạo Address
+      const savedAddress = await createAddress(userId, address);
+      
+      // 2. Tạo Order
+      const orderResponse = await createOrder(userId, savedAddress.addressId);
+      
+      // 3. Khởi tạo thanh toán PayOS
+      const data = await createPaymentLink(orderResponse.orderId);
       if (data && data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
       } else {
-        alert("Lỗi: Không nhận được URL thanh toán từ server.");
+        showToast('error', "Lỗi: Không nhận được URL thanh toán từ server.");
       }
     } catch (error) {
       console.error("Lỗi thanh toán:", error);
-      alert("Không thể khởi tạo thanh toán. Vui lòng kiểm tra API key.");
+      showToast('error', "Không thể khởi tạo thanh toán. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -113,6 +143,33 @@ export default function Cart() {
   return (
     <div style={{ padding: '0', color: '#111827' }}>
       
+      {toastMessage && (
+        <div style={{
+          position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
+          padding: '16px 24px', borderRadius: '8px', color: '#fff',
+          backgroundColor: toastMessage.type === 'success' ? '#10b981' : '#ef4444',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          display: 'flex', alignItems: 'center', gap: '12px',
+          transition: 'all 0.3s ease',
+          animation: 'slideIn 0.3s ease-out forwards'
+        }}>
+          {toastMessage.type === 'success' ? (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          )}
+          <span style={{ fontWeight: '500' }}>{toastMessage.text}</span>
+        </div>
+      )}
+      <style>
+        {`
+          @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+        `}
+      </style>
+
       <div style={{ padding: '24px', background: '#ffffff', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', border: '1px solid #e5e7eb', marginTop: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>Giỏ hàng của bạn</h2>
@@ -194,7 +251,53 @@ export default function Cart() {
               </tbody>
             </table>
             
-            <div style={{ marginTop: '32px', textAlign: 'right', fontSize: '1.25rem', padding: '20px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+            <div style={{ marginTop: '40px', padding: '24px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', color: '#111827' }}>Thông tin giao hàng</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#4b5563', fontSize: '0.9rem', fontWeight: '500' }}>Tên người nhận</label>
+                  <input 
+                    type="text" 
+                    value={address.recipientName}
+                    onChange={(e) => setAddress({...address, recipientName: e.target.value})}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none' }}
+                    placeholder="VD: Nguyễn Văn A"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#4b5563', fontSize: '0.9rem', fontWeight: '500' }}>Số điện thoại</label>
+                  <input 
+                    type="text" 
+                    value={address.phone}
+                    onChange={(e) => setAddress({...address, phone: e.target.value})}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none' }}
+                    placeholder="VD: 0987654321"
+                  />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#4b5563', fontSize: '0.9rem', fontWeight: '500' }}>Địa chỉ cụ thể</label>
+                  <input 
+                    type="text" 
+                    value={address.addressLine}
+                    onChange={(e) => setAddress({...address, addressLine: e.target.value})}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none' }}
+                    placeholder="VD: Số nhà 10, Ngõ 20..."
+                  />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#4b5563', fontSize: '0.9rem', fontWeight: '500' }}>Tỉnh/Thành phố</label>
+                  <input 
+                    type="text" 
+                    value={address.city}
+                    onChange={(e) => setAddress({...address, city: e.target.value})}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none' }}
+                    placeholder="VD: Hà Nội"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '24px', textAlign: 'right', fontSize: '1.25rem', padding: '20px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
               <span style={{ color: '#4b5563', marginRight: '10px' }}>Tổng thanh toán: </span>
               <strong style={{ color: '#ef4444', fontSize: '1.75rem' }}>
                 {cartData.totalAmount?.toLocaleString()}đ
