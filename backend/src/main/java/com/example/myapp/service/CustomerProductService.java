@@ -6,9 +6,11 @@ import com.example.myapp.entity.ProductImage;
 import com.example.myapp.entity.ProductVariant;
 import com.example.myapp.model.CustomerCategoryDTO;
 import com.example.myapp.model.CustomerProductDTO;
+import com.example.myapp.model.DiscountBucketDTO;
 import com.example.myapp.model.FacetOptionDTO;
 import com.example.myapp.model.FilterFacetsDTO;
 import com.example.myapp.model.PageResponseDTO;
+import com.example.myapp.model.PopularityBucketDTO;
 import com.example.myapp.model.PriceBucketDTO;
 import com.example.myapp.model.VariantInfoDTO;
 import com.example.myapp.repos.CategoryRepository;
@@ -41,6 +43,17 @@ public class CustomerProductService {
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
 
+    /**
+     * Catalog query. Every parameter is optional; null/blank means
+     * "do not filter on this field". The pipeline is a stream of
+     * small predicates — each new smart filter is one more line
+     * here plus a corresponding @RequestParam on the controller.
+     *
+     * The "quality" filters (hasImage, hasDescription, hasDiscount,
+     * minDiscountPercent, minSoldCount, minViewCount, minSizeCount,
+     * minColorCount) feed the smart sidebar chips and are computed
+     * lazily per product so adding a new flag is cheap.
+     */
     @Transactional(readOnly = true)
     public PageResponseDTO<CustomerProductDTO> getProducts(
             String keyword,
@@ -51,6 +64,14 @@ public class CustomerProductService {
             String color,
             String variantSize,
             Boolean inStockOnly,
+            Boolean hasImage,
+            Boolean hasDescription,
+            Boolean hasDiscount,
+            Integer minDiscountPercent,
+            Integer minSoldCount,
+            Integer minViewCount,
+            Integer minSizeCount,
+            Integer minColorCount,
             String sortBy,
             String sortDir,
             int page,
@@ -95,6 +116,29 @@ public class CustomerProductService {
                     }
                     return true;
                 })
+                // ===== Smart quality filters =====
+                .filter(p -> !Boolean.TRUE.equals(hasImage)
+                        || productImageRepository.findByProductId(p.getProductId()).stream()
+                                .anyMatch(img -> img.getImageUrl() != null && !img.getImageUrl().isBlank()))
+                .filter(p -> !Boolean.TRUE.equals(hasDescription)
+                        || (p.getDescription() != null && !p.getDescription().isBlank()))
+                .filter(p -> !Boolean.TRUE.equals(hasDiscount)
+                        || (p.getDiscountPrice() != null && p.getBasePrice() != null
+                            && p.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
+                            && p.getDiscountPrice().compareTo(p.getBasePrice()) < 0))
+                .filter(p -> {
+                    if (minDiscountPercent == null) return true;
+                    Integer pct = computeDiscountPercent(p);
+                    return pct != null && pct >= minDiscountPercent;
+                })
+                .filter(p -> minSoldCount == null
+                        || (p.getSoldCount() != null && p.getSoldCount() >= minSoldCount))
+                .filter(p -> minViewCount == null
+                        || (p.getViewCount() != null && p.getViewCount() >= minViewCount))
+                .filter(p -> minSizeCount == null
+                        || distinctVariantValues(p, ProductVariant::getSize).size() >= minSizeCount)
+                .filter(p -> minColorCount == null
+                        || distinctVariantValues(p, ProductVariant::getColor).size() >= minColorCount)
                 .sorted(buildComparator(sortBy, sortDir))
                 .collect(Collectors.toList());
 
@@ -143,7 +187,10 @@ public class CustomerProductService {
             String sortDir,
             int page,
             int size) {
-        return getProducts(keyword, categoryId, null, minPrice, maxPrice, color, variantSize, null, sortBy, sortDir, page, size);
+        // All smart filters default to null = "don't apply"
+        return getProducts(keyword, categoryId, null, minPrice, maxPrice, color, variantSize,
+                null, null, null, null, null, null, null, null, null,
+                sortBy, sortDir, page, size);
     }
 
     @Transactional(readOnly = true)
@@ -153,7 +200,9 @@ public class CustomerProductService {
             String sortDir,
             int page,
             int size) {
-        return getProducts(null, categoryId, null, null, null, null, null, null, sortBy, sortDir, page, size);
+        return getProducts(null, categoryId, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null,
+                sortBy, sortDir, page, size);
     }
 
     @Transactional(readOnly = true)
@@ -196,15 +245,13 @@ public class CustomerProductService {
     }
 
     /**
-     * Compute aggregated facets (sizes, colors, genders, price buckets)
-     * for the customer filter sidebar. Each option includes the count
-     * of ACTIVE products in stock that carry that value, so the UI can
-     * show e.g. "Đỏ (12)" and disable options with count = 0.
+     * Compute aggregated facets (sizes, colors, genders, price buckets,
+     * discount buckets, popularity buckets, quality counts) for the
+     * customer filter sidebar.
      *
-     * Reads only ACTIVE products so dead/disabled SKUs don't pollute
-     * the filter panel. Sizes are sorted by a custom order so that
-     * numeric shoe sizes and clothing sizes follow a natural sequence
-     * rather than alphabetical.
+     * The quality / "smart" facets are computed against the entire
+     * active-product set so the sidebar can show "Sản phẩm có hình
+     * ảnh (123)" instead of just blank checkboxes.
      */
     @Transactional(readOnly = true)
     public FilterFacetsDTO getFilterFacets() {
@@ -212,16 +259,13 @@ public class CustomerProductService {
                 .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
                 .collect(Collectors.toList());
 
-        // Build size/color/gender histograms keyed by their stored value
+        // --- size / color / gender histograms (unchanged from before)
         Map<String, Long> sizeCounts = new LinkedHashMap<>();
         Map<String, Long> colorCounts = new LinkedHashMap<>();
         Map<String, Long> genderCounts = new LinkedHashMap<>();
 
-        // Walk all variants; a product may have several variants and each
-        // variant contributes its size/color once. For the histogram we
-        // count distinct PRODUCTS per value, not distinct variants.
-        Map<Integer, java.util.Set<String>> sizesByProduct = new HashMap<>();
-        Map<Integer, java.util.Set<String>> colorsByProduct = new HashMap<>();
+        Map<Integer, Set<String>> sizesByProduct = new HashMap<>();
+        Map<Integer, Set<String>> colorsByProduct = new HashMap<>();
 
         for (Product p : activeProducts) {
             Integer pid = p.getProductId();
@@ -247,7 +291,6 @@ public class CustomerProductService {
             }
         }
 
-        // --- Sort sizes: clothing (S/M/L/XL/XXL) first, then shoe sizes numerically
         List<FacetOptionDTO> sizeOptions = sizeCounts.entrySet().stream()
                 .map(e -> FacetOptionDTO.builder()
                         .value(e.getKey())
@@ -273,7 +316,7 @@ public class CustomerProductService {
                 FacetOptionDTO.builder().value("unisex").label("Unisex").count(genderCounts.getOrDefault("unisex", 0L)).build()
         ).stream().filter(o -> o.getCount() > 0).collect(Collectors.toList());
 
-        // --- Price range + buckets
+        // --- price buckets (unchanged)
         BigDecimal minPrice = null, maxPrice = null;
         for (Product p : activeProducts) {
             BigDecimal price = p.getDiscountPrice() != null && p.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
@@ -283,15 +326,12 @@ public class CustomerProductService {
             if (maxPrice == null || price.compareTo(maxPrice) > 0) maxPrice = price;
         }
 
-        // Pre-defined buckets that match Vietnamese fashion price ranges
-        // (under 200k = phụ kiện, 200-500k = basic, 500-1tr = mid, 1-2tr = premium, 2tr+ = luxury).
-        // Counts are computed against the active-product set so the UI can disable empty buckets.
         BigDecimal[][] bucketDefs = new BigDecimal[][]{
                 { new BigDecimal("0"),       new BigDecimal("200000") },
                 { new BigDecimal("200000"),  new BigDecimal("500000") },
                 { new BigDecimal("500000"),  new BigDecimal("1000000") },
                 { new BigDecimal("1000000"), new BigDecimal("2000000") },
-                { new BigDecimal("2000000"), null }   // 2tr+ tail
+                { new BigDecimal("2000000"), null }
         };
         String[] bucketLabels = new String[]{
                 "Dưới 200k", "200k – 500k", "500k – 1tr", "1tr – 2tr", "Trên 2tr"
@@ -314,6 +354,73 @@ public class CustomerProductService {
                     .build());
         }
 
+        // ===== Smart quality facets =====
+        long withImages = 0, withDesc = 0, withDiscount = 0, complete = 0, inStock = 0;
+        long multiSize = 0, multiColor = 0;
+        for (Product p : activeProducts) {
+            boolean hasImg = productImageRepository.findByProductId(p.getProductId()).stream()
+                    .anyMatch(img -> img.getImageUrl() != null && !img.getImageUrl().isBlank());
+            boolean hasDesc = p.getDescription() != null && !p.getDescription().isBlank();
+            boolean hasDisc = p.getDiscountPrice() != null && p.getBasePrice() != null
+                    && p.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
+                    && p.getDiscountPrice().compareTo(p.getBasePrice()) < 0;
+            List<ProductVariant> variants = productVariantRepository.findByProductId(p.getProductId());
+            int sizeN = (int) variants.stream()
+                    .map(ProductVariant::getSize)
+                    .filter(s -> s != null && !s.isBlank())
+                    .distinct().count();
+            int colorN = (int) variants.stream()
+                    .map(ProductVariant::getColor)
+                    .filter(c -> c != null && !c.isBlank())
+                    .distinct().count();
+            boolean stock = variants.stream()
+                    .anyMatch(v -> v.getStockQuantity() != null && v.getStockQuantity() > 0);
+
+            if (hasImg) withImages++;
+            if (hasDesc) withDesc++;
+            if (hasDisc) withDiscount++;
+            if (hasImg && hasDesc && sizeN >= 1) complete++;
+            if (stock) inStock++;
+            if (sizeN >= 3) multiSize++;
+            if (colorN >= 2) multiColor++;
+        }
+
+        // --- discount-percent buckets (≥10, ≥30, ≥50, ≥70)
+        int[] thresholds = { 10, 30, 50, 70 };
+        String[] labels = { "Giảm ≥ 10%", "Giảm ≥ 30%", "Giảm ≥ 50%", "Giảm ≥ 70%" };
+        List<DiscountBucketDTO> discountBuckets = new ArrayList<>();
+        for (int i = 0; i < thresholds.length; i++) {
+            int t = thresholds[i];
+            long cnt = activeProducts.stream()
+                    .map(this::computeDiscountPercent)
+                    .filter(Objects::nonNull)
+                    .filter(pct -> pct >= t)
+                    .count();
+            discountBuckets.add(DiscountBucketDTO.builder()
+                    .label(labels[i])
+                    .minPercent(t)
+                    .maxPercent(100)
+                    .count(cnt)
+                    .build());
+        }
+
+        // --- popularity buckets (sold-count thresholds)
+        int[] soldThresholds = { 50, 100, 300 };
+        String[] soldLabels = { "Bán chạy (≥50)", "Hot (≥100)", "Top (≥300)" };
+        List<PopularityBucketDTO> popularityBuckets = new ArrayList<>();
+        for (int i = 0; i < soldThresholds.length; i++) {
+            int t = soldThresholds[i];
+            long cnt = activeProducts.stream()
+                    .filter(p -> p.getSoldCount() != null && p.getSoldCount() >= t)
+                    .count();
+            popularityBuckets.add(PopularityBucketDTO.builder()
+                    .label(soldLabels[i])
+                    .metric("sold")
+                    .minCount(t)
+                    .count(cnt)
+                    .build());
+        }
+
         return FilterFacetsDTO.builder()
                 .sizes(sizeOptions)
                 .colors(colorOptions)
@@ -321,6 +428,19 @@ public class CustomerProductService {
                 .minPrice(minPrice == null ? null : minPrice.longValue())
                 .maxPrice(maxPrice == null ? null : maxPrice.longValue())
                 .priceBuckets(buckets)
+                // smart facets:
+                .allHaveImages(withImages == activeProducts.size() && !activeProducts.isEmpty())
+                .allHaveDescription(withDesc == activeProducts.size() && !activeProducts.isEmpty())
+                .allHaveDiscount(withDiscount == activeProducts.size() && !activeProducts.isEmpty())
+                .productsWithImages(withImages)
+                .productsWithDescription(withDesc)
+                .productsWithDiscount(withDiscount)
+                .productsComplete(complete)
+                .productsInStock(inStock)
+                .productsWithMultipleSizes(multiSize)
+                .productsWithMultipleColors(multiColor)
+                .discountBuckets(discountBuckets)
+                .popularityBuckets(popularityBuckets)
                 .build();
     }
 
@@ -344,16 +464,12 @@ public class CustomerProductService {
             case "ONE SIZE":
             case "MINI":  return 100;
         }
-        // Try numeric (shoe sizes like "39", waist "30", etc.)
         try { return 1000 + Integer.parseInt(s.trim()); }
         catch (NumberFormatException ignored) { return 9000; }
     }
 
     /**
      * Best-effort hex color guess from the Vietnamese color label.
-     * Used to render a colored swatch next to each color pill in the
-     * filter sidebar. If we don't recognise the label we fall back to
-     * a neutral grey so the UI never breaks.
      */
     private String guessColorHex(String label) {
         if (label == null) return "#9ca3af";
@@ -515,6 +631,31 @@ public class CustomerProductService {
         if (p.getBasePrice() == null || p.getDiscountPrice() == null) return BigDecimal.ZERO;
         if (p.getBasePrice().compareTo(BigDecimal.ZERO) == 0) return BigDecimal.ZERO;
         return p.getBasePrice().subtract(p.getDiscountPrice());
+    }
+
+    /**
+     * Returns the integer percent discount (rounded half-up) of a
+     * product, or null if the product isn't on sale.
+     */
+    private Integer computeDiscountPercent(Product p) {
+        if (p.getBasePrice() == null || p.getDiscountPrice() == null) return null;
+        if (p.getBasePrice().compareTo(BigDecimal.ZERO) <= 0) return null;
+        if (p.getDiscountPrice().compareTo(p.getBasePrice()) >= 0) return null;
+        return p.getBasePrice().subtract(p.getDiscountPrice())
+                .multiply(BigDecimal.valueOf(100))
+                .divide(p.getBasePrice(), 0, RoundingMode.HALF_UP)
+                .intValue();
+    }
+
+    /** Returns distinct non-blank values of a variant field for the given product. */
+    private Set<String> distinctVariantValues(Product p,
+            java.util.function.Function<ProductVariant, String> extractor) {
+        Set<String> out = new HashSet<>();
+        for (ProductVariant v : productVariantRepository.findByProductId(p.getProductId())) {
+            String s = extractor.apply(v);
+            if (s != null && !s.isBlank()) out.add(s);
+        }
+        return out;
     }
 
     // ===== Recommendation lists =====
