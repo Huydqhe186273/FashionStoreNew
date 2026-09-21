@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
+import ThemeBootstrap from './styles/ThemeBootstrap';
 import DashboardOverview from './pages/DashboardOverview';
 import ManageUsers from './pages/ManageUsers';
 import ManageStaff from './pages/ManageStaff';
@@ -29,6 +30,7 @@ function CustomerShell({ children }) {
 export default function App() {
   return (
     <Router>
+      <ThemeBootstrap />
       <Routes>
         <Route path="/shop" element={<CustomerShell><ProductListPage /></CustomerShell>} />
         <Route path="/shop/search" element={<CustomerShell><ProductSearchPage /></CustomerShell>} />
