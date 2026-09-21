@@ -17,6 +17,18 @@ spring:
         format_sql: true
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: trungnt7505@gmail.com
+    password: mzra umrl xkzb fbhv
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 server:
   port: 8080
 

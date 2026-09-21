@@ -1,7 +1,16 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 export default function Sidebar() {
+  const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <aside>
       <div>
@@ -50,11 +59,16 @@ export default function Sidebar() {
         </ul>
       </div>
 
-      <div className="user-profile">
-        <div className="user-avatar">AD</div>
-        <div className="user-info">
-          <div className="name">Admin System</div>
-          <div className="role">admin@fashionstore.vn</div>
+      <div className="user-profile flex flex-col cursor-pointer" onClick={handleLogout} title="Click to logout">
+        <div className="flex items-center gap-3">
+          <div className="user-avatar">{user?.email?.charAt(0).toUpperCase() || 'U'}</div>
+          <div className="user-info">
+            <div className="name">{user?.role === 'admin' ? 'Administrator' : 'User'}</div>
+            <div className="role text-xs truncate max-w-[120px]">{user?.email}</div>
+          </div>
+        </div>
+        <div className="text-red-500 text-xs mt-2 text-center hover:underline">
+          Đăng xuất (Logout)
         </div>
       </div>
     </aside>
