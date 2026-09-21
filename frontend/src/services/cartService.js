@@ -20,12 +20,27 @@ export const addToCart = async (userId, variantId, quantity) => {
   return response.data;
 };
 
-export const createPaymentLink = async (userId) => {
+export const createAddress = async (userId, addressData) => {
+  const response = await api.post(`/addresses?userId=${userId}`, addressData);
+  return response.data;
+};
+
+export const createOrder = async (userId, addressId) => {
+  const response = await api.post(`/orders/create-from-cart?userId=${userId}&addressId=${addressId}`);
+  return response.data;
+};
+
+export const createPaymentLink = async (orderId) => {
   try {
-    const response = await api.post(`/payment/create-payment-link?userId=${userId}`);
+    const response = await api.post(`/payment/create-payment-link?orderId=${orderId}`);
     return response.data;
   } catch (error) {
     console.error("Lỗi tạo link thanh toán PayOS:", error);
     throw error;
   }
+};
+
+export const verifyPayment = async (orderId) => {
+  const response = await api.post(`/payment/verify?orderId=${orderId}`);
+  return response.data;
 };
