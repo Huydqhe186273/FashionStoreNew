@@ -14,14 +14,8 @@ export default function Sidebar() {
   return (
     <aside>
       <div>
-        <div className="brand-logo">
-          <div className="brand-icon">
-            <svg viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-          </div>
-          <div>
-            <div className="brand-title">Fashion Store</div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Admin React SPA</div>
-          </div>
+        <div className="brand-logo" style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>
+          <img src="/logo.jpg" alt="Fashion Store" style={{ height: '70px', objectFit: 'contain' }} />
         </div>
 
         <ul className="nav-menu">
@@ -56,19 +50,32 @@ export default function Sidebar() {
             </NavLink>
           </li>
 
+          <li className="nav-item">
+            <NavLink to="/" className="nav-item" style={{ color: '#2563eb' }}>
+              <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path d="M9 22V12h6v10" /></svg>
+              Về Trang Mua Sắm
+            </NavLink>
+          </li>
         </ul>
       </div>
 
-      <div className="user-profile flex flex-col cursor-pointer" onClick={handleLogout} title="Click to logout">
-        <div className="flex items-center gap-3">
+      <div 
+        className="user-profile" 
+        style={{ flexDirection: 'column', alignItems: 'stretch', gap: '12px', cursor: 'pointer', marginTop: 'auto' }} 
+        onClick={handleLogout} 
+        title="Click to logout"
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div className="user-avatar">{user?.email?.charAt(0).toUpperCase() || 'U'}</div>
-          <div className="user-info">
+          <div className="user-info" style={{ overflow: 'hidden' }}>
             <div className="name">{user?.role === 'admin' ? 'Administrator' : 'User'}</div>
-            <div className="role text-xs truncate max-w-[120px]">{user?.email}</div>
+            <div className="role" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }}>
+              {user?.email}
+            </div>
           </div>
         </div>
-        <div className="text-red-500 text-xs mt-2 text-center hover:underline">
-          Đăng xuất (Logout)
+        <div style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', fontWeight: '600', padding: '6px 0', borderTop: '1px solid #e5e7eb' }}>
+          Đăng xuất
         </div>
       </div>
     </aside>

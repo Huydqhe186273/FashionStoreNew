@@ -9,10 +9,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 @RestController
 @RequestMapping("/api/admin/dashboard")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class DashboardController {
 
     private final DashboardService dashboardService;

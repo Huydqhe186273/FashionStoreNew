@@ -10,7 +10,9 @@ export default function Home() {
     <div className="home-container">
       {/* Navbar */}
       <nav className="navbar">
-        <Link to="/" className="nav-brand">FASHION STORE</Link>
+        <Link to="/" className="nav-brand">
+          <img src="/logo.jpg" alt="Fashion Store" style={{ height: '50px', objectFit: 'contain' }} />
+        </Link>
         <div className="nav-links">
           <Link to="/" className="nav-link">Home</Link>
           <Link to="#" className="nav-link">Shop</Link>
@@ -21,8 +23,9 @@ export default function Home() {
           {user ? (
             <>
               {user.role === 'admin' && (
-                <Link to="/dashboard" className="btn-outline">Dashboard</Link>
+                <Link to="/admin" className="btn-outline">Dashboard</Link>
               )}
+              <Link to="/store/cart" className="btn-outline">Giỏ hàng</Link>
               <Link to="/profile" className="btn-outline">Profile</Link>
               <button onClick={logout} className="btn-primary" style={{ padding: '8px 16px', borderRadius: '8px' }}>
                 Logout
