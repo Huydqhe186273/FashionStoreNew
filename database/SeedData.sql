@@ -430,9 +430,9 @@ INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (109, 'S', 'Be', 12, 'APNU-EL-S-BE'), (109, 'M', 'Be', 18, 'APNU-EL-M-BE'), (109, 'L', 'Be', 14, 'APNU-EL-L-BE'), (109, 'S', 'Đen', 10, 'APNU-EL-S-DEN'), (109, 'M', 'Đen', 16, 'APNU-EL-M-DEN'),
 (110, 'M', 'Đen', 20, 'APN-HD-M-DEN'), (110, 'L', 'Đen', 24, 'APN-HD-L-DEN'), (110, 'XL', 'Đen', 18, 'APN-HD-XL-DEN'), (110, 'M', 'Xám', 16, 'APN-HD-M-GRA'), (110, 'L', 'Xám', 20, 'APN-HD-L-GRA');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(108, 'https://picsum.photos/seed/ao-phao-800/600/800', 1), (108, 'https://picsum.photos/seed/ao-phao-800-b/600/800', 0), (108, 'https://picsum.photos/seed/ao-phao-800-c/600/800', 0),
-(109, 'https://picsum.photos/seed/ao-phao-nu-dai/600/800', 1), (109, 'https://picsum.photos/seed/ao-phao-nu-dai-b/600/800', 0),
-(110, 'https://picsum.photos/seed/ao-phao-nam-puffer/600/800', 1), (110, 'https://picsum.photos/seed/ao-phao-nam-puffer-b/600/800', 0);
+(108, 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&q=80&fit=crop', 1), (108, 'https://images.unsplash.com/photo-1548883354-94bcfe321cbb?w=600&q=80&fit=crop', 0), (108, 'https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?w=600&q=80&fit=crop', 0),
+(109, 'https://images.unsplash.com/photo-1544022613-e0ca75dff7d5?w=600&q=80&fit=crop', 1), (109, 'https://images.unsplash.com/photo-1578582928712-3b9b3b2c9b5e?w=600&q=80&fit=crop', 0),
+(110, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80&fit=crop', 1), (110, 'https://images.unsplash.com/photo-1605908502724-9093a79a1b39?w=600&q=80&fit=crop', 0);
 
 /* --- 111-112: Áo vest --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
@@ -440,8 +440,8 @@ INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (111, 'M', 'Xanh Navy', 10, 'AVN-CL-M-NAV'), (111, 'L', 'Xanh Navy', 14, 'AVN-CL-L-NAV'),
 (112, 'S', 'Be Caro', 12, 'AVNU-BC-S-BC'), (112, 'M', 'Be Caro', 18, 'AVNU-BC-M-BC'), (112, 'L', 'Be Caro', 14, 'AVNU-BC-L-BC'), (112, 'S', 'Xám Caro', 10, 'AVNU-BC-S-GC');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(111, 'https://picsum.photos/seed/ao-vest-nam-cs/600/800', 1), (111, 'https://picsum.photos/seed/ao-vest-nam-cs-b/600/800', 0),
-(112, 'https://picsum.photos/seed/ao-vest-nu-bc/600/800', 1), (112, 'https://picsum.photos/seed/ao-vest-nu-bc-b/600/800', 0);
+(111, 'https://images.unsplash.com/photo-1507679799987-c53779524cc8?w=600&q=80&fit=crop', 1), (111, 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80&fit=crop', 0),
+(112, 'https://images.unsplash.com/photo-1551489186-cf8726f514f8?w=600&q=80&fit=crop', 1), (112, 'https://images.unsplash.com/photo-1572804013309-a59a8d4f7af4?w=600&q=80&fit=crop', 0);
 
 /* --- 113-115: Quần short nam --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
@@ -449,25 +449,25 @@ INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (114, 'M', 'Đen', 30, 'QSN-PF-M-DEN'), (114, 'L', 'Đen', 38, 'QSN-PF-L-DEN'), (114, 'XL', 'Đen', 26, 'QSN-PF-XL-DEN'), (114, 'M', 'Xám', 24, 'QSN-PF-M-GRA'),
 (115, '30', 'Xanh Nhạt', 20, 'QSN-DV-30-XN'), (115, '32', 'Xanh Nhạt', 28, 'QSN-DV-32-XN'), (115, '34', 'Xanh Nhạt', 22, 'QSN-DV-34-XN'), (115, '30', 'Xanh Đậm', 16, 'QSN-DV-30-XD');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(113, 'https://picsum.photos/seed/qs-nam-kaki/600/800', 1), (113, 'https://picsum.photos/seed/qs-nam-kaki-b/600/800', 0),
-(114, 'https://picsum.photos/seed/qs-nam-sport/600/800', 1), (114, 'https://picsum.photos/seed/qs-nam-sport-b/600/800', 0),
-(115, 'https://picsum.photos/seed/qs-nam-denim/600/800', 1), (115, 'https://picsum.photos/seed/qs-nam-denim-b/600/800', 0);
+(113, 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&q=80&fit=crop', 1), (113, 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=600&q=80&fit=crop', 0),
+(114, 'https://images.unsplash.com/photo-1565693413579-8a73ce8d8a4f?w=600&q=80&fit=crop', 1), (114, 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80&fit=crop', 0),
+(115, 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&q=80&fit=crop', 1), (115, 'https://images.unsplash.com/photo-1604176354204-9268737828e4?w=600&q=80&fit=crop', 0);
 
 /* --- 116-117: Quần short nữ --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (116, 'S', 'Xanh Nhạt', 22, 'QSNU-CH-S-XN'), (116, 'M', 'Xanh Nhạt', 30, 'QSNU-CH-M-XN'), (116, 'L', 'Xanh Nhạt', 24, 'QSNU-CH-L-XN'), (116, 'M', 'Đen', 18, 'QSNU-CH-M-DEN'),
 (117, 'S', 'Trắng', 20, 'QSNU-LI-S-TRA'), (117, 'M', 'Trắng', 28, 'QSNU-LI-M-TRA'), (117, 'L', 'Trắng', 22, 'QSNU-LI-L-TRA'), (117, 'M', 'Be', 18, 'QSNU-LI-M-BE');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(116, 'https://picsum.photos/seed/qs-nu-denim/600/800', 1), (116, 'https://picsum.photos/seed/qs-nu-denim-b/600/800', 0),
-(117, 'https://picsum.photos/seed/qs-nu-linen/600/800', 1), (117, 'https://picsum.photos/seed/qs-nu-linen-b/600/800', 0);
+(116, 'https://images.unsplash.com/photo-1582142306909-195724d33ffc?w=600&q=80&fit=crop', 1), (116, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80&fit=crop', 0),
+(117, 'https://images.unsplash.com/photo-1583496661160-fb5886a13d28?w=600&q=80&fit=crop', 1), (117, 'https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=600&q=80&fit=crop', 0);
 
 /* --- 118-119: Quần baggy nữ --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (118, 'S', 'Be', 22, 'QBNU-CG-S-BE'), (118, 'M', 'Be', 30, 'QBNU-CG-M-BE'), (118, 'L', 'Be', 24, 'QBNU-CG-L-BE'), (118, 'M', 'Xanh Olive', 18, 'QBNU-CG-M-OLV'),
 (119, 'S', 'Xanh Nhạt', 20, 'QBNU-OS-S-XN'), (119, 'M', 'Xanh Nhạt', 28, 'QBNU-OS-M-XN'), (119, 'L', 'Xanh Nhạt', 22, 'QBNU-OS-L-XN'), (119, 'M', 'Xanh Đậm', 16, 'QBNU-OS-M-XD');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(118, 'https://picsum.photos/seed/qb-nu-cargo/600/800', 1), (118, 'https://picsum.photos/seed/qb-nu-cargo-b/600/800', 0),
-(119, 'https://picsum.photos/seed/qb-nu-jeans/600/800', 1), (119, 'https://picsum.photos/seed/qb-nu-jeans-b/600/800', 0);
+(118, 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&q=80&fit=crop', 1), (118, 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&q=80&fit=crop', 0),
+(119, 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&q=80&fit=crop', 1), (119, 'https://images.unsplash.com/photo-1604176354204-9268737828e4?w=600&q=80&fit=crop', 0);
 
 /* --- 120-122: Váy ngắn --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
@@ -475,17 +475,17 @@ INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (121, 'S', 'Xanh Nhạt', 18, 'VYN-DN-S-XN'), (121, 'M', 'Xanh Nhạt', 24, 'VYN-DN-M-XN'), (121, 'L', 'Xanh Nhạt', 20, 'VYN-DN-L-XN'), (121, 'M', 'Trắng', 14, 'VYN-DN-M-TRA'),
 (122, 'S', 'Be Hoa', 16, 'VYN-HN-S-BH'), (122, 'M', 'Be Hoa', 22, 'VYN-HN-M-BH'), (122, 'L', 'Be Hoa', 18, 'VYN-HN-L-BH'), (122, 'M', 'Hồng Hoa', 12, 'VYN-HN-M-HH');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(120, 'https://picsum.photos/seed/vay-tennis/600/800', 1), (120, 'https://picsum.photos/seed/vay-tennis-b/600/800', 0),
-(121, 'https://picsum.photos/seed/vay-denim/600/800', 1), (121, 'https://picsum.photos/seed/vay-denim-b/600/800', 0),
-(122, 'https://picsum.photos/seed/vay-hoa/600/800', 1), (122, 'https://picsum.photos/seed/vay-hoa-b/600/800', 0);
+(120, 'https://images.unsplash.com/photo-1582142306909-195724d33ffc?w=600&q=80&fit=crop', 1), (120, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80&fit=crop', 0),
+(121, 'https://images.unsplash.com/photo-1583496661160-fb5886a13d28?w=600&q=80&fit=crop', 1), (121, 'https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=600&q=80&fit=crop', 0),
+(122, 'https://images.unsplash.com/photo-1551803091-e20673f15770?w=600&q=80&fit=crop', 1), (122, 'https://images.unsplash.com/photo-1564257577-2d3ee0f6f8b6?w=600&q=80&fit=crop', 0);
 
 /* --- 123-124: Váy dài --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (123, 'S', 'Be', 16, 'VYD-MI-S-BE'), (123, 'M', 'Be', 22, 'VYD-MI-M-BE'), (123, 'L', 'Be', 18, 'VYD-MI-L-BE'), (123, 'M', 'Trắng Ngà', 14, 'VYD-MI-M-NA'),
 (124, 'S', 'Nâu Đất', 14, 'VYD-VT-S-ND'), (124, 'M', 'Nâu Đất', 20, 'VYD-VT-M-ND'), (124, 'L', 'Nâu Đất', 16, 'VYD-VT-L-ND');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(123, 'https://picsum.photos/seed/vay-midi-lua/600/800', 1), (123, 'https://picsum.photos/seed/vay-midi-lua-b/600/800', 0),
-(124, 'https://picsum.photos/seed/vay-vintage/600/800', 1), (124, 'https://picsum.photos/seed/vay-vintage-b/600/800', 0);
+(123, 'https://images.unsplash.com/photo-1577900232427-18219b9166a0?w=600&q=80&fit=crop', 1), (123, 'https://images.unsplash.com/photo-1612722432474-b971cdcea546?w=600&q=80&fit=crop', 0),
+(124, 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&q=80&fit=crop', 1), (124, 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80&fit=crop', 0);
 
 /* --- 125-127: Chân váy --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
@@ -493,17 +493,17 @@ INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (126, 'S', 'Trắng', 18, 'CVNU-TN-S-TRA'), (126, 'M', 'Trắng', 26, 'CVNU-TN-M-TRA'), (126, 'L', 'Trắng', 22, 'CVNU-TN-L-TRA'),
 (127, 'S', 'Xanh Nhạt', 14, 'CVNU-DN-S-XN'), (127, 'M', 'Xanh Nhạt', 22, 'CVNU-DN-M-XN'), (127, 'L', 'Xanh Nhạt', 18, 'CVNU-DN-L-XN');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(125, 'https://picsum.photos/seed/cv-but-chi/600/800', 1), (125, 'https://picsum.photos/seed/cv-but-chi-b/600/800', 0),
-(126, 'https://picsum.photos/seed/cv-tennis-trang/600/800', 1), (126, 'https://picsum.photos/seed/cv-tennis-trang-b/600/800', 0),
-(127, 'https://picsum.photos/seed/cv-jean/600/800', 1), (127, 'https://picsum.photos/seed/cv-jean-b/600/800', 0);
+(125, 'https://images.unsplash.com/photo-1583846783214-7229a91b20ed?w=600&q=80&fit=crop', 1), (125, 'https://images.unsplash.com/photo-1572804013309-a59a8d4f7af4?w=600&q=80&fit=crop', 0),
+(126, 'https://images.unsplash.com/photo-1583496661160-fb5886a13d28?w=600&q=80&fit=crop', 1), (126, 'https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=600&q=80&fit=crop', 0),
+(127, 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&q=80&fit=crop', 1), (127, 'https://images.unsplash.com/photo-1604176354204-9268737828e4?w=600&q=80&fit=crop', 0);
 
 /* --- 128-129: Đầm dài --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (128, 'S', 'Đen Hoa', 16, 'DDNU-MX-S-DH'), (128, 'M', 'Đen Hoa', 22, 'DDNU-MX-M-DH'), (128, 'L', 'Đen Hoa', 18, 'DDNU-MX-L-DH'), (128, 'M', 'Xanh Hoa', 14, 'DDNU-MX-M-XH'),
 (129, 'S', 'Đỏ', 12, 'DDNU-LS-S-DO'), (129, 'M', 'Đỏ', 18, 'DDNU-LS-M-DO'), (129, 'L', 'Đỏ', 14, 'DDNU-LS-L-DO');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(128, 'https://picsum.photos/seed/dam-maxi-hoa/600/800', 1), (128, 'https://picsum.photos/seed/dam-maxi-hoa-b/600/800', 0),
-(129, 'https://picsum.photos/seed/dam-do-tiec/600/800', 1), (129, 'https://picsum.photos/seed/dam-do-tiec-b/600/800', 0);
+(128, 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=600&q=80&fit=crop', 1), (128, 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80&fit=crop', 0),
+(129, 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600&q=80&fit=crop', 1), (129, 'https://images.unsplash.com/photo-1612722432474-b971cdcea546?w=600&q=80&fit=crop', 0);
 
 /* --- 130-132: Đầm công sở --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
@@ -511,83 +511,83 @@ INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (131, 'S', 'Be Sọc', 18, 'DCNU-KS-S-BS'), (131, 'M', 'Be Sọc', 24, 'DCNU-KS-M-BS'), (131, 'L', 'Be Sọc', 20, 'DCNU-KS-L-BS'),
 (132, 'S', 'Xanh Navy', 14, 'DCNU-TD-S-NAV'), (132, 'M', 'Xanh Navy', 22, 'DCNU-TD-M-NAV'), (132, 'L', 'Xanh Navy', 18, 'DCNU-TD-L-NAV'), (132, 'M', 'Đen', 14, 'DCNU-TD-M-DEN');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(130, 'https://picsum.photos/seed/dam-cs-den/600/800', 1), (130, 'https://picsum.photos/seed/dam-cs-den-b/600/800', 0),
-(131, 'https://picsum.photos/seed/dam-cs-be-soc/600/800', 1), (131, 'https://picsum.photos/seed/dam-cs-be-soc-b/600/800', 0),
-(132, 'https://picsum.photos/seed/dam-cs-navy/600/800', 1), (132, 'https://picsum.photos/seed/dam-cs-navy-b/600/800', 0);
+(130, 'https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?w=600&q=80&fit=crop', 1), (130, 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80&fit=crop', 0),
+(131, 'https://images.unsplash.com/photo-1551803091-e20673f15770?w=600&q=80&fit=crop', 1), (131, 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&q=80&fit=crop', 0),
+(132, 'https://images.unsplash.com/photo-1495121605193-b116b5b9c5fe?w=600&q=80&fit=crop', 1), (132, 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80&fit=crop', 0);
 
 /* --- 133-134: Giày thể thao --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (133, '39', 'Trắng', 24, 'GTNU-SN-39-TRA'), (133, '40', 'Trắng', 32, 'GTNU-SN-40-TRA'), (133, '41', 'Trắng', 36, 'GTNU-SN-41-TRA'), (133, '42', 'Trắng', 28, 'GTNU-SN-42-TRA'), (133, '40', 'Đen', 22, 'GTNU-SN-40-DEN'), (133, '41', 'Đen', 26, 'GTNU-SN-41-DEN'),
 (134, '40', 'Đen', 18, 'GTN-RU-40-DEN'), (134, '41', 'Đen', 24, 'GTN-RU-41-DEN'), (134, '42', 'Đen', 20, 'GTN-RU-42-DEN'), (134, '43', 'Đen', 16, 'GTN-RU-43-DEN'), (134, '41', 'Xám', 14, 'GTN-RU-41-GRA');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(133, 'https://picsum.photos/seed/sneaker-trang/600/600', 1), (133, 'https://picsum.photos/seed/sneaker-trang-b/600/600', 0), (133, 'https://picsum.photos/seed/sneaker-trang-c/600/600', 0),
-(134, 'https://picsum.photos/seed/running-den/600/600', 1), (134, 'https://picsum.photos/seed/running-den-b/600/600', 0);
+(133, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80&fit=crop', 1), (133, 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=600&q=80&fit=crop', 0), (133, 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=600&q=80&fit=crop', 0),
+(134, 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=600&q=80&fit=crop', 1), (134, 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&q=80&fit=crop', 0);
 
 /* --- 135-136: Giày da --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (135, '40', 'Đen', 14, 'GDN-TN-40-DEN'), (135, '41', 'Đen', 20, 'GDN-TN-41-DEN'), (135, '42', 'Đen', 16, 'GDN-TN-42-DEN'), (135, '41', 'Nâu', 12, 'GDN-TN-41-NAU'),
 (136, '37', 'Be', 14, 'GDNU-LF-37-BE'), (136, '38', 'Be', 18, 'GDNU-LF-38-BE'), (136, '39', 'Be', 16, 'GDNU-LF-39-BE'), (136, '38', 'Nâu', 12, 'GDNU-LF-38-NAU');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(135, 'https://picsum.photos/seed/giay-tay-den/600/600', 1), (135, 'https://picsum.photos/seed/giay-tay-den-b/600/600', 0),
-(136, 'https://picsum.photos/seed/loafer-be/600/600', 1), (136, 'https://picsum.photos/seed/loafer-be-b/600/600', 0);
+(135, 'https://images.unsplash.com/photo-1614252369475-531eba835eb1?w=600&q=80&fit=crop', 1), (135, 'https://images.unsplash.com/photo-1531310197839-ccf54634509e?w=600&q=80&fit=crop', 0),
+(136, 'https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=600&q=80&fit=crop', 1), (136, 'https://images.unsplash.com/photo-1564609060031-6e5c3c8a5b8e?w=600&q=80&fit=crop', 0);
 
 /* --- 137: Sandal --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (137, '37', 'Nâu', 18, 'SDN-DB-37-NAU'), (137, '38', 'Nâu', 24, 'SDN-DB-38-NAU'), (137, '39', 'Nâu', 22, 'SDN-DB-39-NAU'), (137, '38', 'Be', 16, 'SDN-DB-38-BE');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(137, 'https://picsum.photos/seed/sandal-de-bet/600/600', 1), (137, 'https://picsum.photos/seed/sandal-de-bet-b/600/600', 0);
+(137, 'https://images.unsplash.com/photo-1603487742131-4160ec999306?w=600&q=80&fit=crop', 1), (137, 'https://images.unsplash.com/photo-1531310197839-ccf54634509e?w=600&q=80&fit=crop', 0);
 
 /* --- 138-139: Giày cao gót --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (138, '37', 'Đen', 18, 'GGNU-MN-37-DEN'), (138, '38', 'Đen', 24, 'GGNU-MN-38-DEN'), (138, '39', 'Đen', 20, 'GGNU-MN-39-DEN'), (138, '38', 'Be', 14, 'GGNU-MN-38-BE'), (138, '38', 'Nude', 14, 'GGNU-MN-38-NUD'),
 (139, '37', 'Hồng Pastel', 14, 'GGNU-QM-37-HP'), (139, '38', 'Hồng Pastel', 20, 'GGNU-QM-38-HP'), (139, '39', 'Hồng Pastel', 16, 'GGNU-QM-39-HP'), (139, '38', 'Trắng', 12, 'GGNU-QM-38-TRA');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(138, 'https://picsum.photos/seed/caogot-den/600/600', 1), (138, 'https://picsum.photos/seed/caogot-den-b/600/600', 0),
-(139, 'https://picsum.photos/seed/caogot-pastel/600/600', 1), (139, 'https://picsum.photos/seed/caogot-pastel-b/600/600', 0);
+(138, 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=80&fit=crop', 1), (138, 'https://images.unsplash.com/photo-1581101767113-d1f1f8d2f8c7?w=600&q=80&fit=crop', 0),
+(139, 'https://images.unsplash.com/photo-1535043934128-cf0b28ec52f3?w=600&q=80&fit=crop', 1), (139, 'https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=600&q=80&fit=crop', 0);
 
 /* --- 140-141: Balo --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (140, '15"', 'Đen', 24, 'BLN-LT-15-DEN'), (140, '15"', 'Xám', 22, 'BLN-LT-15-GRA'),
 (141, 'Mini', 'Đen', 18, 'BLNU-MN-MNI-DEN'), (141, 'Mini', 'Be', 16, 'BLNU-MN-MNI-BE');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(140, 'https://picsum.photos/seed/balo-laptop/600/600', 1), (140, 'https://picsum.photos/seed/balo-laptop-b/600/600', 0),
-(141, 'https://picsum.photos/seed/balo-mini/600/600', 1), (141, 'https://picsum.photos/seed/balo-mini-b/600/600', 0);
+(140, 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80&fit=crop', 1), (140, 'https://images.unsplash.com/photo-1547949003-9792a18a2601?w=600&q=80&fit=crop', 0),
+(141, 'https://images.unsplash.com/photo-1581605405669-fcdf81165afa?w=600&q=80&fit=crop', 1), (141, 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80&fit=crop', 0);
 
 /* --- 142: Túi đeo chéo --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (142, 'One Size', 'Xanh Rêu', 16, 'TDN-CV-OS-RX'), (142, 'One Size', 'Nâu', 18, 'TDN-CV-OS-NAU');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(142, 'https://picsum.photos/seed/tui-cheo-canvas/600/600', 1), (142, 'https://picsum.photos/seed/tui-cheo-canvas-b/600/600', 0);
+(142, 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80&fit=crop', 1), (142, 'https://images.unsplash.com/photo-1559563458-527698bf5295?w=600&q=80&fit=crop', 0);
 
 /* --- 143: Ví nam --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (143, 'Ngang', 'Đen', 18, 'VN-DB-NG-DEN'), (143, 'Ngang', 'Nâu', 16, 'VN-DB-NG-NAU');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(143, 'https://picsum.photos/seed/vi-nam-den/600/600', 1), (143, 'https://picsum.photos/seed/vi-nam-den-b/600/600', 0);
+(143, 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&q=80&fit=crop', 1), (143, 'https://images.unsplash.com/photo-1606503825008-909a67e63c3d?w=600&q=80&fit=crop', 0);
 
 /* --- 144: Đồng hồ --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (144, 'One Size', 'Dây Đen', 16, 'DHNU-MN-OS-DD'), (144, 'One Size', 'Dây Nâu', 18, 'DHNU-MN-OS-DN'), (144, 'One Size', 'Mặt Vàng', 12, 'DHNU-MN-OS-MV');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(144, 'https://picsum.photos/seed/dongho-den/600/600', 1), (144, 'https://picsum.photos/seed/dongho-den-b/600/600', 0);
+(144, 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80&fit=crop', 1), (144, 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=600&q=80&fit=crop', 0);
 
 /* --- 145: Kính mát --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (145, 'One Size', 'Vàng', 16, 'KM-AV-OS-VA'), (145, 'One Size', 'Bạc', 14, 'KM-AV-OS-BAC');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(145, 'https://picsum.photos/seed/kinh-mat-aviator/600/600', 1), (145, 'https://picsum.photos/seed/kinh-mat-aviator-b/600/600', 0);
+(145, 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600&q=80&fit=crop', 1), (145, 'https://images.unsplash.com/photo-1577803645773-f96470509666?w=600&q=80&fit=crop', 0);
 
 /* --- 146: Mũ lưỡi trai --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (146, 'Free', 'Đen', 24, 'MLT-BC-FR-DEN'), (146, 'Free', 'Be', 22, 'MLT-BC-FR-BE'), (146, 'Free', 'Xanh Rêu', 18, 'MLT-BC-FR-RX');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(146, 'https://picsum.photos/seed/mu-luoi-trai-den/600/600', 1), (146, 'https://picsum.photos/seed/mu-luoi-trai-den-b/600/600', 0);
+(146, 'https://images.unsplash.com/photo-1521369909029-2afed882baee?w=600&q=80&fit=crop', 1), (146, 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600&q=80&fit=crop', 0);
 
 /* --- 147: Khăn len cashmere --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (147, '180x30', 'Be', 18, 'KHLEN-CS-180-BE'), (147, '180x30', 'Xám', 16, 'KHLEN-CS-180-GRA'), (147, '180x30', 'Đỏ', 14, 'KHLEN-CS-180-DO');
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(147, 'https://picsum.photos/seed/khan-len-cashmere/600/600', 1), (147, 'https://picsum.photos/seed/khan-len-cashmere-b/600/600', 0);
+(147, 'https://images.unsplash.com/photo-1601924994987-69e26d4dc8c0?w=600&q=80&fit=crop', 1), (147, 'https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?w=600&q=80&fit=crop', 0);
 
 /* ============================================================
    5. PRODUCT VARIANTS (Biến thể - Size, Color, Stock)

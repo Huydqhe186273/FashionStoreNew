@@ -14,18 +14,21 @@ const flattenCategories = (nodes, depth = 0) => {
 };
 
 /* -----------------------------------------------------------------
-   SMART FILTER SIDEBAR (v2 — quality-aware)
+   PRODUCT FILTER SIDEBAR (v3 — clean, scroll-friendly)
 
-   Now exposes six new chip groups so shoppers can drill into
-   "real" products that have images, descriptions, discounts,
-   variants, and popularity — instead of placeholder rows.
-
-   1. Quality flags       (3 chips)  : Có ảnh, Có mô tả, Còn hàng
-   2. Discount % chips    (4 chips)  : ≥10%, ≥30%, ≥50%, ≥70%
-   3. Popularity chips    (3 chips)  : Bán chạy, Hot, Top
-   4. Size-count chips    (3 chips)  : 1 size, 2-3 sizes, ≥4 sizes
-   5. Color-count chips   (3 chips)  : 1 màu, 2-3 màu, ≥4 màu
-   6. Đầy đủ thông số     (1 chip)   : hoàn thiện (ảnh+mô tả+≥1 size)
+   Layout principles (after v2 feedback "quá nhiều chip rối mắt"):
+     1. NO chip grids. Each section is a collapsible header with
+        a list of radio rows / inline pills — same shape as
+        Shopee / Lazada / most e-commerce filter sidebars.
+     2. ONE smart-quality toggle at the top, then 4 collapsible
+        sections: Category, Price, Size, Color.
+     3. Discount%, popularity, size-count, color-count moved to
+        a small "Thêm bộ lọc" disclosure inside each section
+        (advanced, hidden by default).
+     4. Counts render inline "(123)" so chips don't fight for
+        attention with badges.
+     5. Each section remembers its own open/closed state so the
+        user can collapse the noise.
    ----------------------------------------------------------------- */
 
 const PRICE_PRESETS = [
@@ -36,18 +39,16 @@ const PRICE_PRESETS = [
   { id: '2000',       label: 'Trên 2tr',      min: 2000000, max: null    },
 ];
 
-/** Preset chips for "đầy đủ size" — min distinct sizes threshold. */
-const SIZE_COUNT_PRESETS = [
-  { id: 'size-1', label: '1 size',     minSizeCount: 1 },
-  { id: 'size-2', label: '2–3 sizes',  minSizeCount: 2 },
-  { id: 'size-4', label: '≥4 sizes',   minSizeCount: 4 },
+const DISCOUNT_OPTIONS = [
+  { id: 'd10', label: '≥ 10%', min: 10 },
+  { id: 'd30', label: '≥ 30%', min: 30 },
+  { id: 'd50', label: '≥ 50%', min: 50 },
 ];
 
-/** Preset chips for "đầy đủ màu" — min distinct colors threshold. */
-const COLOR_COUNT_PRESETS = [
-  { id: 'color-1', label: '1 màu',     minColorCount: 1 },
-  { id: 'color-2', label: '2–3 màu',   minColorCount: 2 },
-  { id: 'color-4', label: '≥4 màu',    minColorCount: 4 },
+const POPULARITY_OPTIONS = [
+  { id: 'p50',  label: 'Bán chạy (≥ 50)',  minSoldCount: 50  },
+  { id: 'p100', label: 'Hot (≥ 100)',      minSoldCount: 100 },
+  { id: 'p300', label: 'Top (≥ 300)',      minSoldCount: 300 },
 ];
 
 function detectActivePreset(minPrice, maxPrice) {
@@ -58,10 +59,45 @@ function detectActivePreset(minPrice, maxPrice) {
   return match ? match.id : '';
 }
 
+/* Reusable collapsible header — no external UI lib. */
+function Section({ title, count, open, onToggle, children }) {
+  return (
+    <section className={`filter-section ${open ? 'open' : ''}`}>
+      <button
+        type="button"
+        className="filter-section-header"
+        onClick={onToggle}
+        aria-expanded={open}
+      >
+        <span className="filter-section-title">
+          {title}
+          {typeof count === 'number' && count > 0 && (
+            <span className="filter-section-count">{count}</span>
+          )}
+        </span>
+        <span className="filter-section-caret" aria-hidden="true">▾</span>
+      </button>
+      {open && <div className="filter-section-body">{children}</div>}
+    </section>
+  );
+}
+
 export default function ProductFilterSidebar({ filters, onChange }) {
   const [flat, setFlat] = useState([]);
   const [facets, setFacets] = useState(null);
   const [loadingFacets, setLoadingFacets] = useState(true);
+
+  // Open/closed state — start with everything expanded so the user
+  // sees all filters at first glance; they can collapse as needed.
+  const [openSections, setOpenSections] = useState({
+    category: true,
+    price:    true,
+    size:     true,
+    color:    true,
+    more:     false,
+  });
+  const toggleSection = (key) =>
+    setOpenSections((s) => ({ ...s, [key]: !s[key] }));
 
   // Categories (with product counts)
   useEffect(() => {
@@ -72,7 +108,7 @@ export default function ProductFilterSidebar({ filters, onChange }) {
     return () => { mounted = false; };
   }, []);
 
-  // Aggregated facets (sizes, colors, genders, price buckets, smart facets)
+  // Aggregated facets
   useEffect(() => {
     let mounted = true;
     setLoadingFacets(true);
@@ -93,19 +129,10 @@ export default function ProductFilterSidebar({ filters, onChange }) {
     color: '',
     size: '',
     inStockOnly: false,
-    hasImage: false,
-    hasDescription: false,
-    hasDiscount: false,
     completeOnly: false,
     minDiscountPercent: null,
     minSoldCount: null,
-    minSizeCount: null,
-    minColorCount: null,
   });
-
-  const toggleSize = (s) => update({ size: filters.size === s ? '' : s });
-  const toggleColor = (c) => update({ color: filters.color === c ? '' : c });
-  const toggleBool = (key) => update({ [key]: !filters[key] });
 
   const applyPricePreset = (preset) => {
     if (detectActivePreset(filters.minPrice, filters.maxPrice) === preset.id) {
@@ -115,31 +142,6 @@ export default function ProductFilterSidebar({ filters, onChange }) {
     update({
       minPrice: preset.min === 0 ? '' : String(preset.min),
       maxPrice: preset.max === null ? '' : String(preset.max),
-    });
-  };
-
-  const applyDiscountBucket = (b) => {
-    update({
-      minDiscountPercent:
-        filters.minDiscountPercent === b.minPercent ? null : b.minPercent,
-    });
-  };
-
-  const applyPopularityBucket = (b) => {
-    update({
-      minSoldCount: filters.minSoldCount === b.minCount ? null : b.minCount,
-    });
-  };
-
-  const applySizeCountPreset = (p) => {
-    update({
-      minSizeCount: filters.minSizeCount === p.minSizeCount ? null : p.minSizeCount,
-    });
-  };
-
-  const applyColorCountPreset = (p) => {
-    update({
-      minColorCount: filters.minColorCount === p.minColorCount ? null : p.minColorCount,
     });
   };
 
@@ -161,24 +163,16 @@ export default function ProductFilterSidebar({ filters, onChange }) {
     (filters.color ? 1 : 0) +
     (filters.size ? 1 : 0) +
     (filters.inStockOnly ? 1 : 0) +
-    (filters.hasImage ? 1 : 0) +
-    (filters.hasDescription ? 1 : 0) +
-    (filters.hasDiscount ? 1 : 0) +
     (filters.completeOnly ? 1 : 0) +
     (filters.minDiscountPercent ? 1 : 0) +
-    (filters.minSoldCount ? 1 : 0) +
-    (filters.minSizeCount ? 1 : 0) +
-    (filters.minColorCount ? 1 : 0);
-
-  // Helpers for rendering chips with counts (defensive: backend may not
-  // yet expose the smart facet on older builds).
-  const safe = (v, d = 0) => (typeof v === 'number' ? v : d);
+    (filters.minSoldCount ? 1 : 0);
 
   return (
     <aside className="filter-sidebar">
+      {/* Header — single line so it never grows. */}
       <div className="filter-sidebar-header">
         <h3>
-          Bộ lọc thông minh
+          Bộ lọc
           {activeFilterCount > 0 && (
             <span className="filter-active-count">{activeFilterCount}</span>
           )}
@@ -193,180 +187,76 @@ export default function ProductFilterSidebar({ filters, onChange }) {
         </button>
       </div>
 
-      {/* === Danh mục === */}
-      <div className="filter-group-block">
-        <h4>Danh mục</h4>
-        <div className="filter-categories">
-          <button
-            type="button"
-            className={`filter-cat-pill ${!filters.categoryId ? 'active' : ''}`}
-            onClick={() => update({ categoryId: null })}
-          >
-            Tất cả
-          </button>
-          {flat.map((cat) => (
-            <button
-              key={cat.categoryId}
-              type="button"
-              className={`filter-cat-pill ${filters.categoryId === cat.categoryId ? 'active' : ''}`}
-              style={{ paddingLeft: 10 + cat.depth * 12 }}
-              onClick={() => update({ categoryId: cat.categoryId })}
-            >
-              <span className="filter-cat-label">{cat.name}</span>
-              {typeof cat.productCount === 'number' && (
-                <span className="filter-cat-count">{cat.productCount}</span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* === Giới tính (facet-driven) === */}
-      <div className="filter-group-block">
-        <h4>Giới tính</h4>
-        <div className="filter-radio-row">
-          <label className={`filter-radio ${!filters.gender ? 'active' : ''}`}>
-            <input
-              type="radio"
-              name="gender"
-              checked={!filters.gender}
-              onChange={() => update({ gender: '' })}
-            />
-            <span>Tất cả</span>
-          </label>
-          {(facets?.genders || []).map((opt) => (
-            <label
-              key={opt.value}
-              className={`filter-radio ${filters.gender === opt.value ? 'active' : ''}`}
-              title={`${opt.label} — ${opt.count} sản phẩm`}
-            >
-              <input
-                type="radio"
-                name="gender"
-                checked={filters.gender === opt.value}
-                onChange={() => update({ gender: filters.gender === opt.value ? '' : opt.value })}
-              />
-              <span>{opt.label}</span>
-              <span className="filter-pill-count">{opt.count}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* === Chất lượng sản phẩm (smart chips) === */}
-      <div className="filter-group-block">
-        <h4>
-          Chất lượng sản phẩm
+      {/* ===== Smart quality row — single line, single toggle ===== */}
+      <div className="filter-quality-row">
+        <label className="filter-quality-toggle">
+          <input
+            type="checkbox"
+            checked={!!filters.completeOnly}
+            onChange={(e) => update({ completeOnly: e.target.checked })}
+          />
+          <span>Chỉ sản phẩm hoàn thiện</span>
           {!loadingFacets && facets && (
-            <span className="filter-group-meta" title="Số sản phẩm hoàn thiện">
-              ({safe(facets.productsComplete)} hoàn thiện)
+            <span className="filter-quality-count">
+              ({facets.productsComplete ?? 0})
             </span>
           )}
-        </h4>
-        <div className="filter-quality-chips">
-          <button
-            type="button"
-            className={`filter-quality-chip ${filters.hasImage ? 'active' : ''}`}
-            onClick={() => toggleBool('hasImage')}
-            disabled={!loadingFacets && safe(facets?.productsWithImages) === 0}
-            title="Sản phẩm có ít nhất một hình ảnh"
-          >
-            <span className="filter-quality-icon">🖼</span>
-            <span className="filter-quality-label">Có hình ảnh</span>
-            {!loadingFacets && (
-              <span className="filter-pill-count">{safe(facets?.productsWithImages)}</span>
-            )}
-          </button>
-          <button
-            type="button"
-            className={`filter-quality-chip ${filters.hasDescription ? 'active' : ''}`}
-            onClick={() => toggleBool('hasDescription')}
-            disabled={!loadingFacets && safe(facets?.productsWithDescription) === 0}
-            title="Sản phẩm có mô tả chi tiết"
-          >
-            <span className="filter-quality-icon">📝</span>
-            <span className="filter-quality-label">Có mô tả</span>
-            {!loadingFacets && (
-              <span className="filter-pill-count">{safe(facets?.productsWithDescription)}</span>
-            )}
-          </button>
-          <button
-            type="button"
-            className={`filter-quality-chip ${filters.inStockOnly ? 'active' : ''}`}
-            onClick={() => toggleBool('inStockOnly')}
-            disabled={!loadingFacets && safe(facets?.productsInStock) === 0}
-            title="Sản phẩm còn hàng"
-          >
-            <span className="filter-quality-icon">📦</span>
-            <span className="filter-quality-label">Còn hàng</span>
-            {!loadingFacets && (
-              <span className="filter-pill-count">{safe(facets?.productsInStock)}</span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* === Đầy đủ thông số (1 chip tổng hợp) === */}
-      <div className="filter-group-block">
-        <button
-          type="button"
-          className={`filter-complete-chip ${filters.completeOnly ? 'active' : ''}`}
-          onClick={() => toggleBool('completeOnly')}
-          disabled={!loadingFacets && safe(facets?.productsComplete) === 0}
-          title="Sản phẩm có ảnh + mô tả + ít nhất 1 biến thể size"
-        >
-          <span className="filter-quality-icon">✓</span>
-          <span className="filter-quality-label">Đầy đủ thông số</span>
-          {!loadingFacets && (
-            <span className="filter-pill-count">{safe(facets?.productsComplete)}</span>
+        </label>
+        <label className="filter-quality-toggle">
+          <input
+            type="checkbox"
+            checked={!!filters.inStockOnly}
+            onChange={(e) => update({ inStockOnly: e.target.checked })}
+          />
+          <span>Còn hàng</span>
+          {!loadingFacets && facets && (
+            <span className="filter-quality-count">
+              ({facets.productsInStock ?? 0})
+            </span>
           )}
-        </button>
+        </label>
       </div>
 
-      {/* === Giảm giá theo % === */}
-      <div className="filter-group-block">
-        <h4>Mức giảm giá</h4>
-        <div className="filter-discount-chips">
-          {(facets?.discountBuckets || []).map((b) => (
+      {/* ===== Category ===== */}
+      <Section
+        title="Danh mục"
+        open={openSections.category}
+        onToggle={() => toggleSection('category')}
+      >
+        <ul className="filter-list filter-list-flat">
+          <li>
             <button
-              key={b.minPercent}
               type="button"
-              disabled={b.count === 0 && !loadingFacets}
-              className={`filter-discount-chip ${filters.minDiscountPercent === b.minPercent ? 'active' : ''}`}
-              onClick={() => applyDiscountBucket(b)}
-              title={`Sản phẩm ${b.label.toLowerCase()} (${b.count} sp)`}
+              className={`filter-list-row ${!filters.categoryId ? 'active' : ''}`}
+              onClick={() => update({ categoryId: null })}
             >
-              <span>{b.label}</span>
-              {!loadingFacets && <span className="filter-pill-count">{b.count}</span>}
+              <span>Tất cả</span>
             </button>
+          </li>
+          {flat.map((cat) => (
+            <li key={cat.categoryId}>
+              <button
+                type="button"
+                className={`filter-list-row ${filters.categoryId === cat.categoryId ? 'active' : ''}`}
+                style={{ paddingLeft: 10 + cat.depth * 12 }}
+                onClick={() => update({ categoryId: cat.categoryId })}
+              >
+                <span className="filter-list-label">{cat.name}</span>
+                {typeof cat.productCount === 'number' && (
+                  <span className="filter-list-count">{cat.productCount}</span>
+                )}
+              </button>
+            </li>
           ))}
-        </div>
-      </div>
+        </ul>
+      </Section>
 
-      {/* === Độ phổ biến === */}
-      <div className="filter-group-block">
-        <h4>Độ phổ biến</h4>
-        <div className="filter-popularity-chips">
-          {(facets?.popularityBuckets || []).map((b) => (
-            <button
-              key={b.minCount}
-              type="button"
-              disabled={b.count === 0 && !loadingFacets}
-              className={`filter-popularity-chip ${filters.minSoldCount === b.minCount ? 'active' : ''}`}
-              onClick={() => applyPopularityBucket(b)}
-              title={`Sản phẩm đã bán ≥ ${b.minCount} (${b.count} sp)`}
-            >
-              <span className="filter-quality-icon">🔥</span>
-              <span>{b.label}</span>
-              {!loadingFacets && <span className="filter-pill-count">{b.count}</span>}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* === Khoảng giá — preset chips + manual inputs === */}
-      <div className="filter-group-block">
-        <h4>Khoảng giá</h4>
+      {/* ===== Price ===== */}
+      <Section
+        title="Khoảng giá"
+        open={openSections.price}
+        onToggle={() => toggleSection('price')}
+      >
         <div className="filter-price-chips">
           {PRICE_PRESETS.map((p) => {
             const bucket = (facets?.priceBuckets || []).find((b) => String(b.minPrice) === String(p.min));
@@ -380,12 +270,11 @@ export default function ProductFilterSidebar({ filters, onChange }) {
                 onClick={() => applyPricePreset(p)}
               >
                 <span>{p.label}</span>
-                {!loadingFacets && <span className="filter-pill-count">{cnt}</span>}
+                {!loadingFacets && <span className="filter-pill-count">({cnt})</span>}
               </button>
             );
           })}
         </div>
-        <div className="filter-price-divider"><span>hoặc</span></div>
         <div className="filter-price-row">
           <input
             type="text"
@@ -411,98 +300,173 @@ export default function ProductFilterSidebar({ filters, onChange }) {
             – {Number(facets.maxPrice).toLocaleString('vi-VN')}đ
           </div>
         )}
-      </div>
+      </Section>
 
-      {/* === Size === */}
-      <div className="filter-group-block">
-        <h4>
-          Size
-          {!loadingFacets && facets?.sizes && (
-            <span className="filter-group-meta">({facets.sizes.length})</span>
-          )}
-        </h4>
-        <div className="filter-size-row">
-          {loadingFacets && (
-            <span className="filter-loading">…</span>
-          )}
-          {!loadingFacets && (facets?.sizes || []).map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              disabled={opt.count === 0}
-              className={`filter-size-pill ${filters.size === opt.value ? 'active' : ''}`}
-              onClick={() => toggleSize(opt.value)}
-              title={`Size ${opt.label} — ${opt.count} sản phẩm`}
-            >
-              {opt.label}
-            </button>
-          ))}
-          {!loadingFacets && (!facets?.sizes || facets.sizes.length === 0) && (
-            <span className="filter-empty">Không có size nào</span>
-          )}
-        </div>
-        {/* Size-count chips */}
-        <div className="filter-size-count-chips">
-          {SIZE_COUNT_PRESETS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              className={`filter-quality-chip ${filters.minSizeCount === p.minSizeCount ? 'active' : ''}`}
-              onClick={() => applySizeCountPreset(p)}
-              title={`Sản phẩm có ≥${p.minSizeCount} size khác nhau`}
-            >
-              <span>{p.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* ===== Size ===== */}
+      <Section
+        title="Size"
+        count={facets?.sizes?.length ?? null}
+        open={openSections.size}
+        onToggle={() => toggleSection('size')}
+      >
+        {loadingFacets && <span className="filter-loading">…</span>}
+        {!loadingFacets && (
+          <div className="filter-size-pills">
+            {(facets?.sizes || []).map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                disabled={opt.count === 0}
+                className={`filter-size-pill ${filters.size === opt.value ? 'active' : ''}`}
+                onClick={() => update({ size: filters.size === opt.value ? '' : opt.value })}
+                title={`Size ${opt.label} — ${opt.count} sản phẩm`}
+              >
+                <span>{opt.label}</span>
+                <span className="filter-pill-count">({opt.count})</span>
+              </button>
+            ))}
+            {(!facets?.sizes || facets.sizes.length === 0) && (
+              <span className="filter-empty">Không có size nào</span>
+            )}
+          </div>
+        )}
+      </Section>
 
-      {/* === Màu sắc === */}
-      <div className="filter-group-block">
-        <h4>
-          Màu sắc
-          {!loadingFacets && facets?.colors && (
-            <span className="filter-group-meta">({facets.colors.length})</span>
-          )}
-        </h4>
-        <div className="filter-color-row">
-          {loadingFacets && <span className="filter-loading">…</span>}
-          {!loadingFacets && (facets?.colors || []).map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              disabled={opt.count === 0}
-              className={`filter-color-pill ${filters.color === opt.value ? 'active' : ''}`}
-              onClick={() => toggleColor(opt.value)}
-              title={`${opt.label} — ${opt.count} sản phẩm`}
-            >
-              <span
-                className="filter-color-dot"
-                style={{ background: opt.hex || '#9ca3af' }}
+      {/* ===== Color ===== */}
+      <Section
+        title="Màu sắc"
+        count={facets?.colors?.length ?? null}
+        open={openSections.color}
+        onToggle={() => toggleSection('color')}
+      >
+        {loadingFacets && <span className="filter-loading">…</span>}
+        {!loadingFacets && (
+          <div className="filter-color-pills">
+            {(facets?.colors || []).map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                disabled={opt.count === 0}
+                className={`filter-color-pill ${filters.color === opt.value ? 'active' : ''}`}
+                onClick={() => update({ color: filters.color === opt.value ? '' : opt.value })}
+                title={`${opt.label} — ${opt.count} sản phẩm`}
+              >
+                <span
+                  className="filter-color-dot"
+                  style={{ background: opt.hex || '#9ca3af' }}
+                />
+                <span>{opt.label}</span>
+                <span className="filter-pill-count">({opt.count})</span>
+              </button>
+            ))}
+            {(!facets?.colors || facets.colors.length === 0) && (
+              <span className="filter-empty">Không có màu nào</span>
+            )}
+          </div>
+        )}
+      </Section>
+
+      {/* ===== More filters (advanced) — collapsed by default ===== */}
+      <Section
+        title="Thêm bộ lọc"
+        open={openSections.more}
+        onToggle={() => toggleSection('more')}
+      >
+        <div className="filter-subhead">Giới tính</div>
+        <ul className="filter-list">
+          <li>
+            <label className={`filter-radio-row ${!filters.gender ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="gender"
+                checked={!filters.gender}
+                onChange={() => update({ gender: '' })}
               />
-              <span>{opt.label}</span>
-              <span className="filter-pill-count">{opt.count}</span>
-            </button>
+              <span>Tất cả</span>
+            </label>
+          </li>
+          {(facets?.genders || []).map((opt) => (
+            <li key={opt.value}>
+              <label className={`filter-radio-row ${filters.gender === opt.value ? 'active' : ''}`}>
+                <input
+                  type="radio"
+                  name="gender"
+                  checked={filters.gender === opt.value}
+                  onChange={() => update({ gender: filters.gender === opt.value ? '' : opt.value })}
+                />
+                <span>{opt.label}</span>
+                <span className="filter-list-count">({opt.count})</span>
+              </label>
+            </li>
           ))}
-          {!loadingFacets && (!facets?.colors || facets.colors.length === 0) && (
-            <span className="filter-empty">Không có màu nào</span>
-          )}
-        </div>
-        {/* Color-count chips */}
-        <div className="filter-color-count-chips">
-          {COLOR_COUNT_PRESETS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              className={`filter-quality-chip ${filters.minColorCount === p.minColorCount ? 'active' : ''}`}
-              onClick={() => applyColorCountPreset(p)}
-              title={`Sản phẩm có ≥${p.minColorCount} màu khác nhau`}
-            >
-              <span>{p.label}</span>
-            </button>
+        </ul>
+
+        <div className="filter-subhead">Mức giảm giá</div>
+        <ul className="filter-list">
+          <li>
+            <label className={`filter-radio-row ${!filters.minDiscountPercent ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="discount"
+                checked={!filters.minDiscountPercent}
+                onChange={() => update({ minDiscountPercent: null })}
+              />
+              <span>Tất cả</span>
+            </label>
+          </li>
+          {(facets?.discountBuckets || []).map((b) => (
+            <li key={b.minPercent}>
+              <label className={`filter-radio-row ${filters.minDiscountPercent === b.minPercent ? 'active' : ''}`}>
+                <input
+                  type="radio"
+                  name="discount"
+                  checked={filters.minDiscountPercent === b.minPercent}
+                  onChange={() => update({
+                    minDiscountPercent: filters.minDiscountPercent === b.minPercent ? null : b.minPercent,
+                  })}
+                />
+                <span>{b.label}</span>
+                {!loadingFacets && <span className="filter-list-count">({b.count})</span>}
+              </label>
+            </li>
           ))}
-        </div>
-      </div>
+        </ul>
+
+        <div className="filter-subhead">Độ phổ biến</div>
+        <ul className="filter-list">
+          <li>
+            <label className={`filter-radio-row ${!filters.minSoldCount ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="popularity"
+                checked={!filters.minSoldCount}
+                onChange={() => update({ minSoldCount: null })}
+              />
+              <span>Tất cả</span>
+            </label>
+          </li>
+          {POPULARITY_OPTIONS.map((p) => {
+            const bucket = (facets?.popularityBuckets || []).find((b) => b.minCount === p.minSoldCount);
+            const cnt = bucket ? bucket.count : 0;
+            return (
+              <li key={p.id}>
+                <label className={`filter-radio-row ${filters.minSoldCount === p.minSoldCount ? 'active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="popularity"
+                    checked={filters.minSoldCount === p.minSoldCount}
+                    onChange={() => update({
+                      minSoldCount: filters.minSoldCount === p.minSoldCount ? null : p.minSoldCount,
+                    })}
+                  />
+                  <span>{p.label}</span>
+                  {!loadingFacets && <span className="filter-list-count">({cnt})</span>}
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      </Section>
     </aside>
   );
 }
