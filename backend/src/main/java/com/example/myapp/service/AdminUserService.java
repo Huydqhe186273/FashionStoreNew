@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class AdminUserService {
 
     private final UserRepository userRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     // Lấy danh sách tài khoản nhân viên/quản trị viên theo các điều kiện lọc.
@@ -34,7 +35,7 @@ public class AdminUserService {
         User user = new User();
         user.setFullName(dto.getFullName());
         user.setEmail(dto.getEmail());
-        user.setPasswordHash(dto.getPassword() != null ? dto.getPassword() : "hashed_password");
+        user.setPasswordHash(dto.getPassword() != null ? passwordEncoder.encode(dto.getPassword()) : passwordEncoder.encode("123456"));
         user.setPhone(dto.getPhone());
         user.setRole(dto.getRole() != null ? dto.getRole() : "staff");
         user.setStatus(dto.getStatus() != null ? dto.getStatus() : "active");
@@ -55,7 +56,7 @@ public class AdminUserService {
         if (dto.getRole() != null) user.setRole(dto.getRole());
         if (dto.getStatus() != null) user.setStatus(dto.getStatus());
         if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
-            user.setPasswordHash(dto.getPassword().trim());
+            user.setPasswordHash(passwordEncoder.encode(dto.getPassword().trim()));
         }
 
         User saved = userRepository.save(user);

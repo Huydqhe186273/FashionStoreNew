@@ -11,18 +11,18 @@
   --text-muted: #6b7280;
   --text-subtle: #9ca3af;
 
-  --primary: #f59e0b; /* Orange-yellow / Amber */
-  --primary-gradient: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
-  --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%);
+  --primary: #d29f96; /* Dusty Rose / Peach */
+  --primary-gradient: linear-gradient(135deg, #e3b9b1 0%, #c1887e 100%);
+  --secondary-gradient: linear-gradient(135deg, #7a7774 0%, #595856 100%);
   
   --success: #10b981;
-  --warning: #f59e0b;
+  --warning: #d29f96;
   --danger: #ef4444;
   --info: #3b82f6;
 
   --radius-sm: 8px;
   --radius-md: 14px;
-  --shadow-glow: 0 10px 30px -10px rgba(245, 158, 11, 0.35);
+  --shadow-glow: 0 10px 30px -10px rgba(210, 159, 150, 0.35);
   --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
@@ -120,7 +120,7 @@ aside {
 }
 
 .nav-item a.active, .nav-item a:hover {
-  background: rgba(245, 158, 11, 0.1);
+  background: rgba(210, 159, 150, 0.1);
   color: var(--primary);
   border-left: 3px solid var(--primary);
 }
@@ -183,6 +183,13 @@ header {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 28px;
+}
+
+.header-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
 }
 
 .header-title h1 {
