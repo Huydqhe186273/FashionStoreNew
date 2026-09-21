@@ -302,6 +302,7 @@ INSERT INTO Categories (Name, Gender) VALUES
 (N'Phụ kiện', 'unisex');
 GO
 
+
 -- Tạo sản phẩm mẫu
 INSERT INTO Products (CategoryId, Name, BasePrice, Status, ViewCount, SoldCount) 
 VALUES (1, N'Áo phông nam siêu cấp vip pro', 150000, 'active', 0, 0);

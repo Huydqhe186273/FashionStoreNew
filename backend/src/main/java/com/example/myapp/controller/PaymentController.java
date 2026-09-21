@@ -1,8 +1,9 @@
 package com.example.myapp.controller;
 
-import com.example.myapp.model.CartDTO;
-import com.example.myapp.model.CartItemDTO;
-import com.example.myapp.service.CartService;
+import com.example.myapp.entity.Order;
+import com.example.myapp.entity.OrderItem;
+import com.example.myapp.repos.OrderRepository;
+import com.example.myapp.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,7 @@ import vn.payos.PayOS;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
 import vn.payos.model.v2.paymentRequests.PaymentLinkItem;
+import vn.payos.model.v2.paymentRequests.PaymentLink;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,45 +24,42 @@ import java.util.Map;
 public class PaymentController {
 
     private final PayOS payOS;
-    private final CartService cartService;
+    private final OrderRepository orderRepository;
+    private final OrderService orderService;
 
     @PostMapping("/create-payment-link")
-    public ResponseEntity<?> createPaymentLink(@RequestParam Integer userId) {
+    public ResponseEntity<?> createPaymentLink(@RequestParam Integer orderId) {
         try {
-            // 1. Lấy thông tin giỏ hàng
-            CartDTO cart = cartService.getCartByUserId(userId);
-            if (cart == null || cart.getItems().isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Giỏ hàng trống"));
+            Order order = orderRepository.findById(orderId).orElse(null);
+            if (order == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Đơn hàng không tồn tại"));
             }
 
-            // 2. Tạo danh sách Item cho PayOS
             List<PaymentLinkItem> items = new ArrayList<>();
-            for (CartItemDTO cartItem : cart.getItems()) {
+            for (OrderItem oi : order.getOrderItems()) {
                 PaymentLinkItem item = PaymentLinkItem.builder()
-                        .name(cartItem.getProductName() + " - " + cartItem.getColor() + " - " + cartItem.getSize())
-                        .price(cartItem.getPrice().longValue())
-                        .quantity(cartItem.getQuantity())
+                        .name(oi.getVariant().getProduct().getName() + " - " + oi.getVariant().getColor() + " - " + oi.getVariant().getSize())
+                        .price(oi.getPriceAtPurchase().longValue())
+                        .quantity(oi.getQuantity())
                         .build();
                 items.add(item);
             }
 
-            // 3. Tạo orderCode duy nhất (Unix timestamp)
-            long orderCode = System.currentTimeMillis() / 1000;
+            
+            long orderCode = order.getOrderId();
 
-            // 4. Khởi tạo PaymentData
-            String returnUrl = "http://localhost:3001/store/cart?payment=success";
-            String cancelUrl = "http://localhost:3001/store/cart?payment=cancel";
+            String returnUrl = "http://localhost:3001/store/cart?payment=success&orderCode=" + orderCode;
+            String cancelUrl = "http://localhost:3001/store/cart?payment=cancel&orderCode=" + orderCode;
 
             CreatePaymentLinkRequest request = CreatePaymentLinkRequest.builder()
                     .orderCode(orderCode)
-                    .amount(cart.getTotalAmount().longValue())
-                    .description("Thanh toan don hang")
+                    .amount(order.getTotalAmount().longValue())
+                    .description("Thanh toan don " + orderCode)
                     .returnUrl(returnUrl)
                     .cancelUrl(cancelUrl)
                     .items(items)
                     .build();
 
-            // 5. Gọi API PayOS để lấy link thanh toán
             CreatePaymentLinkResponse response = payOS.paymentRequests().create(request);
             
             return ResponseEntity.ok(Map.of("checkoutUrl", response.getCheckoutUrl()));
@@ -70,4 +69,21 @@ public class PaymentController {
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
+
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyPayment(@RequestParam Long orderCode) {
+        try {
+            PaymentLink paymentData = payOS.paymentRequests().get(orderCode);
+            if ("PAID".equals(paymentData.getStatus())) {
+                // Đánh dấu đơn hàng là đã thanh toán
+                orderService.markOrderAsPaid(orderCode.intValue());
+                return ResponseEntity.ok(Map.of("status", "success", "message", "Thanh toán thành công"));
+            }
+            return ResponseEntity.badRequest().body(Map.of("status", "pending", "message", "Chưa thanh toán hoặc bị hủy"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
+
