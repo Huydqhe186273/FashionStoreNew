@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import FavoriteButton from './FavoriteButton';
 
 const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500"><rect width="100%" height="100%" fill="%23222a3a"/><text x="50%" y="50%" fill="%23667085" font-family="sans-serif" font-size="20" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>';
 
@@ -19,6 +20,7 @@ export default function ProductCard({ product }) {
         {product.discountPercent ? (
           <span className="product-card-discount">-{product.discountPercent}%</span>
         ) : null}
+        <FavoriteButton productId={product.productId} className="product-card-favorite" />
       </div>
       <div className="product-card-body">
         <div className="product-card-category">{product.categoryName || 'Sản phẩm'}</div>

@@ -11,6 +11,7 @@ import ProductListPage from './pages/customer/ProductListPage';
 import ProductDetailPage from './pages/customer/ProductDetailPage';
 import ProductSearchPage from './pages/customer/ProductSearchPage';
 import ProductCategoryPage from './pages/customer/ProductCategoryPage';
+import WishlistPage from './pages/customer/WishlistPage';
 
 function AdminShell({ children }) {
   return (
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="/shop/search" element={<CustomerShell><ProductSearchPage /></CustomerShell>} />
         <Route path="/shop/category/:id" element={<CustomerShell><ProductCategoryPage /></CustomerShell>} />
         <Route path="/shop/product/:id" element={<CustomerShell><ProductDetailPage /></CustomerShell>} />
+        <Route path="/shop/wishlist" element={<CustomerShell><WishlistPage /></CustomerShell>} />
         <Route path="/" element={<AdminShell><DashboardOverview /></AdminShell>} />
         <Route path="/users" element={<AdminShell><ManageUsers /></AdminShell>} />
         <Route path="/staff" element={<AdminShell><ManageStaff /></AdminShell>} />
