@@ -1,14 +1,14 @@
 spring:
   datasource:
-    url: jdbc:sqlserver://CUONG;instanceName=MSSQLSERVER02;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;
-    # Điền tài khoản đăng nhập SQL Server (thường là sa)
+    url: jdbc:sqlserver://localhost;instanceName=MSSQLSERVER01;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;
     username: sa
-    password: 12345
+    password: sa
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     show-sql: true
@@ -16,6 +16,18 @@ spring:
       hibernate:
         format_sql: true
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: trungnt7505@gmail.com
+    password: mzra umrl xkzb fbhv
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 server:
   port: 8080
@@ -26,3 +38,8 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     operationsSorter: method
+
+payos:
+  client-id: e14c939a-e8da-4b9f-81bd-25f05b31417c
+  api-key: 6ab5f354-952c-4bbf-856c-042ae5731b1a
+  checksum-key: 4467e43ad05fc1268f90844cfe29d92a7e37e32dfdb08dc59d3dac123ee23a51

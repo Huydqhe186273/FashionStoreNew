@@ -1,48 +1,54 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
-import ThemeBootstrap from './styles/ThemeBootstrap';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminLayout from './layouts/AdminLayout';
+import CustomerLayout from './layouts/CustomerLayout';
 import DashboardOverview from './pages/DashboardOverview';
 import ManageUsers from './pages/ManageUsers';
 import ManageStaff from './pages/ManageStaff';
 import ManageCategories from './pages/ManageCategories';
 import ManageProducts from './pages/ManageProducts';
-import CustomerLayout from './components/customer/CustomerLayout';
+import Cart from './pages/Cart';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import Profile from './pages/Profile';
 import ProductListPage from './pages/customer/ProductListPage';
 import ProductDetailPage from './pages/customer/ProductDetailPage';
 import ProductSearchPage from './pages/customer/ProductSearchPage';
 import ProductCategoryPage from './pages/customer/ProductCategoryPage';
 import WishlistPage from './pages/customer/WishlistPage';
 
-function AdminShell({ children }) {
-  return (
-    <>
-      <Sidebar />
-      {children}
-    </>
-  );
-}
-
-function CustomerShell({ children }) {
-  return <CustomerLayout>{children}</CustomerLayout>;
-}
-
 export default function App() {
   return (
-    <Router>
-      <ThemeBootstrap />
-      <Routes>
-        <Route path="/shop" element={<CustomerShell><ProductListPage /></CustomerShell>} />
-        <Route path="/shop/search" element={<CustomerShell><ProductSearchPage /></CustomerShell>} />
-        <Route path="/shop/category/:id" element={<CustomerShell><ProductCategoryPage /></CustomerShell>} />
-        <Route path="/shop/product/:id" element={<CustomerShell><ProductDetailPage /></CustomerShell>} />
-        <Route path="/shop/wishlist" element={<CustomerShell><WishlistPage /></CustomerShell>} />
-        <Route path="/" element={<AdminShell><DashboardOverview /></AdminShell>} />
-        <Route path="/users" element={<AdminShell><ManageUsers /></AdminShell>} />
-        <Route path="/staff" element={<AdminShell><ManageStaff /></AdminShell>} />
-        <Route path="/categories" element={<AdminShell><ManageCategories /></AdminShell>} />
-        <Route path="/products" element={<AdminShell><ManageProducts /></AdminShell>} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer', 'admin']}><Profile /></ProtectedRoute>} />
+          <Route path="/shop" element={<CustomerLayout />}>
+            <Route index element={<ProductListPage />} />
+            <Route path="search" element={<ProductSearchPage />} />
+            <Route path="category/:id" element={<ProductCategoryPage />} />
+            <Route path="product/:id" element={<ProductDetailPage />} />
+            <Route path="wishlist" element={<WishlistPage />} />
+            <Route path="cart" element={<Cart />} />
+          </Route>
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
+            <Route index element={<DashboardOverview />} />
+            <Route path="users" element={<ManageUsers />} />
+            <Route path="staff" element={<ManageStaff />} />
+            <Route path="categories" element={<ManageCategories />} />
+            <Route path="products" element={<ManageProducts />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
