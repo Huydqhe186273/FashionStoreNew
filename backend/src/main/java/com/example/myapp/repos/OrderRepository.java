@@ -18,8 +18,10 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     @Query("SELECT COALESCE(SUM(o.TotalAmount), 0) FROM Order o WHERE o.OrderStatus = :status")
     BigDecimal sumTotalRevenueByStatus(@Param("status") String status);
 
-    long countByOrderStatus(String orderStatus);
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.OrderStatus = :orderStatus")
+    long countByOrderStatus(@Param("orderStatus") String orderStatus);
 
+    @Query("SELECT o FROM Order o ORDER BY o.CreatedAt DESC LIMIT 10")
     List<Order> findTop10ByOrderByCreatedAtDesc();
 
     @Query("SELECT FUNCTION('MONTH', o.CreatedAt) as month, SUM(o.TotalAmount) as total, COUNT(o.OrderId) as orderCount " +
