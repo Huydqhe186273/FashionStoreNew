@@ -50,3 +50,9 @@ export const getDiscountedProducts = async (limit = 10) => {
   const response = await api.get('/customer/products/discounts', { params: { limit } });
   return response.data;
 };
+
+// ===== Aggregated facets for the filter sidebar =====
+export const getFilterFacets = async () => {
+  const response = await api.get('/customer/filters');
+  return response.data;
+};

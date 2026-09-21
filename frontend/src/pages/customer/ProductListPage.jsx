@@ -102,6 +102,7 @@ export default function ProductListPage() {
           maxPrice: filters.maxPrice || null,
           color: filters.color || null,
           variantSize: filters.size || null,
+          inStockOnly: filters.inStockOnly || false,
           sortBy,
           page,
           size,
