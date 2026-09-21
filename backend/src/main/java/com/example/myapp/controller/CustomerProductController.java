@@ -2,6 +2,7 @@ package com.example.myapp.controller;
 
 import com.example.myapp.model.CustomerCategoryDTO;
 import com.example.myapp.model.CustomerProductDTO;
+import com.example.myapp.model.FilterFacetsDTO;
 import com.example.myapp.model.PageResponseDTO;
 import com.example.myapp.model.VariantInfoDTO;
 import com.example.myapp.service.CustomerProductService;
@@ -29,12 +30,13 @@ public class CustomerProductController {
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) String color,
             @RequestParam(required = false) String variantSize,
+            @RequestParam(required = false) Boolean inStockOnly,
             @RequestParam(required = false, defaultValue = "newest") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String sortDir,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "12") int size) {
         return ResponseEntity.ok(customerProductService.getProducts(
-                keyword, categoryId, gender, minPrice, maxPrice, color, variantSize, sortBy, sortDir, page, size));
+                keyword, categoryId, gender, minPrice, maxPrice, color, variantSize, inStockOnly, sortBy, sortDir, page, size));
     }
 
     @GetMapping("/products/{id}")
@@ -82,6 +84,16 @@ public class CustomerProductController {
     @GetMapping("/categories/{id}")
     public ResponseEntity<CustomerCategoryDTO> getCategoryById(@PathVariable("id") Integer id) {
         return ResponseEntity.ok(customerProductService.getCategoryById(id));
+    }
+
+    /**
+     * Aggregated facets (sizes, colors, genders, price buckets) for the
+     * customer filter sidebar. Each option is annotated with a product
+     * count so the UI can disable empty choices.
+     */
+    @GetMapping("/filters")
+    public ResponseEntity<FilterFacetsDTO> getFilterFacets() {
+        return ResponseEntity.ok(customerProductService.getFilterFacets());
     }
 
     // ===== Recommendation sections =====
