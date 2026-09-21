@@ -355,34 +355,21 @@ public class CustomerProductService {
         }
 
         // ===== Smart quality facets =====
-        long withImages = 0, withDesc = 0, withDiscount = 0, complete = 0, inStock = 0;
-        long multiSize = 0, multiColor = 0;
+        long complete = 0, inStock = 0;
         for (Product p : activeProducts) {
             boolean hasImg = productImageRepository.findByProductId(p.getProductId()).stream()
                     .anyMatch(img -> img.getImageUrl() != null && !img.getImageUrl().isBlank());
             boolean hasDesc = p.getDescription() != null && !p.getDescription().isBlank();
-            boolean hasDisc = p.getDiscountPrice() != null && p.getBasePrice() != null
-                    && p.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
-                    && p.getDiscountPrice().compareTo(p.getBasePrice()) < 0;
             List<ProductVariant> variants = productVariantRepository.findByProductId(p.getProductId());
             int sizeN = (int) variants.stream()
                     .map(ProductVariant::getSize)
                     .filter(s -> s != null && !s.isBlank())
                     .distinct().count();
-            int colorN = (int) variants.stream()
-                    .map(ProductVariant::getColor)
-                    .filter(c -> c != null && !c.isBlank())
-                    .distinct().count();
             boolean stock = variants.stream()
                     .anyMatch(v -> v.getStockQuantity() != null && v.getStockQuantity() > 0);
 
-            if (hasImg) withImages++;
-            if (hasDesc) withDesc++;
-            if (hasDisc) withDiscount++;
             if (hasImg && hasDesc && sizeN >= 1) complete++;
             if (stock) inStock++;
-            if (sizeN >= 3) multiSize++;
-            if (colorN >= 2) multiColor++;
         }
 
         // --- discount-percent buckets (≥10, ≥30, ≥50, ≥70)
@@ -428,17 +415,9 @@ public class CustomerProductService {
                 .minPrice(minPrice == null ? null : minPrice.longValue())
                 .maxPrice(maxPrice == null ? null : maxPrice.longValue())
                 .priceBuckets(buckets)
-                // smart facets:
-                .allHaveImages(withImages == activeProducts.size() && !activeProducts.isEmpty())
-                .allHaveDescription(withDesc == activeProducts.size() && !activeProducts.isEmpty())
-                .allHaveDiscount(withDiscount == activeProducts.size() && !activeProducts.isEmpty())
-                .productsWithImages(withImages)
-                .productsWithDescription(withDesc)
-                .productsWithDiscount(withDiscount)
+                // smart facets (v3 — only the two the sidebar actually uses):
                 .productsComplete(complete)
                 .productsInStock(inStock)
-                .productsWithMultipleSizes(multiSize)
-                .productsWithMultipleColors(multiColor)
                 .discountBuckets(discountBuckets)
                 .popularityBuckets(popularityBuckets)
                 .build();

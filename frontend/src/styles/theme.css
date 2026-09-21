@@ -1916,186 +1916,174 @@ tr:hover td { background: var(--bg-soft); }
 }
 
 /* ============================================================
-   SMART FILTER CHIPS — quality / discount / popularity / count
+   FILTER SIDEBAR V3 — collapsible sections + clean lists
    ============================================================ */
 
-/* === Quality chips (has image / has description / in stock) === */
-.filter-quality-chips {
+/* Two-checkbox quality row pinned at top of sidebar. */
+.filter-quality-row {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  padding: var(--s-3) 0 var(--s-3);
+  border-bottom: 1px solid var(--border-subtle);
   margin-bottom: var(--s-2);
 }
-.filter-quality-chip {
-  display: inline-flex;
+.filter-quality-toggle {
+  display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 8px;
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-sm);
   font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-  text-align: left;
-}
-.filter-quality-chip:hover:not(:disabled) {
-  background: var(--bg-soft);
-  border-color: var(--border-medium);
-  color: var(--text-primary);
-}
-.filter-quality-chip.active {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--text-on-dark);
-}
-.filter-quality-chip.active .filter-pill-count {
-  background: rgba(255, 255, 255, 0.2);
-  color: var(--text-on-dark);
-}
-.filter-quality-chip:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.filter-quality-icon {
-  font-size: 0.95rem;
-  line-height: 1;
-}
-.filter-quality-label {
-  flex: 1;
   font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 6px 0;
+  user-select: none;
+}
+.filter-quality-toggle input {
+  accent-color: var(--color-accent);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.filter-quality-count {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 400;
+  margin-left: auto;
 }
 
-/* === Complete-only chip (wide standalone) === */
-.filter-complete-chip {
-  display: inline-flex;
+/* Collapsible section wrapper. */
+.filter-section {
+  border-bottom: 1px solid var(--border-subtle);
+}
+.filter-section:last-child {
+  border-bottom: none;
+}
+.filter-section-header {
+  display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
   width: 100%;
-  padding: 10px 12px;
-  background: var(--bg-soft);
-  border: 1px dashed var(--border-medium);
-  border-radius: var(--r-sm);
+  background: transparent;
+  border: none;
+  padding: var(--s-3) 0;
+  font-family: inherit;
   font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--text-primary);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
   text-align: left;
 }
-.filter-complete-chip:hover:not(:disabled) {
-  border-style: solid;
-  border-color: var(--color-accent);
+.filter-section-header:hover {
+  color: var(--color-accent);
 }
-.filter-complete-chip.active {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  border-style: solid;
-  color: var(--text-on-dark);
-}
-.filter-complete-chip.active .filter-pill-count {
-  background: rgba(255, 255, 255, 0.22);
-  color: var(--text-on-dark);
-}
-.filter-complete-chip:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* === Discount chips (% thresholds) === */
-.filter-discount-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.filter-discount-chip {
+.filter-section-title {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-full);
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.filter-discount-chip:hover:not(:disabled) {
-  background: var(--bg-soft);
-  border-color: var(--border-medium);
-  color: var(--text-primary);
+.filter-section-count {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-muted);
 }
-.filter-discount-chip.active {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--text-on-dark);
+.filter-section-caret {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: transform 0.18s ease;
 }
-.filter-discount-chip.active .filter-pill-count {
-  background: rgba(255, 255, 255, 0.2);
-  color: var(--text-on-dark);
+.filter-section.open .filter-section-caret {
+  transform: rotate(180deg);
 }
-.filter-discount-chip:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-  text-decoration: line-through;
+.filter-section-body {
+  padding: 0 0 var(--s-3) 0;
 }
 
-/* === Popularity chips (🔥 bán chạy / hot / top) === */
-.filter-popularity-chips {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+/* Vertical lists (Category, Gender, Discount, Popularity). */
+.filter-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
-.filter-popularity-chip {
-  display: inline-flex;
+.filter-list::-webkit-scrollbar { width: 4px; }
+.filter-list::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+
+.filter-list-flat {
+  max-height: 260px;
+}
+
+.filter-list-row,
+.filter-radio-row {
+  display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 8px;
   width: 100%;
-  padding: 8px 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-sm);
+  background: transparent;
+  border: none;
+  padding: 6px 4px;
+  font-family: inherit;
   font-size: var(--fs-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
   text-align: left;
+  border-radius: var(--r-sm);
 }
-.filter-popularity-chip:hover:not(:disabled) {
-  background: var(--bg-soft);
-  border-color: var(--border-medium);
+.filter-list-row:hover,
+.filter-radio-row:hover {
   color: var(--text-primary);
+  background: var(--bg-soft);
 }
-.filter-popularity-chip.active {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--text-on-dark);
+.filter-list-row.active,
+.filter-radio-row.active {
+  color: var(--color-accent);
+  font-weight: 600;
 }
-.filter-popularity-chip.active .filter-pill-count {
-  background: rgba(255, 255, 255, 0.2);
-  color: var(--text-on-dark);
+.filter-list-label {
+  flex: 1;
 }
-.filter-popularity-chip:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.filter-list-count {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+.filter-radio-row input {
+  accent-color: var(--color-accent);
+  margin: 0;
+  cursor: pointer;
 }
 
-/* === Size-count + color-count chip rows (smaller, inline) === */
-.filter-size-count-chips,
-.filter-color-count-chips {
+/* Subheading inside "Thêm bộ lọc". */
+.filter-subhead {
+  margin: var(--s-3) 0 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.filter-subhead:first-child {
+  margin-top: 0;
+}
+
+/* Size + Color pill rows: keep the inline pills, just smaller and tighter. */
+.filter-size-pills,
+.filter-color-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 8px;
 }
-.filter-size-count-chips .filter-quality-chip,
-.filter-color-count-chips .filter-quality-chip {
-  width: auto;
-  padding: 4px 10px;
+.filter-size-pill,
+.filter-color-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+}
+.filter-pill-count {
+  color: var(--text-muted);
   font-size: 0.78rem;
+  font-weight: 400;
 }
