@@ -28,4 +28,20 @@ public class CartController {
         CartDTO cart = cartService.addToCart(userId, request);
         return ResponseEntity.ok(cart);
     }
+    @PutMapping("/update/{cartItemId}")
+    public ResponseEntity<CartDTO> updateQuantity(
+            @RequestParam Integer userId,
+            @PathVariable Integer cartItemId,
+            @RequestParam Integer quantity) {
+        CartDTO cart = cartService.updateCartItemQuantity(userId, cartItemId, quantity);
+        return ResponseEntity.ok(cart);
+    }
+
+    @DeleteMapping("/remove/{cartItemId}")
+    public ResponseEntity<CartDTO> removeItem(
+            @RequestParam Integer userId,
+            @PathVariable Integer cartItemId) {
+        CartDTO cart = cartService.removeCartItem(userId, cartItemId);
+        return ResponseEntity.ok(cart);
+    }
 }

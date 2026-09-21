@@ -60,6 +60,46 @@ public class CartService {
         return mapToDTO(cart);
     }
 
+    @Transactional
+    public CartDTO updateCartItemQuantity(Integer userId, Integer cartItemId, Integer quantity) {
+        Cart cart = getOrCreateCart(userId);
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+                
+        if (!item.getCart().getCartId().equals(cart.getCartId())) {
+            throw new RuntimeException("Item does not belong to user's cart");
+        }
+
+        if (quantity <= 0) {
+            cartItemRepository.delete(item);
+            cart.getCartItems().remove(item);
+        } else {
+            if (item.getVariant().getStockQuantity() < quantity) {
+                throw new RuntimeException("Not enough stock");
+            }
+            item.setQuantity(quantity);
+            cartItemRepository.save(item);
+        }
+
+        return mapToDTO(cart);
+    }
+
+    @Transactional
+    public CartDTO removeCartItem(Integer userId, Integer cartItemId) {
+        Cart cart = getOrCreateCart(userId);
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+
+        if (!item.getCart().getCartId().equals(cart.getCartId())) {
+            throw new RuntimeException("Item does not belong to user's cart");
+        }
+
+        cartItemRepository.delete(item);
+        cart.getCartItems().remove(item);
+
+        return mapToDTO(cart);
+    }
+
     private Cart getOrCreateCart(Integer userId) {
         return cartRepository.findByUserId(userId)
                 .orElseGet(() -> {
