@@ -1,6 +1,27 @@
 /* ============================================================
    FASHION STORE DATABASE - SQL SERVER
    Hệ thống bán quần áo trực tuyến tích hợp AI cá nhân hóa
+
+   ⚠ STUB / SCHEMA REFERENCE ONLY
+   ------------------------------------------------------------
+   This file is kept as a quick schema/ERD reference for the
+   project. It is NOT the production seed.
+
+   For actual demo data, see:
+     database/SeedData.sql   (147 products, 36 categories,
+                              ~400 variants, ~250 images,
+                              + discount codes, orders, users)
+
+   SeedData.sql is loaded automatically by
+     backend/.../SeedDataLoader.java
+   on first boot (Users table empty), in UTF-8, batched by `GO`.
+
+   Why this stub is preserved:
+   - Quick DDL reference (CREATE TABLE) without scrolling past
+     1200+ lines of INSERTs.
+   - Sample placeholder product "Áo phông nam siêu c?p vip pro"
+     is intentionally NOT in SeedData.sql and must stay here as
+     a "what NOT to do" example for new contributors.
    ============================================================ */
 
 CREATE DATABASE FashionStoreDB;
