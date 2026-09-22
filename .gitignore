@@ -11,3 +11,21 @@ target/
 .metals/
 .snapshots/
 .bsp/
+
+# Build artifacts
+frontend/dist/
+frontend/node_modules/
+
+# IDE / OS
+.idea/
+*.iml
+Thumbs.db
+.DS_Store
+
+# Local-only DB scripts & test utilities
+database/.vs/
+backend/lib/*.dll
+frontend/screenshot.mjs
+frontend/verify_3000.mjs
+backend/start_*.log
+backend/spring_boot*.log
