@@ -1,0 +1,435 @@
+/* ============================================================
+ * src/components/customer/ShopFilterBar.css
+ * ------------------------------------------------------------
+ * Light-theme styling for the new single-row filter bar on
+ * /Shop. All colors come from --border / --surface-1 /
+ * --surface-2 / --text-primary / --text-secondary defined
+ * in :root (see index.css). NO rgba(255,255,255,0.0X) — we
+ * run on a white background and those values are invisible.
+ * ============================================================ */
+
+/* ---- shell ---- */
+
+.filterbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  position: relative;       /* anchor for the popover */
+}
+
+/* ---- Row 1: category pills, scroll horizontally ---- */
+
+.filterbar-cat-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  padding: 4px 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  -webkit-overflow-scrolling: touch;
+}
+.filterbar-cat-row::-webkit-scrollbar { height: 6px; }
+.filterbar-cat-row::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.filterbar-cat-pill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.filterbar-cat-pill:hover {
+  background: var(--surface-1);
+  color: var(--text-primary);
+}
+.filterbar-cat-pill.active {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+/* ---- Row 2: toolbar ---- */
+
+.filterbar-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+}
+.filterbar-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;             /* allow chip strip to shrink */
+}
+.filterbar-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* "Bộ lọc" trigger button */
+.filterbar-trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.filterbar-trigger:hover {
+  background: var(--surface-1);
+}
+.filterbar-trigger.open {
+  background: var(--text-primary);
+  color: var(--surface-2);
+  border-color: var(--text-primary);
+}
+.filterbar-trigger-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* count badge inside the trigger */
+.filterbar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--danger, #ef4444);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.filterbar-trigger.open .filterbar-badge {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+/* active chip strip (toast of currently applied filters) */
+.filterbar-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-width: 0;
+}
+.filterbar-chips::-webkit-scrollbar { display: none; }
+
+.filterbar-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.filterbar-chip:hover {
+  background: var(--text-primary);
+  color: var(--surface-2);
+  border-color: var(--text-primary);
+}
+.filterbar-chip span {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+/* sort dropdown */
+.filterbar-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.filterbar-sort select {
+  height: 36px;
+  padding: 0 30px 0 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  /* inline caret via mask so we don't depend on OS theme */
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
+                    linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+  background-position: calc(100% - 16px) center, calc(100% - 11px) center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+.filterbar-sort select:focus-visible {
+  border-color: var(--text-primary);
+}
+
+/* ---- Popover ---- */
+
+.filterbar-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 520px;
+}
+
+.filterbar-popover-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.filterbar-popover-section h4 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.filterbar-popover-meta {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+/* dual-range slider */
+.filterbar-range {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0 2px;
+}
+.filterbar-range-track {
+  position: relative;
+  height: 28px;
+}
+.filterbar-range-track input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 28px;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  pointer-events: none;
+  margin: 0;
+}
+.filterbar-range-track input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  border: 2px solid var(--surface-2);
+  cursor: pointer;
+  pointer-events: auto;
+  margin-top: 0;
+  box-shadow: 0 0 0 1px var(--border);
+}
+.filterbar-range-track input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  border: 2px solid var(--surface-2);
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 0 0 1px var(--border);
+}
+.filterbar-range-track::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--border);
+  border-radius: 2px;
+}
+.filterbar-range-fill {
+  position: absolute;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--text-primary);
+  border-radius: 2px;
+}
+.filterbar-range-readout {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* size pills (multi-select) */
+.filterbar-size-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.filterbar-size-pill {
+  min-width: 44px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.filterbar-size-pill:hover {
+  background: var(--surface-1);
+}
+.filterbar-size-pill.active {
+  background: var(--text-primary);
+  color: var(--surface-2);
+  border-color: var(--text-primary);
+}
+
+/* smart "Giảm từ 30%" pill */
+.filterbar-smart-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.filterbar-smart-pill {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.filterbar-smart-pill:hover {
+  background: var(--surface-1);
+}
+.filterbar-smart-pill.active {
+  background: var(--text-primary);
+  color: var(--surface-2);
+  border-color: var(--text-primary);
+}
+
+/* footer buttons */
+.filterbar-popover-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+.filterbar-btn-clear,
+.filterbar-btn-apply {
+  height: 36px;
+  padding: 0 18px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.filterbar-btn-clear {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.filterbar-btn-clear:hover {
+  background: var(--surface-1);
+}
+.filterbar-btn-apply {
+  background: var(--text-primary);
+  color: var(--surface-2);
+  border: 1px solid var(--text-primary);
+}
+.filterbar-btn-apply:hover {
+  opacity: 0.85;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 720px) {
+  .filterbar-toolbar {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .filterbar-toolbar-left,
+  .filterbar-toolbar-right {
+    width: 100%;
+  }
+  .filterbar-toolbar-right { justify-content: flex-end; }
+  .filterbar-popover {
+    left: 8px;
+    right: 8px;
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .filterbar-cat-row { padding: 4px; }
+  .filterbar-cat-pill { padding: 0 12px; height: 32px; font-size: 0.82rem; }
+}
