@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { queryProducts } from './filterService';
+import { getFilterFacets, queryProducts } from './filterService';
 
 /* -----------------------------------------------------------------------------
  * Thuan-owned smart product query hook.
@@ -13,11 +13,13 @@ import { queryProducts } from './filterService';
  * filter to actually narrow the result set must use this hook
  * instead.
  *
- * Returns { data, loading, error, totalElements, totalPages } and
- * re-fetches whenever the `filters` ref changes.
+ * Returns { data, loading, error, totalElements, totalPages, facets }
+ * so the price slider can compute its bounds from the live API
+ * facets (falling back to `null` while the request is in-flight).
  * -------------------------------------------------------------------------- */
 export function useSmartProductList(filters, page = 0, size = 12, sortBy = 'newest') {
   const [data, setData] = useState({ content: [], page: 0, size, totalElements: 0, totalPages: 0 });
+  const [facets, setFacets] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -67,6 +69,20 @@ export function useSmartProductList(filters, page = 0, size = 12, sortBy = 'newe
     sortBy,
   ]);
 
+  /**
+   * Fetch the price / size / color / smart-quality facets ONCE on
+   * mount. The filter sidebar uses `facets.minPrice` / `maxPrice`
+   * to set the dual-range slider bounds so they're driven by real
+   * data, not a hard-coded 3M VND ceiling.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    getFilterFacets()
+      .then((res) => { if (!cancelled) setFacets(res); })
+      .catch(() => { if (!cancelled) setFacets(null); });
+    return () => { cancelled = true; };
+  }, []);
+
   return {
     content: data.content || [],
     loading,
@@ -75,5 +91,6 @@ export function useSmartProductList(filters, page = 0, size = 12, sortBy = 'newe
     size: data.size ?? size,
     totalElements: data.totalElements ?? 0,
     totalPages: data.totalPages ?? 0,
+    facets,
   };
 }
