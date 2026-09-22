@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './layouts/AdminLayout';
@@ -15,6 +15,11 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
+import ProductListPage from './pages/customer/ProductListPage';
+import ProductDetailPage from './pages/customer/ProductDetailPage';
+import ProductSearchPage from './pages/customer/ProductSearchPage';
+import ProductCategoryPage from './pages/customer/ProductCategoryPage';
+import WishlistPage from './pages/customer/WishlistPage';
 
 export default function App() {
   return (
@@ -26,7 +31,12 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer', 'admin']}><Profile /></ProtectedRoute>} />
-          <Route path="/store" element={<ProtectedRoute allowedRoles={['customer', 'admin']}><CustomerLayout /></ProtectedRoute>}>
+          <Route path="/shop" element={<CustomerLayout />}>
+            <Route index element={<ProductListPage />} />
+            <Route path="search" element={<ProductSearchPage />} />
+            <Route path="category/:id" element={<ProductCategoryPage />} />
+            <Route path="product/:id" element={<ProductDetailPage />} />
+            <Route path="wishlist" element={<WishlistPage />} />
             <Route path="cart" element={<Cart />} />
           </Route>
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>

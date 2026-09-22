@@ -1,0 +1,311 @@
+/* ============================================================
+ * src/pages/customer/shop.css
+ * ------------------------------------------------------------
+ * Styles scoped to ProductListPage (Shop page) only. Imported
+ * once from ProductListPage.jsx. The filter UI now lives in
+ * components/customer/ShopFilterBar.css (own co-located stylesheet)
+ * — this file intentionally does NOT contain filter/sidebar rules.
+ * ============================================================ */
+
+.shop-page {
+  padding: 16px;
+  /* keep the 6-col grid in a predictable container so 1fr columns
+     never balloon to 100% wide when the grid item's content is
+     overflowing. */
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ---------- SHOP HERO ---------- */
+
+.shop-hero {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(139, 92, 246, 0.12));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 24px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.shop-hero h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+.shop-hero p {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+}
+.shop-hero-sort-hint { color: var(--text-secondary); font-weight: 500; }
+@media (max-width: 640px) {
+  .shop-hero { padding: 12px 16px; }
+  .shop-hero h1 { font-size: 1.25rem; }
+}
+
+/* ---------- source badge row (API / Mock) ---------- */
+
+.shop-source-status {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  margin: -8px 0 12px;
+}
+.shop-live-badge {
+  color: var(--success);
+  font-weight: 600;
+}
+.shop-offline-badge {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* ---------- PRODUCT GRID + CARD ---------- */
+
+/* 3 rows × 6 columns. Fixed-col layout keeps every card the same
+   width regardless of viewport, so 6-per-row × 3-per-page always
+   lines up cleanly with no orphan cards on row 4.
+   Scales down to 3 cols @ tablet, 2 cols @ mobile. */
+.shop-grid {
+  display: grid;
+  /* use explicit fixed track sizing — `repeat(N, 1fr)` alone is
+     unsafe when a card has long intrinsic content (image, word,
+     etc.) which the browser treats as min-content and forces the
+     tracks wider than the container permits. */
+  grid-template-columns: repeat(6, minmax(0, calc((100% - 5 * 18px) / 6)));
+  gap: 18px;
+  width: 100%;
+}
+@media (max-width: 1200px) {
+  .shop-grid { grid-template-columns: repeat(4, minmax(0, calc((100% - 3 * 18px) / 4))); }
+}
+@media (max-width: 900px) {
+  .shop-grid { grid-template-columns: repeat(3, minmax(0, calc((100% - 2 * 18px) / 3))); }
+}
+@media (max-width: 600px) {
+  .shop-grid { grid-template-columns: repeat(2, minmax(0, calc((100% - 1 * 18px) / 2))); }
+}
+.product-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  /* keep every card same height so each 3×6 grid block is visually
+     symmetric regardless of name/description length */
+  height: 100%;
+  /* critical for nested grid / flex children with intrinsic
+     min-content (image, long words): without this the grid track
+     silently expands past 1fr and the row collapses to 1 col. */
+  min-width: 0;
+}
+.product-card-body {
+  flex: 1;
+  /* consistent min-height so 1-line and 2-line names never break
+     the row rhythm */
+  min-height: 110px;
+}
+.product-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-color-glow);
+  box-shadow: var(--shadow-glow);
+}
+.product-card-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background: #f3f4f6;        /* light-mode placeholder bg */
+  overflow: hidden;
+  /* prevent intrinsic image size from forcing the grid track wider */
+  min-width: 0;
+}
+.product-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* safety: keep image inside the column width */
+  max-width: 100%;
+}
+.product-card-discount {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.product-card-body {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.product-card-category {
+  font-size: 0.72rem;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+.product-card-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.6em;
+  line-height: 1.3;
+  /* long single-word sizes (e.g. "Áo Tank Top Nam Basic") must NOT
+     widen the column by themselves */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.product-card-pricing {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 2px;
+}
+.product-card-price {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.product-card-base-price {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-decoration: line-through;
+}
+.product-card-meta {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.product-card-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+  margin-bottom: 4px;
+}
+.product-card-size {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  font-size: 0.70rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.product-card-size-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 0.70rem;
+  font-weight: 600;
+}
+.product-card-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.product-card-color {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.10);
+}
+.product-card-color-more {
+  font-size: 0.70rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+/* ---------- EMPTY STATE + PAGINATION ---------- */
+
+.shop-empty {
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+.shop-empty span {
+  font-size: 2.4rem;
+  display: block;
+  margin-bottom: 10px;
+}
+.shop-empty p {
+  margin-bottom: 16px;
+}
+.shop-empty-reset {
+  display: inline-block;
+  padding: 8px 18px;
+  background: var(--text-primary);
+  color: var(--surface-2);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 1px solid var(--text-primary);
+  cursor: pointer;
+}
+.shop-empty-reset:hover {
+  opacity: 0.85;
+}
+
+.shop-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 28px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.shop-pagination button {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.shop-pagination button:hover:not(:disabled) {
+  background: var(--surface-1);
+}
+.shop-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
