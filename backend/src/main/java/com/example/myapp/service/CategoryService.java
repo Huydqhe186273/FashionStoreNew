@@ -18,12 +18,14 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     @Transactional(readOnly = true)
+    // Lấy danh sách danh mục, hỗ trợ lọc theo tên và giới tính.
     public List<CategoryDTO> getCategories(String keyword, String gender) {
         List<Category> categories = categoryRepository.searchCategories(keyword, gender);
         return categories.stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
+    // Lấy một danh mục theo ID; báo lỗi nếu không tồn tại.
     public CategoryDTO getCategoryById(Integer id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục ID: " + id));
@@ -31,6 +33,7 @@ public class CategoryService {
     }
 
     @Transactional
+    // Tạo danh mục mới và liên kết danh mục cha khi parentId được cung cấp.
     public CategoryDTO createCategory(CreateCategoryRequestDTO dto) {
         Category category = new Category();
         category.setName(dto.getName());
@@ -47,6 +50,7 @@ public class CategoryService {
     }
 
     @Transactional
+    // Cập nhật danh mục và thay đổi/xóa liên kết danh mục cha theo parentId.
     public CategoryDTO updateCategory(Integer id, CreateCategoryRequestDTO dto) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục ID: " + id));
@@ -67,10 +71,12 @@ public class CategoryService {
     }
 
     @Transactional
+    // Xóa danh mục theo ID.
     public void deleteCategory(Integer id) {
         categoryRepository.deleteById(id);
     }
 
+    // Chuyển entity Category thành DTO, bao gồm danh mục cha và số sản phẩm thuộc danh mục.
     private CategoryDTO mapToDTO(Category c) {
         long prodCount = c.getProducts() != null ? c.getProducts().size() : 0;
         return CategoryDTO.builder()

@@ -9,6 +9,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const { user, setUser } = useContext(AuthContext);
 
   useEffect(() => {
@@ -34,15 +35,36 @@ export default function Profile() {
     e.preventDefault();
     setError('');
     setMessage('');
+    const fullName = profile.fullName?.trim() || '';
+    const phone = profile.phone?.trim() || '';
+    const email = profile.email?.trim() || '';
+    const validationErrors = {};
+
+    if (fullName.length < 2 || fullName.length > 100 || !/^\p{L}+(?:\s+\p{L}+)*$/u.test(fullName)) {
+      validationErrors.fullName = 'Full Name can contain letters and spaces only';
+    }
+    if (!/^0\d{9}$/.test(phone)) {
+      validationErrors.phone = 'Phone Number must contain exactly 10 digits and start with 0';
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      validationErrors.email = 'Please enter a valid email address';
+    }
+
+    setFieldErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
+
     try {
-      await api.put('/profile', profile);
+      const updatedProfile = { ...profile, fullName, phone, email };
+      const response = await api.put('/profile', updatedProfile);
+      setProfile(response.data);
       setMessage('Profile updated successfully');
       // Update global context so header/sidebar updates immediately
       if (user && setUser) {
-        setUser({ ...user, fullName: profile.fullName });
+        setUser({ ...user, fullName: response.data.fullName, email: response.data.email });
       }
     } catch (err) {
-      setError('Failed to update profile');
+      const errorData = err.response?.data;
+      setError(typeof errorData === 'string' ? errorData : errorData?.message || 'Failed to update profile');
     }
   };
 
@@ -70,7 +92,7 @@ export default function Profile() {
             {message && <div className="profile-alert profile-alert-success">{message}</div>}
             
             {profile && (
-              <form onSubmit={handleUpdate}>
+              <form onSubmit={handleUpdate} noValidate>
                 <div className="profile-form-group">
                   <label className="profile-label">Full Name</label>
                   <input
@@ -78,8 +100,13 @@ export default function Profile() {
                     className="profile-input"
                     placeholder="Enter your full name"
                     value={profile.fullName || ''}
-                    onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
+                    maxLength="100"
+                    onChange={(e) => {
+                      setProfile({ ...profile, fullName: e.target.value });
+                      setFieldErrors({ ...fieldErrors, fullName: '' });
+                    }}
                   />
+                  {fieldErrors.fullName && <div className="profile-field-error">{fieldErrors.fullName}</div>}
                 </div>
                 
                 <div className="profile-form-group">
@@ -89,19 +116,28 @@ export default function Profile() {
                     className="profile-input"
                     placeholder="Enter your phone number"
                     value={profile.phone || ''}
-                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                    inputMode="numeric"
+                    maxLength="10"
+                    onChange={(e) => {
+                      setProfile({ ...profile, phone: e.target.value });
+                      setFieldErrors({ ...fieldErrors, phone: '' });
+                    }}
                   />
+                  {fieldErrors.phone && <div className="profile-field-error">{fieldErrors.phone}</div>}
                 </div>
                 
                 <div className="profile-form-group">
                   <label className="profile-label">Email Address</label>
                   <input
                     type="email"
-                    disabled
                     className="profile-input"
+                    onChange={(e) => {
+                      setProfile({ ...profile, email: e.target.value });
+                      setFieldErrors({ ...fieldErrors, email: '' });
+                    }}
                     value={profile.email || ''}
-                    title="Email cannot be changed"
                   />
+                  {fieldErrors.email && <div className="profile-field-error">{fieldErrors.email}</div>}
                 </div>
                 
                 <button type="submit" className="profile-btn">

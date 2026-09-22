@@ -2,6 +2,7 @@ package com.example.myapp.controller;
 
 import com.example.myapp.entity.User;
 import com.example.myapp.model.ChangePasswordRequest;
+import com.example.myapp.model.ProfileUpdateRequestDTO;
 import com.example.myapp.model.UpdateUserRequestDTO;
 import com.example.myapp.model.UserDTO;
 import com.example.myapp.repos.UserRepository;
@@ -37,9 +38,14 @@ public class UserProfileController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateProfile(@Valid @RequestBody UpdateUserRequestDTO dto) {
+    public ResponseEntity<?> updateProfile(@Valid @RequestBody ProfileUpdateRequestDTO profileDto) {
         try {
             Integer userId = getAuthenticatedUserId();
+            UpdateUserRequestDTO dto = UpdateUserRequestDTO.builder()
+                    .fullName(profileDto.getFullName())
+                    .phone(profileDto.getPhone())
+                    .email(profileDto.getEmail())
+                    .build();
             // Reuse admin's updateUser service, but make sure a user can't change their own role or status.
             // Ideally, we'd have a separate DTO for profile updates. For now we just override role/status to null.
             dto.setRole(null);
@@ -60,6 +66,10 @@ public class UserProfileController {
 
             if (!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())) {
                 return ResponseEntity.badRequest().body("Error: Incorrect old password");
+            }
+
+            if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+                return ResponseEntity.badRequest().body("Mật khẩu mới không được trùng với mật khẩu cũ");
             }
 
             user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
