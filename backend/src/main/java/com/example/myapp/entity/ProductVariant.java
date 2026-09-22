@@ -14,7 +14,9 @@ public class ProductVariant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer VariantId;
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String Size;
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String Color;
     private Integer StockQuantity = 0;
     private String Sku;

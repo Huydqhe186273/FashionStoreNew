@@ -48,8 +48,8 @@ public class PaymentController {
             
             long orderCode = order.getOrderId();
 
-            String returnUrl = "http://localhost:3001/store/cart?payment=success&orderCode=" + orderCode;
-            String cancelUrl = "http://localhost:3001/store/cart?payment=cancel&orderCode=" + orderCode;
+            String returnUrl = "http://localhost:3000/shop/cart?payment=success&orderCode=" + orderCode;
+            String cancelUrl = "http://localhost:3000/shop/cart?payment=cancel&orderCode=" + orderCode;
 
             CreatePaymentLinkRequest request = CreatePaymentLinkRequest.builder()
                     .orderCode(orderCode)

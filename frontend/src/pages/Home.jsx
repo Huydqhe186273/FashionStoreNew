@@ -15,8 +15,8 @@ export default function Home() {
         </Link>
         <div className="nav-links">
           <Link to="/" className="nav-link">Home</Link>
-          <Link to="#" className="nav-link">Shop</Link>
-          <Link to="#" className="nav-link">Collections</Link>
+          <Link to="/shop" className="nav-link">Shop</Link>
+          <Link to="/shop" className="nav-link">Collections</Link>
           <Link to="#" className="nav-link">About</Link>
         </div>
         <div className="nav-actions">
@@ -25,7 +25,7 @@ export default function Home() {
               {user.role === 'admin' && (
                 <Link to="/admin" className="btn-outline">Dashboard</Link>
               )}
-              <Link to="/store/cart" className="btn-outline">Giỏ hàng</Link>
+              <Link to="/shop/cart" className="btn-outline">Giỏ hàng</Link>
               <Link to="/profile" className="btn-outline">Profile</Link>
               <button onClick={logout} className="btn-primary" style={{ padding: '8px 16px', borderRadius: '8px' }}>
                 Logout
@@ -50,7 +50,7 @@ export default function Home() {
             Discover the latest trends in fashion and explore our new collections. 
             Designed for the modern trendsetter.
           </p>
-          <Link to="#" className="hero-btn">Shop Now</Link>
+          <Link to="/shop" className="hero-btn">Shop Now</Link>
         </div>
       </section>
 
