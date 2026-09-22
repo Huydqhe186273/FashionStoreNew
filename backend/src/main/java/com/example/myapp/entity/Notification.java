@@ -16,7 +16,9 @@ public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer NotificationId;
+    @Column(columnDefinition = "NVARCHAR(100)")
     private String Type;
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String Content;
     private Boolean IsRead = false;
     private LocalDateTime CreatedAt;

@@ -18,14 +18,14 @@ spring:
     # Without ALL THREE the driver sends Java strings through
     # SQL Server's non-Unicode code page (CP-1252 on most installs)
     # and silently strips every Vietnamese diacritic on INSERT.
-    url: ${DB_URL:jdbc:sqlserver://localhost;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;}
+    url: ${DB_URL:jdbc:sqlserver://localhost;instanceName=MSSQLSERVER01;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;}
     username: ${DB_USERNAME:sa}
     password: ${DB_PASSWORD:sa}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     show-sql: true
@@ -47,7 +47,12 @@ spring:
             enable: true
 
 server:
-    port: 8080
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 server.error.include-stacktrace: never
 server.error.include-message: never
@@ -60,6 +65,6 @@ springdoc:
     operationsSorter: method
 
 payos:
-  client-id: ${PAYOS_CLIENT_ID:}
-  api-key: ${PAYOS_API_KEY:}
-  checksum-key: ${PAYOS_CHECKSUM_KEY:}
+  client-id: ${PAYOS_CLIENT_ID:e14c939a-e8da-4b9f-81bd-25f05b31417c}
+  api-key: ${PAYOS_API_KEY:6ab5f354-952c-4bbf-856c-042ae5731b1a}
+  checksum-key: ${PAYOS_CHECKSUM_KEY:4467e43ad05fc1268f90844cfe29d92a7e37e32dfdb08dc59d3dac123ee23a51}

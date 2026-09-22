@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useState, useContext } from 'react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { getProductById } from '../../services/customerProductService';
+import { addToCart } from '../../services/cartService';
+import { AuthContext } from '../../context/AuthContext';
 import ProductCard from '../../components/customer/ProductCard';
 import FavoriteButton from '../../components/customer/FavoriteButton';
 import ReviewList from '../../components/customer/ReviewList';
@@ -55,6 +57,11 @@ export default function ProductDetailPage() {
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [reviewRefreshKey, setReviewRefreshKey] = useState(0);
+  const [isAdding, setIsAdding] = useState(false);
+
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const userId = user?.id; // Lấy userId thật từ AuthContext
 
   useDocumentTitle(product?.name || 'Chi tiết sản phẩm');
 
@@ -107,12 +114,41 @@ export default function ProductDetailPage() {
     return match?.stockQuantity || 0;
   }, [product, selectedSize, selectedColor]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async (isBuyNow = false) => {
+    if (!userId) {
+      alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!');
+      navigate('/login');
+      return;
+    }
     if (!selectedSize || !selectedColor) {
       alert('Vui lòng chọn size và màu sắc.');
       return;
     }
-    alert(`Đã thêm vào giỏ:\n- Sản phẩm: ${product.name}\n- Size: ${selectedSize}\n- Màu: ${selectedColor}\n- SL: ${quantity}\n(Giỏ hàng đang được phát triển)`);
+    const variant = product.variants?.find((v) => v.size === selectedSize && v.color === selectedColor);
+    if (!variant) {
+      alert('Sản phẩm này không có sẵn biến thể bạn chọn.');
+      return;
+    }
+    if (!isLive) {
+      alert('Sản phẩm đang hiển thị ở chế độ Demo (không kết nối được backend). Không thể thêm vào giỏ hàng thật!');
+      return;
+    }
+    
+    try {
+      setIsAdding(true);
+      await addToCart(userId, variant.variantId, quantity);
+      
+      if (isBuyNow) {
+        navigate('/shop/cart');
+      } else {
+        alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
+      }
+    } catch (error) {
+      console.error('Lỗi thêm vào giỏ hàng:', error);
+      alert('Thêm vào giỏ hàng thất bại. Vui lòng thử lại.');
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   if (loading && !product) {
@@ -230,8 +266,12 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="product-detail-actions">
-            <button type="button" className="btn-add-cart" onClick={handleAddToCart} disabled={currentStock <= 0}>🛒 Thêm vào giỏ</button>
-            <button type="button" className="btn-buy-now" disabled={currentStock <= 0}>⚡ Mua ngay</button>
+            <button type="button" className="btn-add-cart" onClick={() => handleAddToCart(false)} disabled={currentStock <= 0 || isAdding}>
+              {isAdding ? 'Đang thêm...' : '🛒 Thêm vào giỏ'}
+            </button>
+            <button type="button" className="btn-buy-now" onClick={() => handleAddToCart(true)} disabled={currentStock <= 0 || isAdding}>
+              ⚡ Mua ngay
+            </button>
           </div>
 
           <div className="product-detail-description">

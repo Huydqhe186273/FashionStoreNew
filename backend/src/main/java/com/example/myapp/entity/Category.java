@@ -17,8 +17,11 @@ public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer CategoryId;
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String Name;
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String Gender;
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String Season;
 
     @ManyToOne(fetch = FetchType.LAZY)
