@@ -11,9 +11,14 @@ import java.util.List;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
-    List<Review> findByProduct_ProductIdOrderByCreatedAtDesc(Integer productId);
+    // Spring Data can't derive property paths when the entity field is `ProductId`
+    // and not `id`. Use explicit JPQL so the binding is unambiguous.
 
-    long countByProduct_ProductId(Integer productId);
+    @Query("SELECT r FROM Review r WHERE r.Product.ProductId = :productId ORDER BY r.CreatedAt DESC")
+    List<Review> findReviewsByProductOrderByCreatedAtDesc(@Param("productId") Integer productId);
+
+    @Query("SELECT COUNT(r) FROM Review r WHERE r.Product.ProductId = :productId")
+    long countReviewsByProduct(@Param("productId") Integer productId);
 
     @Query("SELECT AVG(r.Rating) FROM Review r WHERE r.Product.ProductId = :productId")
     Double averageRatingByProductId(@Param("productId") Integer productId);

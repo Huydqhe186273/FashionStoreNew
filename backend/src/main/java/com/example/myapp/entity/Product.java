@@ -27,6 +27,12 @@ public class Product {
     private Integer ViewCount = 0;
     private Integer SoldCount = 0;
     private LocalDateTime CreatedAt;
+    /**
+     * Test/seed-only flag. Customers should never see rows where this is true.
+     * Default false so existing rows stay visible until the migration marks
+     * them (or the dev deletes them).
+     */
+    private Boolean IsTest = false;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "CategoryId", nullable = false, foreignKey = @ForeignKey(name = "FK_Products_Categories"))

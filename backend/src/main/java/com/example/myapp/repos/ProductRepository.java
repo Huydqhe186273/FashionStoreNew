@@ -24,6 +24,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     long sumTotalStockQuantity();
 
     @Query("SELECT p FROM Product p WHERE " +
+           "p.IsTest = false AND " +
            "(:keyword IS NULL OR :keyword = '' OR LOWER(p.Name) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:categoryId IS NULL OR p.Category.CategoryId = :categoryId) AND " +
            "(:status IS NULL OR :status = '' OR p.Status = :status) " +

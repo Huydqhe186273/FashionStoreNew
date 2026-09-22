@@ -34,7 +34,7 @@ public class FavoriteService {
 
     @Transactional(readOnly = true)
     public List<CustomerProductDTO> listFavorites(Integer userId) {
-        return favoriteRepository.findByUser_UserIdOrderByCreatedAtDesc(userId).stream()
+        return favoriteRepository.findFavoritesByUserOrderByCreatedAtDesc(userId).stream()
                 .map(Favorite::getProduct)
                 .filter(Objects::nonNull)
                 .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
@@ -45,7 +45,7 @@ public class FavoriteService {
     @Transactional(readOnly = true)
     public boolean isFavorited(Integer userId, Integer productId) {
         if (userId == null || productId == null) return false;
-        return favoriteRepository.existsByUser_UserIdAndProduct_ProductId(userId, productId);
+        return favoriteRepository.existsFavoriteByUserAndProduct(userId, productId);
     }
 
     @Transactional
@@ -58,7 +58,7 @@ public class FavoriteService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm ID: " + productId));
 
-        return favoriteRepository.findByUser_UserIdAndProduct_ProductId(userId, productId)
+        return favoriteRepository.findFavoriteByUserAndProduct(userId, productId)
                 .orElseGet(() -> {
                     Favorite f = new Favorite();
                     f.setUser(user);

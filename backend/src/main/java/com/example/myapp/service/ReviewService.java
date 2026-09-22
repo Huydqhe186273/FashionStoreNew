@@ -29,11 +29,11 @@ public class ReviewService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> listByProduct(Integer productId) {
-        List<ReviewDTO> reviews = reviewRepository.findByProduct_ProductIdOrderByCreatedAtDesc(productId).stream()
+        List<ReviewDTO> reviews = reviewRepository.findReviewsByProductOrderByCreatedAtDesc(productId).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
 
-        long count = reviewRepository.countByProduct_ProductId(productId);
+        long count = reviewRepository.countReviewsByProduct(productId);
         Double avg = reviewRepository.averageRatingByProductId(productId);
 
         Map<String, Object> summary = new java.util.LinkedHashMap<>();

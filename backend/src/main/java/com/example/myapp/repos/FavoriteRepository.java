@@ -13,13 +13,20 @@ import java.util.Optional;
 @Repository
 public interface FavoriteRepository extends JpaRepository<Favorite, Integer> {
 
-    List<Favorite> findByUser_UserIdOrderByCreatedAtDesc(Integer userId);
+    // Spring Data can't derive `findByUser_UserId` because the User entity
+    // has `UserId`, not `id`. Use explicit JPQL instead.
 
-    Optional<Favorite> findByUser_UserIdAndProduct_ProductId(Integer userId, Integer productId);
+    @Query("SELECT f FROM Favorite f WHERE f.User.UserId = :userId ORDER BY f.CreatedAt DESC")
+    List<Favorite> findFavoritesByUserOrderByCreatedAtDesc(@Param("userId") Integer userId);
 
-    boolean existsByUser_UserIdAndProduct_ProductId(Integer userId, Integer productId);
+    @Query("SELECT f FROM Favorite f WHERE f.User.UserId = :userId AND f.Product.ProductId = :productId")
+    Optional<Favorite> findFavoriteByUserAndProduct(@Param("userId") Integer userId, @Param("productId") Integer productId);
 
-    long countByUser_UserId(Integer userId);
+    @Query("SELECT COUNT(f) > 0 FROM Favorite f WHERE f.User.UserId = :userId AND f.Product.ProductId = :productId")
+    boolean existsFavoriteByUserAndProduct(@Param("userId") Integer userId, @Param("productId") Integer productId);
+
+    @Query("SELECT COUNT(f) FROM Favorite f WHERE f.User.UserId = :userId")
+    long countFavoritesByUser(@Param("userId") Integer userId);
 
     @Modifying
     @Query("DELETE FROM Favorite f WHERE f.User.UserId = :userId AND f.Product.ProductId = :productId")
