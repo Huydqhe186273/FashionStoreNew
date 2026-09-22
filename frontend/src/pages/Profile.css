@@ -149,6 +149,12 @@
   border-color: #e5e7eb;
 }
 
+.profile-field-error {
+  color: #dc2626;
+  font-size: 0.82rem;
+  margin-top: 6px;
+}
+
 .profile-btn {
   width: 100%;
   padding: 16px;

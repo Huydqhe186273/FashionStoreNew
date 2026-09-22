@@ -17,8 +17,10 @@ import java.util.stream.Collectors;
 public class AdminUserService {
 
     private final UserRepository userRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
+    // Lấy danh sách tài khoản nhân viên/quản trị viên theo các điều kiện lọc.
     public List<StaffDTO> getStaffMembers(String keyword, String role, String status) {
         List<User> users = userRepository.searchUsers(keyword, role, status);
         return users.stream()
@@ -28,11 +30,12 @@ public class AdminUserService {
     }
 
     @Transactional
+    // Tạo tài khoản nhân viên hoặc quản trị viên mới với các giá trị mặc định khi cần.
     public StaffDTO createStaff(CreateStaffRequestDTO dto) {
         User user = new User();
         user.setFullName(dto.getFullName());
         user.setEmail(dto.getEmail());
-        user.setPasswordHash(dto.getPassword() != null ? dto.getPassword() : "hashed_password");
+        user.setPasswordHash(dto.getPassword() != null ? passwordEncoder.encode(dto.getPassword()) : passwordEncoder.encode("123456"));
         user.setPhone(dto.getPhone());
         user.setRole(dto.getRole() != null ? dto.getRole() : "staff");
         user.setStatus(dto.getStatus() != null ? dto.getStatus() : "active");
@@ -43,6 +46,7 @@ public class AdminUserService {
     }
 
     @Transactional
+    // Cập nhật thông tin tài khoản nhân viên; chỉ đổi mật khẩu khi request có mật khẩu hợp lệ.
     public StaffDTO updateStaff(Integer id, CreateStaffRequestDTO dto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên ID: " + id));
@@ -52,13 +56,14 @@ public class AdminUserService {
         if (dto.getRole() != null) user.setRole(dto.getRole());
         if (dto.getStatus() != null) user.setStatus(dto.getStatus());
         if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
-            user.setPasswordHash(dto.getPassword().trim());
+            user.setPasswordHash(passwordEncoder.encode(dto.getPassword().trim()));
         }
 
         User saved = userRepository.save(user);
         return mapToStaffDTO(saved);
     }
 
+    // Chuyển entity User thành StaffDTO để không trả về password hash.
     private StaffDTO mapToStaffDTO(User u) {
         return StaffDTO.builder()
                 .userId(u.getUserId())

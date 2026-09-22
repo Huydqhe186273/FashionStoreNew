@@ -26,8 +26,16 @@ public class AuthService {
     private final EmailService emailService;
 
     public String authenticateUser(LoginRequest loginRequest) {
+        String email = loginRequest.getEmail().trim().toLowerCase();
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Tài khoản email không đúng."));
+
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("Mật khẩu không đúng.");
+        }
+
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+            new UsernamePasswordAuthenticationToken(email, loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return jwtUtils.generateJwtToken(authentication);
@@ -50,25 +58,28 @@ public class AuthService {
     }
 
     public void forgotPassword(String email) {
+        email = email.trim().toLowerCase();
         if (!userRepository.existsByEmail(email)) {
-            throw new RuntimeException("Error: Email not found.");
+            throw new RuntimeException("Không tìm thấy email này trong hệ thống.");
         }
         emailService.sendOtpEmail(email);
     }
 
     public void verifyOtp(String email, String otp) {
+        email = email.trim().toLowerCase();
         if (!emailService.verifyOtp(email, otp, false)) {
-            throw new RuntimeException("Error: Invalid or expired OTP.");
+            throw new RuntimeException("Mã OTP không đúng hoặc đã hết hạn.");
         }
     }
 
     public void resetPassword(String email, String otp, String newPassword) {
+        email = email.trim().toLowerCase();
         if (!emailService.verifyOtp(email, otp, true)) {
-            throw new RuntimeException("Error: Invalid or expired OTP.");
+            throw new RuntimeException("Mã OTP không đúng hoặc đã hết hạn.");
         }
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Error: User not found."));
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng."));
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);

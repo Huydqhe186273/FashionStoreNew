@@ -24,7 +24,10 @@ export default function Login() {
         navigate('/');
       }
     } catch (err) {
-      setError(err.response?.data || 'Login failed. Please try again.');
+      const errorData = err.response?.data;
+      setError(typeof errorData === 'string'
+        ? errorData
+        : errorData?.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
     }
   };
 

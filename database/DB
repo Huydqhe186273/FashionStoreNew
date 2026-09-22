@@ -1,6 +1,27 @@
 /* ============================================================
    FASHION STORE DATABASE - SQL SERVER
    Hệ thống bán quần áo trực tuyến tích hợp AI cá nhân hóa
+
+   ⚠ STUB / SCHEMA REFERENCE ONLY
+   ------------------------------------------------------------
+   This file is kept as a quick schema/ERD reference for the
+   project. It is NOT the production seed.
+
+   For actual demo data, see:
+     database/SeedData.sql   (147 products, 36 categories,
+                              ~400 variants, ~250 images,
+                              + discount codes, orders, users)
+
+   SeedData.sql is loaded automatically by
+     backend/.../SeedDataLoader.java
+   on first boot (Users table empty), in UTF-8, batched by `GO`.
+
+   Why this stub is preserved:
+   - Quick DDL reference (CREATE TABLE) without scrolling past
+     1200+ lines of INSERTs.
+   - Sample placeholder product "Áo phông nam siêu c?p vip pro"
+     is intentionally NOT in SeedData.sql and must stay here as
+     a "what NOT to do" example for new contributors.
    ============================================================ */
 
 CREATE DATABASE FashionStoreDB;
@@ -290,8 +311,8 @@ GO
    ============================================================ */
 
 INSERT INTO Users (FullName, Email, PasswordHash, Role) VALUES
-(N'Admin Hệ Thống', 'admin@fashionstore.vn', 'hashed_password', 'admin'),
-(N'Nguyễn Văn A', 'customer1@example.com', 'hashed_password', 'customer');
+(N'Admin Hệ Thống', 'admin@fashionstore.vn', 'admin123', 'admin'),
+(N'Nguyễn Văn A', 'customer1@example.com', 'admin123', 'customer');
 
 INSERT INTO Categories (Name, Gender) VALUES
 (N'Áo', 'unisex'),
@@ -300,5 +321,18 @@ INSERT INTO Categories (Name, Gender) VALUES
 (N'Áo khoác', 'unisex'),
 (N'Giày', 'unisex'),
 (N'Phụ kiện', 'unisex');
+GO
 
+
+-- Tạo sản phẩm mẫu
+INSERT INTO Products (CategoryId, Name, BasePrice, Status, ViewCount, SoldCount) 
+VALUES (1, N'Áo phông nam siêu cấp vip pro', 150000, 'active', 0, 0);
+GO
+
+-- Tạo các biến thể mẫu (Đen và Trắng)
+INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) 
+VALUES (1, 'M', N'Đen', 100, 'APN-M-DEN');
+
+INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) 
+VALUES (1, 'L', N'Trắng', 50, 'APN-L-TRANG');
 GO

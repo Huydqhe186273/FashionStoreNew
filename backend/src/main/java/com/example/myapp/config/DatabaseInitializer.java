@@ -7,6 +7,8 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 public class DatabaseInitializer {
+    // Kết nối vào cơ sở dữ liệu master để kiểm tra và tự tạo database được chỉ định nếu chưa tồn tại.
+    // DatasourceUrl là chuỗi kết nối; Username và Password là thông tin đăng nhập SQL Server.
     public static void initialize(String DatasourceUrl, String Username, String Password) throws Exception {
         String DatabaseName = extractDatabaseName(DatasourceUrl);
         String MasterUrl = DatasourceUrl.replaceFirst("(?i)databaseName=[^;]+", "databaseName=master");
@@ -26,6 +28,8 @@ public class DatabaseInitializer {
         }
     }
 
+    // Trích xuất và kiểm tra giá trị databaseName trong chuỗi kết nối JDBC.
+    // Trả về tên chỉ gồm chữ cái, số hoặc dấu gạch dưới.
     private static String extractDatabaseName(String Url) {
         String Prefix = "databaseName=";
         int Start = Url.indexOf(Prefix);

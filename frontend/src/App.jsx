@@ -1,82 +1,53 @@
-import React, { useContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AuthProvider, AuthContext } from './context/AuthContext';
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import Sidebar from './components/Sidebar';
+import AdminLayout from './layouts/AdminLayout';
+import CustomerLayout from './layouts/CustomerLayout';
 import DashboardOverview from './pages/DashboardOverview';
 import ManageUsers from './pages/ManageUsers';
 import ManageStaff from './pages/ManageStaff';
 import ManageCategories from './pages/ManageCategories';
 import ManageProducts from './pages/ManageProducts';
+import Cart from './pages/Cart';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
-
-const AppLayout = ({ children }) => {
-  const { user } = useContext(AuthContext);
-  const location = useLocation();
-  const noSidebarRoutes = ['/', '/login', '/register', '/forgot-password'];
-  const showSidebar = user?.role === 'admin' && !noSidebarRoutes.includes(location.pathname);
-
-  return (
-    <div style={{ display: 'flex', width: '100%', minHeight: '100vh', flexDirection: showSidebar ? 'row' : 'column' }}>
-      {showSidebar && <Sidebar />}
-      <div style={{ flex: 1, width: '100%' }}>
-        {children}
-      </div>
-    </div>
-  );
-};
+import ProductListPage from './pages/customer/ProductListPage';
+import ProductDetailPage from './pages/customer/ProductDetailPage';
+import ProductSearchPage from './pages/customer/ProductSearchPage';
+import ProductCategoryPage from './pages/customer/ProductCategoryPage';
+import WishlistPage from './pages/customer/WishlistPage';
 
 export default function App() {
   return (
     <AuthProvider>
       <Router>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            
-            {/* Protected Routes for Customer & Admin */}
-            <Route path="/profile" element={
-              <ProtectedRoute allowedRoles={['customer', 'admin']}>
-                <Profile />
-              </ProtectedRoute>
-            } />
-
-            {/* Admin Routes */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <DashboardOverview />
-              </ProtectedRoute>
-            } />
-            <Route path="/users" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <ManageUsers />
-              </ProtectedRoute>
-            } />
-            <Route path="/staff" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <ManageStaff />
-              </ProtectedRoute>
-            } />
-            <Route path="/categories" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <ManageCategories />
-              </ProtectedRoute>
-            } />
-            <Route path="/products" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <ManageProducts />
-              </ProtectedRoute>
-            } />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </AppLayout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer', 'admin']}><Profile /></ProtectedRoute>} />
+          <Route path="/shop" element={<CustomerLayout />}>
+            <Route index element={<ProductListPage />} />
+            <Route path="search" element={<ProductSearchPage />} />
+            <Route path="category/:id" element={<ProductCategoryPage />} />
+            <Route path="product/:id" element={<ProductDetailPage />} />
+            <Route path="wishlist" element={<WishlistPage />} />
+            <Route path="cart" element={<Cart />} />
+          </Route>
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
+            <Route index element={<DashboardOverview />} />
+            <Route path="users" element={<ManageUsers />} />
+            <Route path="staff" element={<ManageStaff />} />
+            <Route path="categories" element={<ManageCategories />} />
+            <Route path="products" element={<ManageProducts />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </Router>
     </AuthProvider>
   );

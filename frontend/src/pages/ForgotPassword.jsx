@@ -16,15 +16,17 @@ export default function ForgotPassword() {
     e.preventDefault();
     setMessage('');
     setError('');
+    const normalizedEmail = email.trim().toLowerCase();
     try {
-      await api.post('/auth/forgot-password', { email });
-      setMessage('OTP has been sent to your email.');
+      await api.post('/auth/forgot-password', { email: normalizedEmail });
+      setEmail(normalizedEmail);
+      setMessage('Mã OTP đã được gửi đến email của bạn.');
       setStep(2);
     } catch (err) {
       const errorData = err.response?.data;
       const errorMessage = typeof errorData === 'string' 
         ? errorData 
-        : errorData?.message || errorData?.error || 'Failed to request OTP';
+        : errorData?.message || errorData?.error || 'Không thể gửi mã OTP.';
       setError(errorMessage);
     }
   };
@@ -41,7 +43,7 @@ export default function ForgotPassword() {
       const errorData = err.response?.data;
       const errorMessage = typeof errorData === 'string' 
         ? errorData 
-        : errorData?.message || errorData?.error || 'Invalid OTP';
+        : errorData?.message || errorData?.error || 'Mã OTP không đúng hoặc đã hết hạn.';
       setError(errorMessage);
     }
   };
@@ -58,7 +60,7 @@ export default function ForgotPassword() {
       const errorData = err.response?.data;
       const errorMessage = typeof errorData === 'string' 
         ? errorData 
-        : errorData?.message || errorData?.error || 'Failed to reset password';
+        : errorData?.message || errorData?.error || 'Không thể đặt lại mật khẩu.';
       setError(errorMessage);
     }
   };
