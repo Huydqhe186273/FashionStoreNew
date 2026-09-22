@@ -25,7 +25,7 @@ export default function Home() {
               {user.role === 'admin' && (
                 <Link to="/admin" className="btn-outline">Dashboard</Link>
               )}
-              <Link to="/store/cart" className="btn-outline">Giỏ hàng</Link>
+              <Link to="/shop/cart" className="btn-outline">Giỏ hàng</Link>
               <Link to="/profile" className="btn-outline">Profile</Link>
               <button onClick={logout} className="btn-primary" style={{ padding: '8px 16px', borderRadius: '8px' }}>
                 Logout

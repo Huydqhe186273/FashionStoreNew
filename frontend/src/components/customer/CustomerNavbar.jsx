@@ -98,10 +98,10 @@ export default function CustomerNavbar() {
 
         <div className="customer-nav-actions">
           <Link to="/shop/wishlist" className="customer-icon-btn" title="Yêu thích" aria-label="Yêu thích">♡</Link>
-          <button type="button" className="customer-icon-btn" title="Tài khoản"
-            onClick={() => alert('Tính năng tài khoản đang phát triển')}>👤</button>
-          <button type="button" className="customer-icon-btn" title="Giỏ hàng"
-            onClick={() => alert('Giỏ hàng đang phát triển')}>🛒 <span className="cart-badge">0</span></button>
+          <Link to="/profile" className="customer-icon-btn" title="Tài khoản" aria-label="Tài khoản">👤</Link>
+          <Link to="/shop/cart" className="customer-icon-btn" title="Giỏ hàng" aria-label="Giỏ hàng">
+            🛒 <span className="cart-badge">0</span>
+          </Link>
         </div>
       </div>
     </nav>

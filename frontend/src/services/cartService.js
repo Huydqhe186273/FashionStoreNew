@@ -15,6 +15,11 @@ export const removeItem = async (userId, cartItemId) => {
   return response.data;
 };
 
+export const clearCart = async (userId) => {
+  const response = await api.delete(`/cart/clear?userId=${userId}`);
+  return response.data;
+};
+
 export const addToCart = async (userId, variantId, quantity) => {
   const response = await api.post(`/cart/add`, { variantId, quantity }, { params: { userId } });
   return response.data;
@@ -40,7 +45,7 @@ export const createPaymentLink = async (orderId) => {
   }
 };
 
-export const verifyPayment = async (orderId) => {
-  const response = await api.post(`/payment/verify?orderId=${orderId}`);
+export const verifyPayment = async (orderCode) => {
+  const response = await api.post(`/payment/verify?orderCode=${orderCode}`);
   return response.data;
 };

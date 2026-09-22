@@ -17,6 +17,7 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer ReviewId;
     private Integer Rating;
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String Comment;
     private LocalDateTime CreatedAt;
 

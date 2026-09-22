@@ -19,7 +19,9 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer ProductId;
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String Name;
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String Description;
     private BigDecimal BasePrice;
     private BigDecimal DiscountPrice;

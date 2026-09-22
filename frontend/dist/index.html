@@ -6,9 +6,19 @@
     <title>Fashion Store - Admin Dashboard SPA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/assets/index-WEABDj2I.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-B_BQFLeU.css">
+    <!--
+      Plus Jakarta Sans does NOT ship Vietnamese glyphs in its
+      default subset, so "Áo thun" rendered as "Ao thun" before.
+      Be Vietnam Pro + Inter both ship the Vietnamese range; we
+      pull both so the body can fall back to whichever loads
+      first, and brand display stays on Bodoni Moda (Latin only,
+      used for the wordmark — see .brand-title in index.css).
+    -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet">
+    <script type="module" crossorigin src="/assets/index-PmbC8-CC.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CTXgJRLI.css">
   </head>
   <body>
     <div id="root"></div>
