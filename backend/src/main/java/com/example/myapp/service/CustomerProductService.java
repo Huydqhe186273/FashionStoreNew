@@ -77,7 +77,9 @@ public class CustomerProductService {
             int page,
             int pageSize) {
 
-        List<Product> all = productRepository.findAll();
+        List<Product> all = productRepository.findAll().stream()
+                .filter(p -> !Boolean.TRUE.equals(p.getIsTest()))
+                .collect(Collectors.toList());
 
         List<Product> filtered = all.stream()
                 .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
@@ -256,6 +258,7 @@ public class CustomerProductService {
     @Transactional(readOnly = true)
     public FilterFacetsDTO getFilterFacets() {
         List<Product> activeProducts = productRepository.findAll().stream()
+                .filter(p -> !Boolean.TRUE.equals(p.getIsTest()))
                 .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
                 .collect(Collectors.toList());
 
@@ -502,18 +505,25 @@ public class CustomerProductService {
     }
 
     private CustomerProductDTO mapToDTO(Product p, boolean includeVariants) {
-        List<ProductVariant> variants = includeVariants
-                ? productVariantRepository.findByProductId(p.getProductId())
-                : List.of();
+        /* Always load variants for size/color facets — the list view
+         * still wants to render "Size có sẵn" + swatches even when
+         * it doesn't include the full variants array. The query is
+         * cheap (one indexed lookup per product). */
+        List<ProductVariant> variants = productVariantRepository.findByProductId(p.getProductId());
 
         List<String> images = new ArrayList<>();
         String primary = null;
         List<ProductImage> imgs = productImageRepository.findByProductId(p.getProductId());
         for (ProductImage img : imgs) {
-            if (img.getImageUrl() != null) images.add(img.getImageUrl());
-            if (Boolean.TRUE.equals(img.getIsPrimary()) && img.getImageUrl() != null) {
-                primary = img.getImageUrl();
-            }
+            String url = img.getImageUrl();
+            if (url == null) continue;
+            // Skip placeholder / random-photo URLs that don't actually
+            // match the product name. The frontend will synthesise a
+            // name-aware SVG artwork instead — see productArtwork.js.
+            // Tested against the demo seed which uses picsum.photos.
+            if (isStockPhotoPlaceholder(url)) continue;
+            images.add(url);
+            if (Boolean.TRUE.equals(img.getIsPrimary())) primary = url;
         }
         if (primary == null && !images.isEmpty()) primary = images.get(0);
 
@@ -577,14 +587,20 @@ public class CustomerProductService {
     }
 
     private Comparator<Product> buildComparator(String sortBy, String sortDir) {
-        boolean descending = sortDir != null && sortDir.equalsIgnoreCase("desc");
+        String key = sortBy == null ? "" : sortBy.toLowerCase();
+        // price_asc / price_desc encode the direction in their name;
+        // newer / bestseller / discount don't — for those we still
+        // honour sortDir (default "desc" set by the controller).
+        boolean sortByHasDirection = key.equals("price_asc") || key.equals("price_desc");
+        boolean descending = !sortByHasDirection
+                && sortDir != null && sortDir.equalsIgnoreCase("desc");
         Comparator<Product> cmp;
-        switch (sortBy == null ? "" : sortBy.toLowerCase()) {
+        switch (key) {
             case "price_asc":
                 cmp = Comparator.comparing((Product p) -> priceOf(p), Comparator.nullsLast(BigDecimal::compareTo));
                 break;
             case "price_desc":
-                cmp = Comparator.comparing((Product p) -> priceOf(p), Comparator.nullsLast(BigDecimal::compareTo));
+                cmp = Comparator.comparing((Product p) -> priceOf(p), Comparator.nullsLast(BigDecimal::compareTo)).reversed();
                 break;
             case "bestseller":
                 cmp = Comparator.comparing(Product::getSoldCount, Comparator.nullsLast(Comparator.naturalOrder()));
@@ -626,6 +642,27 @@ public class CustomerProductService {
                 .intValue();
     }
 
+    /**
+     * True when the URL points at a stock-photo service whose image
+     * content is independent of the product name. We treat those as
+     * placeholders and the frontend synthesises a name-aware SVG
+     * artwork instead (see utils/productArtwork.js).
+     *
+     * Recognised hosts: picsum.photos, source.unsplash.com (deprecated
+     * mid-2024), images.unsplash.com, plus /placeholders/ paths.
+     */
+    private static boolean isStockPhotoPlaceholder(String url) {
+        if (url == null) return true;
+        String u = url.toLowerCase();
+        return u.contains("picsum.photos")
+                || u.contains("source.unsplash.com")
+                || u.contains("images.unsplash.com")
+                || u.contains("/placeholder")
+                || u.endsWith("/no-image")
+                || u.endsWith("/no-image.png")
+                || u.endsWith("/no-image.jpg");
+    }
+
     /** Returns distinct non-blank values of a variant field for the given product. */
     private Set<String> distinctVariantValues(Product p,
             java.util.function.Function<ProductVariant, String> extractor) {
@@ -643,6 +680,7 @@ public class CustomerProductService {
     public List<CustomerProductDTO> getNewProducts(int limit) {
         int safeLimit = Math.max(1, Math.min(limit, 50));
         return productRepository.findAll().stream()
+                .filter(p -> !Boolean.TRUE.equals(p.getIsTest()))
                 .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
                 .sorted(Comparator.comparing(Product::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .limit(safeLimit)
@@ -654,6 +692,7 @@ public class CustomerProductService {
     public List<CustomerProductDTO> getBestsellers(int limit) {
         int safeLimit = Math.max(1, Math.min(limit, 50));
         return productRepository.findAll().stream()
+                .filter(p -> !Boolean.TRUE.equals(p.getIsTest()))
                 .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
                 .sorted(Comparator.comparing(Product::getSoldCount, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .limit(safeLimit)
@@ -665,6 +704,7 @@ public class CustomerProductService {
     public List<CustomerProductDTO> getDiscountedProducts(int limit) {
         int safeLimit = Math.max(1, Math.min(limit, 50));
         return productRepository.findAll().stream()
+                .filter(p -> !Boolean.TRUE.equals(p.getIsTest()))
                 .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
                 .filter(p -> p.getDiscountPrice() != null && p.getBasePrice() != null
                         && p.getDiscountPrice().compareTo(p.getBasePrice()) < 0)
