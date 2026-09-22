@@ -24,29 +24,38 @@ public class CartService {
 
     @Transactional(readOnly = true)
     public CartDTO getCartByUserId(Integer userId) {
+        // Lấy giỏ hàng của user từ DB (nếu chưa có thì tự động tạo mới)
         Cart cart = getOrCreateCart(userId);
+        // Chuyển sang DTO để chỉ trả về các thông tin cần thiết cho Frontend
         return mapToDTO(cart);
     }
 
     @Transactional
     public CartDTO addToCart(Integer userId, AddToCartRequestDTO request) {
+        // Lấy giỏ hàng của user
         Cart cart = getOrCreateCart(userId);
+        
+        // Lấy thông tin phân loại sản phẩm (variant) từ DB
         ProductVariant variant = productVariantRepository.findById(request.getVariantId())
                 .orElseThrow(() -> new RuntimeException("Variant not found"));
 
+        // Kiểm tra số lượng tồn kho có đủ không
         if (variant.getStockQuantity() < request.getQuantity()) {
             throw new RuntimeException("Not enough stock");
         }
 
+        // Kiểm tra xem sản phẩm này đã có trong giỏ hàng chưa
         Optional<CartItem> existingItemOpt = cart.getCartItems().stream()
                 .filter(item -> item.getVariant().getVariantId().equals(variant.getVariantId()))
                 .findFirst();
 
         if (existingItemOpt.isPresent()) {
+            // Nếu có rồi thì cộng dồn số lượng
             CartItem existingItem = existingItemOpt.get();
             existingItem.setQuantity(existingItem.getQuantity() + request.getQuantity());
             cartItemRepository.save(existingItem);
         } else {
+            // Nếu chưa có thì thêm mới vào giỏ hàng
             CartItem newItem = new CartItem();
             newItem.setCart(cart);
             newItem.setVariant(variant);
@@ -100,6 +109,14 @@ public class CartService {
         return mapToDTO(cart);
     }
 
+    @Transactional
+    public CartDTO clearCart(Integer userId) {
+        Cart cart = getOrCreateCart(userId);
+        cartItemRepository.deleteAll(cart.getCartItems());
+        cart.getCartItems().clear();
+        return mapToDTO(cart);
+    }
+
     private Cart getOrCreateCart(Integer userId) {
         return cartRepository.findByUserId(userId)
                 .orElseGet(() -> {
@@ -127,15 +144,19 @@ public class CartService {
         CartDTO dto = new CartDTO();
         dto.setCartId(cart.getCartId());
 
+        // Lặp qua từng món trong giỏ để nhặt thông tin mang lên Frontend
         List<CartItemDTO> itemDTOs = cart.getCartItems().stream().map(item -> {
             CartItemDTO itemDTO = new CartItemDTO();
             itemDTO.setCartItemId(item.getCartItemId());
             itemDTO.setVariantId(item.getVariant().getVariantId());
+            
+            // Đi qua bảng Phân loại (Variant) để chọc thẳng vào bảng Sản phẩm lấy tên
             itemDTO.setProductId(item.getVariant().getProduct().getProductId());
             itemDTO.setProductName(item.getVariant().getProduct().getName());
             itemDTO.setSize(item.getVariant().getSize());
             itemDTO.setColor(item.getVariant().getColor());
 
+            // Trích xuất giá tiền: Check xem có đang sale không, nếu không thì lấy giá gốc
             BigDecimal price = item.getVariant().getProduct().getDiscountPrice() != null ?
                     item.getVariant().getProduct().getDiscountPrice() :
                     item.getVariant().getProduct().getBasePrice();
@@ -143,6 +164,7 @@ public class CartService {
             itemDTO.setPrice(price);
             itemDTO.setQuantity(item.getQuantity());
             
+            // Tính thành tiền của món đồ này (subTotal = Giá * Số lượng)
             if (price != null && item.getQuantity() != null) {
                 itemDTO.setSubTotal(price.multiply(BigDecimal.valueOf(item.getQuantity())));
             } else {
@@ -153,6 +175,7 @@ public class CartService {
 
         dto.setItems(itemDTOs);
 
+        // Cộng dồn thành tiền (subTotal) của tất cả món đồ lại để ra Tổng bill (totalAmount)
         BigDecimal totalAmount = itemDTOs.stream()
                 .map(CartItemDTO::getSubTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

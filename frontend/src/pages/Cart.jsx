@@ -1,10 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { getCart, addToCart, updateQuantity, removeItem, createPaymentLink, createAddress, createOrder, verifyPayment } from '../services/cartService';
+import React, { useEffect, useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getCart, addToCart, updateQuantity, removeItem, clearCart, createPaymentLink, createAddress, createOrder, verifyPayment } from '../services/cartService';
+import { AuthContext } from '../context/AuthContext';
 
 export default function Cart() {
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const userId = user?.id; // Lấy userId từ người dùng đã đăng nhập
+
   const [cartData, setCartData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [adding, setAdding] = useState(false);
   const [updatingItemId, setUpdatingItemId] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null); // Lưu thông tin item đang chuẩn bị xóa
   const [address, setAddress] = useState({
@@ -13,7 +18,6 @@ export default function Cart() {
     addressLine: '',
     city: ''
   });
-  const userId = 1; // Mặc định dùng userId 1 để test
 
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -23,6 +27,10 @@ export default function Cart() {
   };
 
   const loadCart = async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const data = await getCart(userId);
@@ -39,10 +47,10 @@ export default function Cart() {
     
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
-    const orderId = urlParams.get('orderId');
+    const orderCode = urlParams.get('orderCode');
     
-    if (paymentStatus === 'success' && orderId) {
-      verifyPayment(orderId).then(res => {
+    if (paymentStatus === 'success' && orderCode) {
+      verifyPayment(orderCode).then(res => {
         showToast('success', res.message);
         window.history.replaceState({}, document.title, window.location.pathname);
         loadCart();
@@ -56,34 +64,27 @@ export default function Cart() {
     }
   }, []);
 
-  const handleAddSampleItem = async (variantId) => {
-    try {
-      setAdding(true);
-      const updatedCart = await addToCart(userId, variantId, 1);
-      setCartData(updatedCart);
-    } catch (error) {
-      console.error("Lỗi thêm sản phẩm:", error);
-      showToast('error', 'Thêm sản phẩm thất bại. Có thể do hết hàng hoặc chưa có Variant ID ' + variantId + ' trong Database.');
-    } finally {
-      setAdding(false);
-    }
-  };
-
   const handleUpdateQuantity = async (cartItemId, newQuantity) => {
-    if (newQuantity < 1) return; // Không cho giảm dưới 1 bằng nút này, phải dùng nút xóa
+    // Chặn luôn nếu giảm xuống 0, bắt user dùng nút xóa riêng
+    if (newQuantity < 1) return; 
     try {
+      // Bật loading xoay xoay cho item đang sửa
       setUpdatingItemId(cartItemId);
+      // Gọi API đá lên backend để update
       const updatedCart = await updateQuantity(userId, cartItemId, newQuantity);
+      // Backend trả về giỏ mới thì gán lại state để render
       setCartData(updatedCart);
     } catch (error) {
       console.error("Lỗi cập nhật số lượng:", error);
+      // Bắn toast báo lỗi, thường là do hết tồn kho
       showToast('error', 'Cập nhật thất bại. Có thể do hết hàng trong kho.');
     } finally {
+      // Xong xuôi thì tắt loading đi
       setUpdatingItemId(null);
     }
   };
 
-  // Mở modal xác nhận thay vì dùng window.confirm
+  // Bấm xóa thì mở modal confirm chứ không dùng window.confirm phèn phèn
   const handleRemoveItemRequest = (item) => {
     setItemToDelete(item);
   };
@@ -91,7 +92,9 @@ export default function Cart() {
   const confirmRemoveItem = async () => {
     if (!itemToDelete) return;
     try {
+      // Bật state loading chờ xóa
       setUpdatingItemId(itemToDelete.cartItemId);
+      // Gọi API đá item này ra khỏi DB
       const updatedCart = await removeItem(userId, itemToDelete.cartItemId);
       setCartData(updatedCart);
       showToast('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
@@ -99,16 +102,35 @@ export default function Cart() {
       console.error("Lỗi xóa sản phẩm:", error);
       showToast('error', 'Xóa sản phẩm thất bại.');
     } finally {
+      // Dọn dẹp state, ẩn modal
       setUpdatingItemId(null);
-      setItemToDelete(null); // Đóng modal
+      setItemToDelete(null); 
+    }
+  };
+
+  const handleClearCart = async () => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa tất cả sản phẩm trong giỏ hàng không?")) {
+      try {
+        setLoading(true);
+        const updatedCart = await clearCart(userId);
+        setCartData(updatedCart);
+        showToast('success', 'Đã xóa tất cả sản phẩm khỏi giỏ hàng.');
+      } catch (error) {
+        console.error("Lỗi xóa giỏ hàng:", error);
+        showToast('error', 'Xóa tất cả sản phẩm thất bại.');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   const cancelRemoveItem = () => {
-    setItemToDelete(null); // Đóng modal
+    // Quay xe không xóa nữa thì đóng modal thôi
+    setItemToDelete(null); 
   };
 
   const handleCheckout = async () => {
+    // Check sương sương xem giỏ trống không trước khi gọi API thanh toán
     if (!cartData || !cartData.items || cartData.items.length === 0) {
       showToast('error', "Giỏ hàng của bạn đang trống!");
       return;
@@ -173,26 +195,27 @@ export default function Cart() {
       <div style={{ padding: '24px', background: '#ffffff', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', border: '1px solid #e5e7eb', marginTop: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>Giỏ hàng của bạn</h2>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          {cartData && cartData.items && cartData.items.length > 0 && (
             <button 
-              onClick={() => handleAddSampleItem(1)} 
-              disabled={adding}
-              style={{ padding: '10px 16px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', opacity: adding ? 0.7 : 1, fontWeight: '600' }}
+              onClick={handleClearCart} 
+              disabled={loading}
+              style={{ padding: '8px 16px', backgroundColor: '#fee2e2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer', opacity: loading ? 0.7 : 1, fontWeight: '600', fontSize: '0.9rem' }}
             >
-              {adding ? 'Đang thêm...' : '+ Áo Đen'}
+              Xóa tất cả
             </button>
-            <button 
-              onClick={() => handleAddSampleItem(3)} 
-              disabled={adding}
-              style={{ padding: '10px 16px', backgroundColor: '#f59e0b', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', opacity: adding ? 0.7 : 1, fontWeight: '600' }}
-            >
-              {adding ? 'Đang thêm...' : '+ Áo Trắng'}
-            </button>
-          </div>
+          )}
         </div>
 
         {loading ? (
           <p style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>Đang tải giỏ hàng...</p>
+        ) : !userId ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9ca3af' }}>
+            <svg viewBox="0 0 24 24" style={{ width: '80px', height: '80px', opacity: 0.3, marginBottom: '16px', margin: '0 auto', display: 'block', color: '#6b7280' }}><path d="M12 11c0 3.532 2.156 6.453 5.342 7.575a7.973 7.973 0 01-10.684 0C9.844 17.453 12 14.532 12 11zm0 0a4 4 0 100-8 4 4 0 000 8z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <p style={{ fontSize: '1.2rem', marginTop: '16px', fontWeight: '500', color: '#4b5563' }}>Bạn cần đăng nhập để xem giỏ hàng.</p>
+            <button onClick={() => navigate('/login')} style={{ marginTop: '16px', padding: '10px 20px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
+              Đăng nhập ngay
+            </button>
+          </div>
         ) : !cartData || !cartData.items || cartData.items.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9ca3af' }}>
             <svg viewBox="0 0 24 24" style={{ width: '80px', height: '80px', opacity: 0.3, marginBottom: '16px', margin: '0 auto', display: 'block', color: '#6b7280' }}><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>

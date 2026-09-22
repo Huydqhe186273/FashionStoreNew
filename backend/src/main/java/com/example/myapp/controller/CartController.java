@@ -44,4 +44,10 @@ public class CartController {
         CartDTO cart = cartService.removeCartItem(userId, cartItemId);
         return ResponseEntity.ok(cart);
     }
+
+    @DeleteMapping("/clear")
+    public ResponseEntity<CartDTO> clearCart(@RequestParam Integer userId) {
+        CartDTO cart = cartService.clearCart(userId);
+        return ResponseEntity.ok(cart);
+    }
 }

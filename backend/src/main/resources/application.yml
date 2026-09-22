@@ -50,7 +50,12 @@ spring:
             enable: true
 
 server:
-    port: 8080
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 server.error.include-stacktrace: never
 server.error.include-message: never
