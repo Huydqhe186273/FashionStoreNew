@@ -116,18 +116,18 @@ INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, S
 INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
 (15, N'Áo Sơ Mi Nam Dài Tay Oxford', N'Áo sơ mi nam dài tay chất Oxford cao cấp, cổ điển lịch lãm. Phù hợp đi làm, đi chơi, dự tiệc. May đo chuẩn form.', 599000, 499000, 'active', 980, 67, DATEADD(day, -35, SYSDATETIME())),
 (15, N'Áo Sơ Mi Nam Ngắn Tay Havana', N'Áo sơ mi nam ngắn tay chất Havana, phong cách casual. Màu sắc tươi sáng, phù hợp mùa hè. Có thể mặc ngoài hoặc tuck vào.', 449000, NULL, 'active', 720, 41, DATEADD(day, -18, SYSDATETIME())),
-(15, N'Áo Sơ Mi Nam Slim Fit Karen', N'Áo sơ mi nam slim fit, ôm sát cơ thể, lịch lãm. Chất vải cotton pha poly, ít nhăn, dễ giặt.', 699000, 599000, 'active', 540, 28, DATEADD(day, -12, SYSDATETIME()));
+(15, N'Áo Sơ Mi Nam Slim Fit Korean (Hàn Quốc)', N'Áo sơ mi nam slim fit, ôm sát cơ thể, lịch lãm. Chất vải cotton pha poly, ít nhăn, dễ giặt.', 699000, 599000, 'active', 540, 28, DATEADD(day, -12, SYSDATETIME()));
 
 -- Áo sơ mi nữ
 INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
 (16, N'Áo Sơ Mi Nữ Dài Tay Lụa', N'Áo sơ mi nữ dài tay chất lụa cao cấp, sang trọng. Thiết kế thanh lịch, phù hợp công sở hoặc dự tiệc.', 749000, 649000, 'active', 860, 52, DATEADD(day, -30, SYSDATETIME())),
 (16, N'Áo Sơ Mi Nữ Ngắn Tay Caro', N'Áo sơ mi nữ ngắn tay họa tiết caro, phong cách trẻ trung. Chất vải cotton thoáng mát, phù hợp mùa hè.', 399000, NULL, 'active', 1100, 73, DATEADD(day, -20, SYSDATETIME())),
-(16, N'Áo Sơ Mi Nữ Oversize男友风', N'Áo sơ mi nữ oversize phong cách Hàn Quốc, mượt mà. Có thể mặc như áo khoác nhẹ bên ngoài.', 529000, 459000, 'active', 920, 48, DATEADD(day, -25, SYSDATETIME()));
+(16, N'Áo Sơ Mi Nữ Oversize phong cách Hàn Quốc', N'Áo sơ mi nữ oversize phong cách Hàn Quốc, mượt mà. Có thể mặc như áo khoác nhẹ bên ngoài.', 529000, 459000, 'active', 920, 48, DATEADD(day, -25, SYSDATETIME()));
 
 -- Áo khoác nam
 INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
 (17, N'Áo Khoác Nam Jeans Wash Xanh', N'Áo khoác jeans nam wash xanh nhạt, phong cách streetwear. Chất denim dày dặn, bền đẹp theo thời gian.', 899000, 799000, 'active', 760, 44, DATEADD(day, -40, SYSDATETIME())),
-(17, N'Áo Khoác Nam Nỉ Bum Đen', N'Áo khoác nỉ nam phong cách Bum, màu đen cổ điển. Ấm áp, phù hợp mùa thu đông. Có mũ trùm đầu.', 649000, NULL, 'active', 630, 35, DATEADD(day, -22, SYSDATETIME())),
+(17, N'Áo Khoác Nam Nỉ Đen Classic', N'Áo khoác nỉ nam phong cách Bum, màu đen cổ điển. Ấm áp, phù hợp mùa thu đông. Có mũ trùm đầu.', 649000, NULL, 'active', 630, 35, DATEADD(day, -22, SYSDATETIME())),
 (17, N'Áo Khoác Nam Gió 2 Lớp', N'Áo khoác gió nam 2 lớp chống nắng, chống gió. Nhẹ nhàng, dễ gấp gọn, tiện lợi mang theo.', 499000, 399000, 'active', 480, 22, DATEADD(day, -10, SYSDATETIME()));
 
 -- Áo khoác nữ
@@ -170,7 +170,7 @@ INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, S
 INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
 (25, N'Quần Baggy Nữ Nỉ Caro', N'Quần baggy nữ chất nỉ bông họa tiết caro, siêu mềm. Ống cực rộng, thoải mái tuyệt đối. Trend 2024!', 449000, 379000, 'active', 1680, 112, DATEADD(day, -18, SYSDATETIME())),
 (25, N'Quần Baggy Nữ Jeans Vintage', N'Quần baggy nữ jeans vintage wash đẹp. Phong cách retro, cực kỳ trendy. Phải có trong tủ đồ!', 649000, NULL, 'active', 1420, 88, DATEADD(day, -25, SYSDATETIME())),
-(25, N'Quần Baggy Nữ Thun Phong Cách', N'Quần baggy nữ chất thun cotton, phong cáchoversize. Siêu thoải mái, mặc ngủ cũng được.', 299000, 249000, 'active', 2100, 156, DATEADD(day, -12, SYSDATETIME()));
+(25, N'Quần Baggy Nữ Thun Phong Cách', N'Quần baggy nữ chất thun cotton, phong cách oversize. Siêu thoải mái, mặc ngủ cũng được.', 299000, 249000, 'active', 2100, 156, DATEADD(day, -12, SYSDATETIME()));
 
 -- Váy ngắn
 INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
@@ -205,7 +205,7 @@ INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, S
 -- Giày thể thao
 INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
 (33, N'Giày Thể Thao Nam Classic White', N'Giày thể thao nam classic trắng, minimal style. Da tổng hợp cao cấp, êm chân. Phối đồ với mọi thứ!', 899000, 799000, 'active', 1560, 98, DATEADD(day, -25, SYSDATETIME())),
-(33, N'Giày Thể Thao Nam Running Pro', N'Giày chạy bộ nam running pro, công nghệ đệm Air. Nhẹ, êm, hỗ trợ跑步 (chạy) tốt. Dành cho runner!', 1499000, 1299000, 'active', 890, 45, DATEADD(day, -30, SYSDATETIME())),
+(33, N'Giày Thể Thao Nam Running Pro', N'Giày chạy bộ nam running pro, công nghệ đệm Air. Nhẹ, êm, hỗ trợ chạy bộ tốt. Dành cho runner!', 1499000, 1299000, 'active', 890, 45, DATEADD(day, -30, SYSDATETIME())),
 (33, N'Giày Thể Thao Nam High Top Street', N'Giày high top nam phong cách streetwear, chunky design. Hot trend 2024. Cực ngầu!', 1199000, NULL, 'active', 1240, 72, DATEADD(day, -15, SYSDATETIME())),
 (33, N'Giày Thể Thao Nữ Sneaker Platform', N'Giày sneaker nữ platform cao, tăng chiều cao. Phong cách Hàn Quốc, cực kỳ xinh. Must-have!', 999000, 899000, 'active', 2100, 145, DATEADD(day, -20, SYSDATETIME())),
 (33, N'Giày Thể Thao Nữ Classic Pink', N'Giày thể thao nữ classic màu hồng, ngọt ngào. Da mềm, đế cao su bền. Đi chơi, đi làm đều xinh.', 799000, NULL, 'active', 1680, 112, DATEADD(day, -22, SYSDATETIME())),
@@ -238,15 +238,15 @@ INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, S
 
 -- Túi đeo chéo
 INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(38, N'TúI Đeo Chéo Nam Crossbody', N'Túi đeo chéo nam crossbody, phong cách streetwear. Chất vải canvas bền bỉ. Đi chơi, đi phố cực ngầu!', 449000, 379000, 'active', 780, 45, DATEADD(day, -20, SYSDATETIME())),
-(38, N'TúI Đeo Chéo Nữ Mini Bag', N'Túi mini nữ đeo chéo, xinh xắn. Chất da tổng hợp cao cấp. Đi cafe, đi mall perfect!', 349000, NULL, 'active', 1560, 102, DATEADD(day, -12, SYSDATETIME())),
-(38, N'TúI Đeo Chéo Unisex Messenger', N'Túi messenger unisex, phong cách vintage. Có nhiều ngăn, đựng được tablet. Đi học, đi làm đều OK.', 649000, 549000, 'active', 620, 34, DATEADD(day, -25, SYSDATETIME()));
+(38, N'Túi Đeo Chéo Nam Crossbody', N'Túi đeo chéo nam crossbody, phong cách streetwear. Chất vải canvas bền bỉ. Đi chơi, đi phố cực ngầu!', 449000, 379000, 'active', 780, 45, DATEADD(day, -20, SYSDATETIME())),
+(38, N'Túi Đeo Chéo Nữ Mini Bag', N'Túi mini nữ đeo chéo, xinh xắn. Chất da tổng hợp cao cấp. Đi cafe, đi mall perfect!', 349000, NULL, 'active', 1560, 102, DATEADD(day, -12, SYSDATETIME())),
+(38, N'Túi Đeo Chéo Unisex Messenger', N'Túi messenger unisex, phong cách vintage. Có nhiều ngăn, đựng được tablet. Đi học, đi làm đều OK.', 649000, 549000, 'active', 620, 34, DATEADD(day, -25, SYSDATETIME()));
 
 -- Túi xách tay
 INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(39, N'TúI Xách Nữ Tote Bag Classic', N'Túi tote nữ cổ điển, đựng vừa laptop 14 inch. Da PU cao cấp, sang trọng. Đi làm, đi meeting chuyên nghiệp.', 899000, 799000, 'active', 1080, 65, DATEADD(day, -22, SYSDATETIME())),
-(39, N'TúI Xách Nữ Satchel Elegant', N'Túi satchel nữ thanh lịch, có khóa kim loại. Đeo chéo hoặc cầm tay đều xinh. Đi tiệc, đi chơi đều OK.', 1199000, NULL, 'active', 840, 47, DATEADD(day, -30, SYSDATETIME())),
-(39, N'TúI Xách Nữ Bucket Hobo', N'Túi bucket/hobo nữ, form mềm. Chất vải nỉ cao cấp, nhẹ. Phong cách casual, thoải mái. Trend 2024!', 599000, 499000, 'active', 1260, 82, DATEADD(day, -18, SYSDATETIME()));
+(39, N'Túi Xách Nữ Tote Bag Classic', N'Túi tote nữ cổ điển, đựng vừa laptop 14 inch. Da PU cao cấp, sang trọng. Đi làm, đi meeting chuyên nghiệp.', 899000, 799000, 'active', 1080, 65, DATEADD(day, -22, SYSDATETIME())),
+(39, N'Túi Xách Nữ Satchel Elegant', N'Túi satchel nữ thanh lịch, có khóa kim loại. Đeo chéo hoặc cầm tay đều xinh. Đi tiệc, đi chơi đều OK.', 1199000, NULL, 'active', 840, 47, DATEADD(day, -30, SYSDATETIME())),
+(39, N'Túi Xách Nữ Bucket Hobo', N'Túi bucket/hobo nữ, form mềm. Chất vải nỉ cao cấp, nhẹ. Phong cách casual, thoải mái. Trend 2024!', 599000, 499000, 'active', 1260, 82, DATEADD(day, -18, SYSDATETIME()));
 
 -- Ví nam
 INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
@@ -265,7 +265,7 @@ INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, S
 INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
 (42, N'Kính Mát Nam Aviator Classic', N'Kính mát nam aviator huyền thoại, gọng kim loại. Tròng gradient UV400. Mặc là ngầu!', 899000, 799000, 'active', 720, 42, DATEADD(day, -25, SYSDATETIME())),
 (42, N'Kính Mát Nam Square Bold', N'Kính mát nam vuông bold, gọng nhựa to. Phong cách Y2K. Hot trend!', 699000, NULL, 'active', 640, 38, DATEADD(day, -18, SYSDATETIME())),
-(42, N'Kính Mát Nữ Cat Eye', N'Kính mát nữ cat eye, kiểu mèo cute. Gọng vành nhỏ, nữ tính. Tặng闺蜜 (bạn thân) cực phù hợp!', 549000, 479000, 'active', 1100, 76, DATEADD(day, -15, SYSDATETIME())),
+(42, N'Kính Mát Nữ Cat Eye', N'Kính mát nữ cat eye, kiểu mèo cute. Gọng vành nhỏ, nữ tính. Tặng kèm cho bạn thân cực phù hợp!', 549000, 479000, 'active', 1100, 76, DATEADD(day, -15, SYSDATETIME())),
 (42, N'Kính Mát Nữ Round Vintage', N'Kính mát nữ round vintage, kiểu John Lennon. Gọng tròn đầy đủ. Phong cách retro cực cool!', 649000, NULL, 'active', 880, 54, DATEADD(day, -20, SYSDATETIME()));
 
 -- Mũ
@@ -704,7 +704,7 @@ INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (8, 'M', 'Đỏ', 20, 'ASM-NT-M-DO'),
 (8, 'L', 'Đỏ', 15, 'ASM-NT-L-DO');
 
--- Áo Sơ Mi Nam Slim Fit Karen (ProductId = 9)
+-- Áo Sơ Mi Nam Slim Fit Korean (Hàn Quốc) (ProductId = 9)
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
 (9, 'S', 'Trắng', 15, 'ASM-SF-S-TRANG'),
 (9, 'M', 'Trắng', 25, 'ASM-SF-M-TRANG'),
