@@ -6,7 +6,17 @@
   --bg-card: #ffffff;
   --border-color: #e5e7eb;
   --border-color-glow: rgba(245, 158, 11, 0.4);
-  
+
+  /* ----- aliases for ShopFilterBar (added 2026-09) -----
+     These don't change the existing values; they're stable
+     short names so the Shop filter bar can be theme-agnostic
+     and stay in sync if we ever swap the design tokens. */
+  --border: var(--border-color);
+  --surface-1: var(--bg-body);
+  --surface-2: var(--bg-card);
+  --text-primary: var(--text-main);
+  --text-secondary: var(--text-muted);
+
   --text-main: #111827;
   --text-muted: #6b7280;
   --text-subtle: #9ca3af;
@@ -14,7 +24,7 @@
   --primary: #d29f96; /* Dusty Rose / Peach */
   --primary-gradient: linear-gradient(135deg, #e3b9b1 0%, #c1887e 100%);
   --secondary-gradient: linear-gradient(135deg, #7a7774 0%, #595856 100%);
-  
+
   --success: #10b981;
   --warning: #d29f96;
   --danger: #ef4444;
@@ -24,13 +34,28 @@
   --radius-md: 14px;
   --shadow-glow: 0 10px 30px -10px rgba(210, 159, 150, 0.35);
   --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+
+  /* ----- Typography tokens -----
+     Stack order: Be Vietnam Pro (Vietnamese glyphs) → Inter
+     (Vietnamese glyphs + numerals) → Plus Jakarta Sans (Latin)
+     → system Segoe UI / Roboto / Helvetica as a final safety
+     net so we never fall back to a tofu box. */
+  --font-sans: "Be Vietnam Pro", "Inter", "Plus Jakarta Sans",
+               "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Bodoni Moda", "Playfair Display", "Times New Roman", serif;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-sans);
+  /* Improve Vietnamese text rendering on Windows / Linux where
+     font fallback sometimes skips combining diacritics. */
+  font-feature-settings: "kern" 1, "liga" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -90,7 +115,7 @@ aside {
 }
 
 .brand-title {
-  font-family: 'Bodoni Moda', serif;
+  font-family: var(--font-serif);
   font-size: 1.5rem;
   font-weight: 900;
   letter-spacing: -1.5px;
@@ -702,7 +727,7 @@ tr:hover td {
   align-items: center;
   gap: 8px;
   max-width: 460px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
   border: 1px solid var(--border-color);
   border-radius: 24px;
   padding: 6px 14px;
@@ -739,7 +764,7 @@ tr:hover td {
 
 .customer-icon-btn {
   position: relative;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
   border: 1px solid var(--border-color);
   color: var(--text-main);
   width: 40px;
@@ -825,438 +850,13 @@ tr:hover td {
   color: var(--text-subtle);
 }
 
-.shop-hero {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(139, 92, 246, 0.12));
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 32px 28px;
-  margin-bottom: 24px;
-  text-align: center;
-}
+/* Shop page styles now live in src/pages/customer/shop.css
+   and are loaded by ProductListPage.jsx. The `.product-card`
+   family below USED to have a safety-net `display: revert` so
+   unstyled Shop pages still showed cards in some shape — but
+   `display: revert` resets `<a>` back to `inline`, which actually
+   broke the grid layout. Removed 2026-09-22. */
 
-.shop-hero h1 {
-  font-size: 1.85rem;
-  font-weight: 800;
-  margin-bottom: 6px;
-}
-
-.shop-hero p { color: var(--text-muted); font-size: 0.95rem; }
-
-.shop-hero.category-hero { text-align: left; }
-
-.category-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.category-pill {
-  display: inline-block;
-  padding: 5px 12px;
-  border-radius: 14px;
-  background: rgba(99, 102, 241, 0.18);
-  color: #c7d2fe;
-  font-size: 0.8rem;
-  font-weight: 600;
-  border: 1px solid rgba(99, 102, 241, 0.3);
-}
-
-.sub-category-nav {
-  margin-top: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-.sub-category-label { color: var(--text-muted); font-size: 0.85rem; margin-right: 6px; }
-
-.sub-category-pill {
-  padding: 6px 14px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-main);
-  text-decoration: none;
-  font-size: 0.82rem;
-  border: 1px solid var(--border-color);
-}
-
-.sub-category-pill:hover { background: rgba(99, 102, 241, 0.15); }
-
-.shop-search-bar {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 24px;
-}
-
-.shop-search-input {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  padding: 12px 16px;
-  border-radius: var(--radius-sm);
-  font-size: 0.95rem;
-  outline: none;
-}
-
-.shop-search-input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
-}
-
-.shop-body {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 24px;
-  align-items: start;
-}
-
-@media (max-width: 960px) {
-  .shop-body { grid-template-columns: 1fr; }
-}
-
-.filter-sidebar {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  position: sticky;
-  top: 92px;
-}
-
-.filter-sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.filter-sidebar-header h3 { font-size: 1rem; font-weight: 700; }
-
-.filter-clear {
-  background: transparent;
-  border: none;
-  color: var(--primary);
-  font-size: 0.82rem;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.filter-group-block {
-  padding: 14px 0;
-  border-top: 1px solid var(--border-color);
-}
-
-.filter-group-block:first-of-type { border-top: none; padding-top: 0; }
-
-.filter-group-block h4 {
-  font-size: 0.85rem;
-  font-weight: 700;
-  margin-bottom: 10px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.filter-categories {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.filter-cat-pill {
-  text-align: left;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--text-muted);
-  padding: 8px 10px;
-  font-size: 0.85rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.filter-cat-pill:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-main);
-}
-
-.filter-cat-pill.active {
-  background: rgba(99, 102, 241, 0.18);
-  color: #c7d2fe;
-  border-color: rgba(99, 102, 241, 0.3);
-}
-
-.filter-radio-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.filter-radio {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.filter-radio input { accent-color: var(--primary); }
-
-.filter-price-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.filter-price-input {
-  width: 90px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  padding: 8px 10px;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  outline: none;
-}
-
-.filter-price-input:focus { border-color: var(--primary); }
-
-.filter-size-row,
-.filter-color-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.filter-size-pill {
-  min-width: 38px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  font-size: 0.82rem;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.filter-size-pill.active {
-  background: var(--primary-gradient);
-  color: white;
-  border-color: transparent;
-}
-
-.filter-color-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.filter-color-pill.active {
-  background: rgba(99, 102, 241, 0.18);
-  border-color: rgba(99, 102, 241, 0.3);
-}
-
-.filter-color-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  display: inline-block;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.shop-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 12px 18px;
-  margin-bottom: 18px;
-}
-
-.shop-toolbar-info {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-}
-
-.shop-live-badge { color: var(--success); font-weight: 600; }
-.shop-offline-badge { color: var(--warning); font-weight: 600; }
-.shop-loading { color: var(--text-subtle); }
-
-.shop-toolbar-sort {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.shop-toolbar-sort select {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  outline: none;
-}
-
-.shop-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 18px;
-}
-
-.product-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  text-decoration: none;
-  color: var(--text-main);
-  transition: all 0.2s;
-  display: flex;
-  flex-direction: column;
-}
-
-.product-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--border-color-glow);
-  box-shadow: var(--shadow-glow);
-}
-
-.product-card-image {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  background: #1f2937;
-  overflow: hidden;
-}
-
-.product-card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.product-card-discount {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: #ef4444;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-
-.product-card-body {
-  padding: 14px 16px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.product-card-category {
-  font-size: 0.72rem;
-  color: var(--primary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 700;
-}
-
-.product-card-name {
-  font-size: 0.95rem;
-  font-weight: 600;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  min-height: 2.6em;
-  line-height: 1.3;
-}
-
-.product-card-pricing {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.product-card-price { font-size: 1.05rem; font-weight: 800; color: #ffffff; }
-
-.product-card-base-price {
-  font-size: 0.8rem;
-  color: var(--text-subtle);
-  text-decoration: line-through;
-}
-
-.product-card-meta { font-size: 0.78rem; color: var(--text-subtle); }
-
-.shop-empty {
-  background: var(--bg-card);
-  border: 1px dashed var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 48px 24px;
-  text-align: center;
-  color: var(--text-muted);
-}
-
-.shop-empty span { font-size: 2.4rem; display: block; margin-bottom: 10px; }
-.shop-empty p { margin-bottom: 16px; }
-
-.shop-empty-reset {
-  display: inline-block;
-  padding: 8px 18px;
-  background: var(--primary-gradient);
-  color: white;
-  text-decoration: none;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 0.85rem;
-  border: none;
-  cursor: pointer;
-}
-
-.shop-pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-  margin-top: 28px;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-.shop-pagination button {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.shop-pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .shop-loading-page {
   text-align: center;
@@ -1405,7 +1005,7 @@ tr:hover td {
 .product-detail-color-pill {
   padding: 8px 16px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
   border: 1px solid var(--border-color);
   color: var(--text-main);
   font-size: 0.85rem;
@@ -1423,7 +1023,7 @@ tr:hover td {
   min-width: 52px;
   padding: 10px 14px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
   border: 1px solid var(--border-color);
   color: var(--text-main);
   font-size: 0.9rem;
@@ -1456,7 +1056,7 @@ tr:hover td {
 .product-detail-qty button {
   width: 38px;
   height: 38px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
   border: none;
   color: var(--text-main);
   cursor: pointer;
@@ -1570,3 +1170,8 @@ tr:hover td {
   background: #f9fafb;
   border-color: #d1d5db;
 }
+
+
+/* Smart Minimal v4 filter sidebar + product card Shop-page styles have been moved to
+   src/pages/customer/shop.css (loaded once by ProductListPage.jsx). */
+
