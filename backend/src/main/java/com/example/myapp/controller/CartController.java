@@ -28,6 +28,7 @@ public class CartController {
         CartDTO cart = cartService.addToCart(userId, request);
         return ResponseEntity.ok(cart);
     }
+
     @PutMapping("/update/{cartItemId}")
     public ResponseEntity<CartDTO> updateQuantity(
             @RequestParam Integer userId,
