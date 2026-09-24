@@ -17,7 +17,6 @@ import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 import ProductListPage from './pages/customer/ProductListPage';
 import ProductDetailPage from './pages/customer/ProductDetailPage';
-import ProductSearchPage from './pages/customer/ProductSearchPage';
 import ProductCategoryPage from './pages/customer/ProductCategoryPage';
 import WishlistPage from './pages/customer/WishlistPage';
 
@@ -33,7 +32,6 @@ export default function App() {
           <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer', 'admin']}><Profile /></ProtectedRoute>} />
           <Route path="/shop" element={<CustomerLayout />}>
             <Route index element={<ProductListPage />} />
-            <Route path="search" element={<ProductSearchPage />} />
             <Route path="category/:id" element={<ProductCategoryPage />} />
             <Route path="product/:id" element={<ProductDetailPage />} />
             <Route path="wishlist" element={<WishlistPage />} />

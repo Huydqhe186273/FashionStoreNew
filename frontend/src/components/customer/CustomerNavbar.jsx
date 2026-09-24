@@ -36,7 +36,7 @@ export default function CustomerNavbar() {
     e.preventDefault();
     const trimmed = keyword.trim();
     if (trimmed) {
-      navigate(`/shop/search?keyword=${encodeURIComponent(trimmed)}`);
+      navigate(`/shop?keyword=${encodeURIComponent(trimmed)}`);
     } else {
       navigate('/shop');
     }
