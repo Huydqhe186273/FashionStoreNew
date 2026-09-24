@@ -3,27 +3,10 @@ spring:
     import: optional:file:.env[.properties]
 
   datasource:
-    # NOTE on Vietnamese text:
-    #
-    # `sendStringParametersAsUnicode=true` makes the MS JDBC driver
-    # bind Java UTF-16 strings as NVARCHAR(n) on PreparedStatement
-    # calls. This protects *parameterised* queries (Hibernate JPA).
-    #
-    # `stringtype=nvarchar` is the SQL Server-native equivalent for
-    # *inline string literals* — anything the driver hands to
-    # `Statement.execute(String)` will be routed through NVARCHAR
-    # too. This protects `JdbcTemplate.execute(batch)` which our
-    # migration + seed loader use to feed multi-statement scripts.
-    #
-    # `characterEncoding=UTF-8` is belt-and-braces so the driver
-    # itself uses UTF-8 for VARCHAR-bound params (rare, but cheap).
-    #
-    # Without ALL THREE the driver sends Java strings through
-    # SQL Server's non-Unicode code page (CP-1252 on most installs)
-    # and silently strips every Vietnamese diacritic on INSERT.
-    url: ${DB_URL:jdbc:sqlserver://localhost;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;}
-    username: sa
-    password: 123456
+    # Cấu hình kết nối SQL Server chuẩn (đã bật hỗ trợ Tiếng Việt Unicode)
+    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:sa}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
   jpa:
