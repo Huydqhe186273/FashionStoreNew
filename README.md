@@ -36,14 +36,9 @@ Sau đó mở thư mục `FashionStoreNew` bằng VS Code.
 3. Ấn **Execute** (hoặc F5) để chạy lệnh. Code sẽ tự động tạo Database tên là `FashionStoreDB`, tạo tất cả các bảng và chèn sẵn dữ liệu mẫu.
 
 ### Bước 3: Cấu hình kết nối Backend - Database
-1. Trong VS Code, mở file: `backend/src/main/resources/application.yml`
-2. Kiểm tra dòng `url: jdbc:sqlserver://localhost;instanceName=...`. Nếu tên instance SQL Server trên máy bạn không phải là `MSSQLSERVER01`, hãy sửa lại cho đúng (hoặc xoá đoạn `;instanceName=MSSQLSERVER01` nếu bạn cài đặt mặc định).
-3. Sửa `username` và `password` cho đúng với mật khẩu máy bạn:
-   ```yaml
-   username: sa
-   password: <mật_khẩu_của_bạn_ở_đây>
-   ```
-*(Lưu ý: Không commit file application.yml lên git nếu bạn đã điền mật khẩu thật của mình).*
+1. Trong VS Code, mở file: `backend/.env`
+2. Sửa các giá trị `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` cho đúng với SQL Server trên máy bạn. Connection string duy nhất của project nằm trong file này.
+*(Lưu ý: Không commit file .env lên git — đã có trong .gitignore).*
 
 ### Bước 4: Chạy và kiểm tra dự án Backend
 - Đảm bảo bạn đang mở thư mục `backend` bằng VS Code. Chờ một lát để VS Code tải các thư viện Maven xong.

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../../components/customer/ProductCard';
+import ProductSearch from '../../components/customer/ProductSearch';
 import ShopFilterBar from '../../components/customer/ShopFilterBar';
 import { getProducts } from '../../services/customerProductService';
 import { getFilterFacets } from '../../services/filterService';
@@ -202,6 +203,15 @@ export default function ProductListPage() {
     setPage(0);
   };
 
+  const setKeyword = (value) => {
+    setFilters((f) => ({ ...f, keyword: value || '' }));
+    setPage(0);
+    const sp = new URLSearchParams(searchParams);
+    if (value) sp.set('keyword', value);
+    else sp.delete('keyword');
+    setSearchParams(sp, { replace: true });
+  };
+
   const clearAll = () => changeFilters({
     keyword: filters.keyword,
     categoryId: null,
@@ -234,6 +244,9 @@ export default function ProductListPage() {
             <span className="shop-hero-sort-hint"> — đang lọc theo: {sortLabel}</span>
           )}
         </p>
+
+        {/* === Hero-center keyword search === */}
+        <ProductSearch value={filters.keyword} onCommit={setKeyword} />
       </div>
 
       {/* === Single horizontal filter bar === */}
