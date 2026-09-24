@@ -7,7 +7,6 @@
  * in :root (see index.css). NO rgba(255,255,255,0.0X) — we
  * run on a white background and those values are invisible.
  * ============================================================ */
-
 /* ---- shell ---- */
 
 .filterbar {
