@@ -50,7 +50,7 @@ export default function Home() {
             Discover the latest trends in fashion and explore our new collections. 
             Designed for the modern trendsetter.
           </p>
-          <Link to="#" className="hero-btn">Shop Now</Link>
+          <Link to="/shop" className="hero-btn">Shop Now</Link>   // ra shop now
         </div>
       </section>
 

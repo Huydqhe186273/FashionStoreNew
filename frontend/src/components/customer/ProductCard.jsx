@@ -1,12 +1,42 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import FavoriteButton from './FavoriteButton';
 import { resolveProductImage, PLACEHOLDER, colorHex } from '../../utils/productImage';
 
 const SIZE_LIMIT = 4;   // show first 4 sizes; rest hidden behind "+N"
 const COLOR_LIMIT = 5;  // show first 5 swatches
 
+/* ----- keyword highlight -----
+ * Wraps every case-insensitive occurrence of `keyword` in <mark>.
+ * Returns a React fragment so the caller can drop it straight into
+ * JSX without further wrapping.
+ */
+function highlightText(text, keyword) {
+  if (!text) return text;
+  if (!keyword) return text;
+  const kw = String(keyword).trim();
+  if (!kw) return text;
+  // Escape regex special chars in keyword before building the pattern
+  const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const parts = String(text).split(new RegExp(`(${escaped})`, 'gi'));
+  return parts.map((part, i) =>
+    part.toLowerCase() === kw.toLowerCase()
+      ? <mark key={i} className="product-card-mark">{part}</mark>
+      : <React.Fragment key={i}>{part}</React.Fragment>
+  );
+}
+
 export default function ProductCard({ product }) {
+  /* Read keyword from URL so search highlights survive even when
+   * the parent doesn't explicitly pass a prop. Falls back to ''.
+   */
+  const location = useLocation();
+  const urlKeyword = React.useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('keyword') || '';
+  }, [location.search]);
+  const keyword = (product._keyword ?? urlKeyword) || '';
+
   const price = product.finalPrice ?? product.discountPrice ?? product.basePrice ?? 0;
   const hasDiscount =
     product.discountPrice && product.basePrice &&
@@ -38,7 +68,7 @@ export default function ProductCard({ product }) {
 
       <div className="product-card-body">
         <div className="product-card-category">{product.categoryName || 'Sản phẩm'}</div>
-        <div className="product-card-name">{product.name}</div>
+        <div className="product-card-name">{highlightText(product.name, keyword)}</div>
 
         {visibleSizes.length > 0 && (
           <div className="product-card-sizes" aria-label="Size có sẵn">
