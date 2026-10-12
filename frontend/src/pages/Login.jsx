@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import api from '../services/api';
 import './Auth.css';
 
@@ -9,6 +10,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { login } = useContext(AuthContext);
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   // State cho Modal Đăng nhập bằng Google
@@ -50,7 +52,7 @@ export default function Login() {
     try {
       await api.post(`/auth/send-google-otp?email=${encodeURIComponent(googleEmailInput)}`);
       setOtpSent(true);
-      alert("Đã gửi mã OTP 6 số về Gmail của bạn!");
+      toast.success("Đã gửi mã OTP 6 số về Gmail của bạn!");
     } catch (err) {
       setGoogleError(err.response?.data || err.message || 'Lỗi gửi mã OTP');
     } finally {

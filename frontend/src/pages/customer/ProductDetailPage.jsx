@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { getProductById } from '../../services/customerProductService';
 import { addToCart } from '../../services/cartService';
 import { AuthContext } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import ProductCard from '../../components/customer/ProductCard';
 import FavoriteButton from '../../components/customer/FavoriteButton';
 import ReviewList from '../../components/customer/ReviewList';
@@ -61,6 +62,7 @@ export default function ProductDetailPage() {
 
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  const { toast } = useToast();
   const userId = user?.id; // Lấy userId thật từ AuthContext
 
   useDocumentTitle(product?.name || 'Chi tiết sản phẩm');
@@ -116,21 +118,21 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = async (isBuyNow = false) => {
     if (!userId) {
-      alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!');
+      toast.warning('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!');
       navigate('/login');
       return;
     }
     if (!selectedSize || !selectedColor) {
-      alert('Vui lòng chọn size và màu sắc.');
+      toast.warning('Vui lòng chọn size và màu sắc.');
       return;
     }
     const variant = product.variants?.find((v) => v.size === selectedSize && v.color === selectedColor);
     if (!variant) {
-      alert('Sản phẩm này không có sẵn biến thể bạn chọn.');
+      toast.error('Sản phẩm này không có sẵn biến thể bạn chọn.');
       return;
     }
     if (!isLive) {
-      alert('Sản phẩm đang hiển thị ở chế độ Demo (không kết nối được backend). Không thể thêm vào giỏ hàng thật!');
+      toast.info('Sản phẩm đang hiển thị ở chế độ Demo (không kết nối được backend). Không thể thêm vào giỏ hàng thật!');
       return;
     }
     
@@ -141,11 +143,11 @@ export default function ProductDetailPage() {
       if (isBuyNow) {
         navigate('/shop/cart');
       } else {
-        alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
+        toast.success('Đã thêm sản phẩm vào giỏ hàng thành công!');
       }
     } catch (error) {
       console.error('Lỗi thêm vào giỏ hàng:', error);
-      alert('Thêm vào giỏ hàng thất bại. Vui lòng thử lại.');
+      toast.error('Thêm vào giỏ hàng thất bại. Vui lòng thử lại.');
     } finally {
       setIsAdding(false);
     }
