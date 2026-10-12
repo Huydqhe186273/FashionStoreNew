@@ -71,6 +71,11 @@ public class CartService {
 
     @Transactional
     public CartDTO updateCartItemQuantity(Integer userId, Integer cartItemId, Integer quantity) {
+        return updateCartItem(userId, cartItemId, quantity, null);
+    }
+
+    @Transactional
+    public CartDTO updateCartItem(Integer userId, Integer cartItemId, Integer quantity, Integer newVariantId) {
         Cart cart = getOrCreateCart(userId);
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new RuntimeException("Cart item not found"));
@@ -79,17 +84,25 @@ public class CartService {
             throw new RuntimeException("Item does not belong to user's cart");
         }
 
-        if (quantity <= 0) {
-            cartItemRepository.delete(item);
-            cart.getCartItems().remove(item);
-        } else {
+        if (newVariantId != null) {
+            ProductVariant newVariant = productVariantRepository.findById(newVariantId)
+                    .orElseThrow(() -> new RuntimeException("Variant not found"));
+            item.setVariant(newVariant);
+        }
+
+        if (quantity != null) {
+            if (quantity <= 0) {
+                cartItemRepository.delete(item);
+                cart.getCartItems().remove(item);
+                return mapToDTO(cart);
+            }
             if (item.getVariant().getStockQuantity() < quantity) {
                 throw new RuntimeException("Not enough stock");
             }
             item.setQuantity(quantity);
-            cartItemRepository.save(item);
         }
 
+        cartItemRepository.save(item);
         return mapToDTO(cart);
     }
 

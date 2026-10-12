@@ -16,9 +16,9 @@ public class MyAppApplication {
 			// To override: set DB_URL, DB_USERNAME, DB_PASSWORD env vars or .env file.
 			String dbUrl = System.getenv().getOrDefault(
 				"DB_URL",
-				"jdbc:sqlserver://localhost;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;");
+				"jdbc:sqlserver://localhost;instanceName=MSSQLSERVER01;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;");
 			String dbUser = System.getenv().getOrDefault("DB_USERNAME", "sa");
-			String dbPass = System.getenv().getOrDefault("DB_PASSWORD", "123456");
+			String dbPass = System.getenv().getOrDefault("DB_PASSWORD", "sa");
 			DatabaseInitializer.initialize(dbUrl, dbUser, dbPass);
 		} catch (Exception exception) {
 			throw new IllegalStateException("Unable to create or verify FashionStoreDB", exception);
@@ -30,7 +30,7 @@ public class MyAppApplication {
 	// In thông báo xác nhận sau khi Spring Boot đã sẵn sàng nhận request.
 	public void logDatabaseConnectionSuccess() {
 		System.out.println("\n=========================================================");
-		System.out.println("✅ KẾT NỐI DATABASE THÀNH CÔNG VÀ ỨNG DỤNG ĐÃ CHẠY LÊN!");
+		System.out.println(">>> KET NOI DATABASE THANH CONG VA UNG DUNG DA CHAY LEN! <<<");
 		System.out.println("=========================================================\n");
 	}
 

@@ -10,12 +10,30 @@ export default function Home() {
     <div className="home-container">
       {/* Navbar */}
       <nav className="navbar">
-        <Link to="/" className="nav-brand">
-          <img src="/logo.jpg" alt="Fashion Store" style={{ height: '50px', objectFit: 'contain' }} />
+        <Link to="/" className="nav-brand" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img 
+            src="/logo.png" 
+            alt="FS Clothing Logo" 
+            style={{ 
+              width: '44px', 
+              height: '44px', 
+              borderRadius: '50%', 
+              objectFit: 'cover',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
+            }} 
+          />
+          <span style={{
+            fontSize: '20px',
+            fontWeight: '800',
+            letterSpacing: '-0.5px',
+            color: '#111827'
+          }}>
+            Fashion<span style={{ color: '#d29f96' }}>Store</span>
+          </span>
         </Link>
         <div className="nav-links">
           <Link to="/" className="nav-link">Home</Link>
-          <Link to="#" className="nav-link">Shop</Link>
+          <Link to="/shop" className="nav-link">Shop</Link>
           <Link to="#" className="nav-link">Collections</Link>
           <Link to="#" className="nav-link">About</Link>
         </div>
@@ -47,10 +65,10 @@ export default function Home() {
         <div className="hero-content">
           <h1>ELEVATE YOUR STYLE</h1>
           <p>
-            Discover the latest trends in fashion and explore our new collections. 
+            Discover the latest trends in fashion and explore our new collections.
             Designed for the modern trendsetter.
           </p>
-          <Link to="/shop" className="hero-btn">Shop Now</Link>   // ra shop now
+          <Link to="/shop" className="hero-btn">Shop Now</Link>
         </div>
       </section>
 

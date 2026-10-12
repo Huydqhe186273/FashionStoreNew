@@ -43,17 +43,8 @@ public class CustomerProductService {
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
 
-    /**
-     * Catalog query. Every parameter is optional; null/blank means
-     * "do not filter on this field". The pipeline is a stream of
-     * small predicates — each new smart filter is one more line
-     * here plus a corresponding @RequestParam on the controller.
-     *
-     * The "quality" filters (hasImage, hasDescription, hasDiscount,
-     * minDiscountPercent, minSoldCount, minViewCount, minSizeCount,
-     * minColorCount) feed the smart sidebar chips and are computed
-     * lazily per product so adding a new flag is cheap.
-     */
+   
+
     @Transactional(readOnly = true)
     public PageResponseDTO<CustomerProductDTO> getProducts(
             String keyword,

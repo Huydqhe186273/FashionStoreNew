@@ -35,7 +35,7 @@ export default function Cart() {
       setLoading(true);
       // Gọi API qua Axios để lấy dữ liệu CartDTO từ Backend
       const data = await getCart(userId);
-      // Cập nhật state để render danh sách sản phẩm lên giao diện
+      // Lưu vào state để Lát nữa phần dưới (return) lấy ra vẽ <table>
       setCartData(data);
     } catch (error) {
       console.error("Lỗi khi tải giỏ hàng:", error);
@@ -47,16 +47,16 @@ export default function Cart() {
   useEffect(() => {
     loadCart();
 
-    // Kiểm tra URL parameters để xác định kết quả trả về từ cổng thanh toán PayOS
+    // URL xem có phải vừa đi quét mã QR PayOS về không
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
     const orderCode = urlParams.get('orderCode');
 
     if (paymentStatus === 'success' && orderCode) {
-      // Xác minh thanh toán tại Backend để đảm bảo tính bảo mật của giao dịch
+      // ĐỂ BẢO MẬT: Bắt buộc gọi Backend (/verify) bắt nó đi hỏi lại PayOS xem tiền vô thật chưa
       verifyPayment(orderCode).then(res => {
         showToast('success', res.message);
-        // Xóa query parameters trên URL để làm sạch thanh địa chỉ
+
         window.history.replaceState({}, document.title, window.location.pathname);
         loadCart();
       }).catch(err => {
@@ -70,24 +70,26 @@ export default function Cart() {
   }, []);
 
   const handleUpdateQuantity = async (cartItemId, newQuantity) => {
-    // Không cho phép giảm số lượng xuống dưới 1 qua nút bấm
+    // Chặn luôn nếu giảm xuống 0, bắt user dùng nút xóa riêng
     if (newQuantity < 1) return;
     try {
-      // Kích hoạt trạng thái loading cho item đang cập nhật
+      // Bật loading xoay xoay cho item đang sửa
       setUpdatingItemId(cartItemId);
-      // Gọi API để cập nhật số lượng sản phẩm trong cơ sở dữ liệu
+      // Gọi API đá lên backend để update
       const updatedCart = await updateQuantity(userId, cartItemId, newQuantity);
-      // Cập nhật lại state với dữ liệu giỏ hàng mới nhất
+      // Backend trả về giỏ mới thì gán lại state để render
       setCartData(updatedCart);
     } catch (error) {
       console.error("Lỗi cập nhật số lượng:", error);
+      // Bắn toast báo lỗi, thường là do hết tồn kho
       showToast('error', 'Cập nhật thất bại. Có thể do hết hàng trong kho.');
     } finally {
+      // Xong xuôi thì tắt loading đi
       setUpdatingItemId(null);
     }
   };
 
-  // Mở modal xác nhận trước khi thực hiện xóa sản phẩm
+  // Bấm xóa thì mở modal confirm chứ không dùng window.confirm phèn phèn
   const handleRemoveItemRequest = (item) => {
     setItemToDelete(item);
   };
@@ -128,12 +130,12 @@ export default function Cart() {
   };
 
   const cancelRemoveItem = () => {
-    // Đóng modal xác nhận xóa
+    // Quay xe không xóa nữa thì đóng modal thôi
     setItemToDelete(null);
   };
 
   const handleCheckout = async () => {
-    // Kiểm tra giỏ hàng trống trước khi tiến hành thanh toán
+    // Check xem giỏ trống không trước khi gọi API thanh toán
     if (!cartData || !cartData.items || cartData.items.length === 0) {
       showToast('error', "Giỏ hàng của bạn đang trống!");
       return;
@@ -144,16 +146,16 @@ export default function Cart() {
     }
     try {
       setLoading(true);
-      // BƯỚC 1: Lưu thông tin giao hàng vào Database
+      // BƯỚC 1: Lưu thông tin giao hàng xuống DB
       const savedAddress = await createAddress(userId, address);
 
-      // BƯỚC 2: Chuyển dữ liệu từ Giỏ hàng sang Đơn hàng (Trạng thái UNPAID)
+      // BƯỚC 2: Chốt đơn, Bê đồ từ bảng Carts ném sang bảng Orders (Trạng thái UNPAID)
       const orderResponse = await createOrder(userId, savedAddress.addressId);
 
-      // BƯỚC 3: Khởi tạo phiên thanh toán PayOS và chuyển hướng người dùng
+      // BƯỚC 3: Xin mã QR PayOS và Chuyển hướng khách đi nạp tiền
       const data = await createPaymentLink(orderResponse.orderId);
       if (data && data.checkoutUrl) {
-        // Chuyển hướng người dùng sang cổng thanh toán PayOS
+        // Đá khách văng sang cái link PayOS (checkoutUrl)
         window.location.href = data.checkoutUrl;
       } else {
         showToast('error', "Lỗi: Không nhận được URL thanh toán từ server.");

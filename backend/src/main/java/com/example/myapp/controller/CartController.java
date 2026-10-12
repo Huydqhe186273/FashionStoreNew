@@ -38,6 +38,16 @@ public class CartController {
         return ResponseEntity.ok(cart);
     }
 
+    @PutMapping("/edit/{cartItemId}")
+    public ResponseEntity<CartDTO> editCartItem(
+            @RequestParam Integer userId,
+            @PathVariable Integer cartItemId,
+            @RequestParam(required = false) Integer quantity,
+            @RequestParam(required = false) Integer newVariantId) {
+        CartDTO cart = cartService.updateCartItem(userId, cartItemId, quantity, newVariantId);
+        return ResponseEntity.ok(cart);
+    }
+
     @DeleteMapping("/remove/{cartItemId}")
     public ResponseEntity<CartDTO> removeItem(
             @RequestParam Integer userId,
