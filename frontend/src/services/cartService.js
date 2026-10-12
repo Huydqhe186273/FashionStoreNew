@@ -10,6 +10,14 @@ export const updateQuantity = async (userId, cartItemId, quantity) => {
   return response.data;
 };
 
+export const editCartItem = async (userId, cartItemId, quantity, newVariantId) => {
+  const params = { userId };
+  if (quantity != null) params.quantity = quantity;
+  if (newVariantId != null) params.newVariantId = newVariantId;
+  const response = await api.put(`/cart/edit/${cartItemId}`, null, { params });
+  return response.data;
+};
+
 export const removeItem = async (userId, cartItemId) => {
   const response = await api.delete(`/cart/remove/${cartItemId}?userId=${userId}`);
   return response.data;

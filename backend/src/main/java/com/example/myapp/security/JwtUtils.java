@@ -35,6 +35,22 @@ public class JwtUtils {
                 .compact();
     }
 
+    public String generateTokenFromUser(com.example.myapp.entity.User user) {
+        String roleStr = user.getRole() != null ? user.getRole().toUpperCase() : "CUSTOMER";
+        if (!roleStr.startsWith("ROLE_")) {
+            roleStr = "ROLE_" + roleStr;
+        }
+
+        return Jwts.builder()
+                .setSubject(user.getEmail())
+                .claim("role", roleStr)
+                .claim("userId", user.getUserId())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(key(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public String getEmailFromJwtToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key()).build()
                 .parseClaimsJws(token).getBody().getSubject();

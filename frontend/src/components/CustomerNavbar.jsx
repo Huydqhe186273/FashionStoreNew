@@ -11,14 +11,44 @@ export default function CustomerNavbar() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '64px' }}>
           
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <img src="/logo.jpg" alt="Fashion Store Logo" style={{ height: '48px', objectFit: 'contain' }} />
+            <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <img 
+                src="/logo.png" 
+                alt="FS Clothing Logo" 
+                style={{ 
+                  width: '44px', 
+                  height: '44px', 
+                  borderRadius: '50%', 
+                  objectFit: 'cover',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
+                }} 
+              />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{
+                  fontSize: '20px',
+                  fontWeight: '800',
+                  letterSpacing: '-0.5px',
+                  color: '#111827',
+                  lineHeight: '1.1'
+                }}>
+                  Fashion<span style={{ color: '#d29f96' }}>Store</span>
+                </span>
+                <span style={{
+                  fontSize: '9px',
+                  letterSpacing: '1.2px',
+                  textTransform: 'uppercase',
+                  color: '#9ca3af',
+                  fontWeight: '600'
+                }}>
+                  Style & Quality
+                </span>
+              </div>
             </Link>
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <Link 
-              to="/store/cart" 
+              to="/shop/cart" 
               style={{ color: '#6b7280', textDecoration: 'none', padding: '8px', display: 'flex', alignItems: 'center' }}
               onMouseOver={(e) => e.currentTarget.style.color = '#d29f96'}
               onMouseOut={(e) => e.currentTarget.style.color = '#6b7280'}

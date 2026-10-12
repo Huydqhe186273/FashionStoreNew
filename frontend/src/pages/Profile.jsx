@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import ChangePassword from './ChangePassword';
@@ -77,77 +78,90 @@ export default function Profile() {
       </div>
       
       <div className="profile-container">
-        <div className="profile-header">
-          <div className="profile-avatar" style={{ backgroundImage: `url('https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=111827&color=fff&size=200')` }}></div>
-          <div className="profile-header-text">
-            <h1 className="profile-title">My Account</h1>
-            <p className="profile-subtitle">Manage your personal information and security settings.</p>
-          </div>
+        <div className="profile-back-nav">
+          <Link to="/" className="profile-back-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="profile-back-icon">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+            </svg>
+            Back to Home
+          </Link>
         </div>
-        
-        <div className="profile-content">
-          <div className="profile-card">
-            <h2 className="profile-card-title">Personal Information</h2>
-            {error && <div className="profile-alert profile-alert-error">{error}</div>}
-            {message && <div className="profile-alert profile-alert-success">{message}</div>}
-            
-            {profile && (
-              <form onSubmit={handleUpdate} noValidate>
-                <div className="profile-form-group">
-                  <label className="profile-label">Full Name</label>
-                  <input
-                    type="text"
-                    className="profile-input"
-                    placeholder="Enter your full name"
-                    value={profile.fullName || ''}
-                    maxLength="100"
-                    onChange={(e) => {
-                      setProfile({ ...profile, fullName: e.target.value });
-                      setFieldErrors({ ...fieldErrors, fullName: '' });
-                    }}
-                  />
-                  {fieldErrors.fullName && <div className="profile-field-error">{fieldErrors.fullName}</div>}
-                </div>
-                
-                <div className="profile-form-group">
-                  <label className="profile-label">Phone Number</label>
-                  <input
-                    type="text"
-                    className="profile-input"
-                    placeholder="Enter your phone number"
-                    value={profile.phone || ''}
-                    inputMode="numeric"
-                    maxLength="10"
-                    onChange={(e) => {
-                      setProfile({ ...profile, phone: e.target.value });
-                      setFieldErrors({ ...fieldErrors, phone: '' });
-                    }}
-                  />
-                  {fieldErrors.phone && <div className="profile-field-error">{fieldErrors.phone}</div>}
-                </div>
-                
-                <div className="profile-form-group">
-                  <label className="profile-label">Email Address</label>
-                  <input
-                    type="email"
-                    className="profile-input"
-                    onChange={(e) => {
-                      setProfile({ ...profile, email: e.target.value });
-                      setFieldErrors({ ...fieldErrors, email: '' });
-                    }}
-                    value={profile.email || ''}
-                  />
-                  {fieldErrors.email && <div className="profile-field-error">{fieldErrors.email}</div>}
-                </div>
-                
-                <button type="submit" className="profile-btn">
-                  Save Changes
-                </button>
-              </form>
-            )}
-          </div>
 
-          <ChangePassword />
+        <div className="profile-layout">
+          {/* Sidebar Area */}
+          <div className="profile-sidebar">
+            <div className="profile-avatar-wrapper">
+              <div className="profile-avatar" style={{ backgroundImage: `url('https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=111827&color=fff&size=200')` }}></div>
+            </div>
+            <h1 className="profile-name">{profile?.fullName || 'My Account'}</h1>
+            <p className="profile-email">{profile?.email || 'Manage your personal information and security settings.'}</p>
+          </div>
+          
+          {/* Main Content Area */}
+          <div className="profile-content-area">
+            <div className="profile-card">
+              <h2 className="profile-card-title">Personal Information</h2>
+              {error && <div className="profile-alert profile-alert-error">{error}</div>}
+              {message && <div className="profile-alert profile-alert-success">{message}</div>}
+              
+              {profile && (
+                <form onSubmit={handleUpdate} noValidate>
+                  <div className="profile-form-group">
+                    <label className="profile-label">Full Name</label>
+                    <input
+                      type="text"
+                      className="profile-input"
+                      placeholder="Enter your full name"
+                      value={profile.fullName || ''}
+                      maxLength="100"
+                      onChange={(e) => {
+                        setProfile({ ...profile, fullName: e.target.value });
+                        setFieldErrors({ ...fieldErrors, fullName: '' });
+                      }}
+                    />
+                    {fieldErrors.fullName && <div className="profile-field-error">{fieldErrors.fullName}</div>}
+                  </div>
+                  
+                  <div className="profile-form-group">
+                    <label className="profile-label">Phone Number</label>
+                    <input
+                      type="text"
+                      className="profile-input"
+                      placeholder="Enter your phone number"
+                      value={profile.phone || ''}
+                      inputMode="numeric"
+                      maxLength="10"
+                      onChange={(e) => {
+                        setProfile({ ...profile, phone: e.target.value });
+                        setFieldErrors({ ...fieldErrors, phone: '' });
+                      }}
+                    />
+                    {fieldErrors.phone && <div className="profile-field-error">{fieldErrors.phone}</div>}
+                  </div>
+                  
+                  <div className="profile-form-group">
+                    <label className="profile-label">Email Address</label>
+                    <input
+                      type="email"
+                      className="profile-input"
+                      onChange={(e) => {
+                        setProfile({ ...profile, email: e.target.value });
+                        setFieldErrors({ ...fieldErrors, email: '' });
+                      }}
+                      value={profile.email || ''}
+                    />
+                    {fieldErrors.email && <div className="profile-field-error">{fieldErrors.email}</div>}
+                  </div>
+                  
+                  <button type="submit" className="profile-btn">
+                    Save Changes
+                  </button>
+                </form>
+              )}
+            </div>
+
+            <ChangePassword />
+          </div>
         </div>
       </div>
     </div>

@@ -41,6 +41,68 @@ public class AuthService {
         return jwtUtils.generateJwtToken(authentication);
     }
 
+    public com.example.myapp.model.JwtResponse googleLogin(com.example.myapp.model.GoogleLoginRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user == null) {
+            user = new User();
+            user.setEmail(email);
+            user.setFullName(request.getFullName() != null && !request.getFullName().isBlank() ? request.getFullName() : email);
+            user.setPasswordHash(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
+            user.setRole("customer");
+            user.setStatus("active");
+            user.setCreatedAt(LocalDateTime.now());
+            user = userRepository.save(user);
+        }
+
+        String jwt = jwtUtils.generateTokenFromUser(user);
+        String role = user.getRole() != null ? user.getRole().toLowerCase() : "customer";
+
+        return new com.example.myapp.model.JwtResponse(jwt, user.getUserId(), user.getEmail(), role);
+    }
+
+    public void sendRegisterOtp(String email) {
+        email = email.trim().toLowerCase();
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email này đã được sử dụng!");
+        }
+        emailService.sendOtpEmail(email);
+    }
+
+    public void registerUserWithOtp(RegisterRequest signUpRequest, String otp) {
+        String email = signUpRequest.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Error: Email is already in use!");
+        }
+        if (!emailService.verifyOtp(email, otp, true)) {
+            throw new RuntimeException("Mã OTP xác thực đăng ký không đúng hoặc đã hết hạn!");
+        }
+
+        User user = new User();
+        user.setFullName(signUpRequest.getFullName());
+        user.setEmail(email);
+        user.setPasswordHash(passwordEncoder.encode(signUpRequest.getPassword()));
+        user.setRole("customer");
+        user.setStatus("active");
+        user.setCreatedAt(LocalDateTime.now());
+
+        userRepository.save(user);
+    }
+
+    public void sendGoogleOtp(String email) {
+        email = email.trim().toLowerCase();
+        emailService.sendOtpEmail(email);
+    }
+
+    public com.example.myapp.model.JwtResponse googleLoginWithOtp(com.example.myapp.model.GoogleLoginRequest request, String otp) {
+        String email = request.getEmail().trim().toLowerCase();
+        if (!emailService.verifyOtp(email, otp, true)) {
+            throw new RuntimeException("Mã OTP xác thực Google không đúng hoặc đã hết hạn!");
+        }
+        return googleLogin(request);
+    }
+
     public void registerUser(RegisterRequest signUpRequest) {
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             throw new RuntimeException("Error: Email is already in use!");
