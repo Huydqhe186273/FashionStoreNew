@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { addFavorite, checkFavorite, removeFavorite } from '../../services/customerFavoriteService';
+import { trackFavorite } from '../../services/trackingService';
 import { useToast } from '../../context/ToastContext';
 
 export default function FavoriteButton({ productId, className = '' }) {
@@ -30,6 +31,7 @@ export default function FavoriteButton({ productId, className = '' }) {
       } else {
         await addFavorite(null, productId);
         setActive(true);
+        trackFavorite(productId);
         toast.success('Đã thêm sản phẩm vào danh sách yêu thích!');
       }
     } catch (err) {

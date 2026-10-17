@@ -495,7 +495,7 @@ public class CustomerProductService {
                 .build();
     }
 
-    private CustomerProductDTO mapToDTO(Product p, boolean includeVariants) {
+    public CustomerProductDTO mapToDTO(Product p, boolean includeVariants) {
         /* Always load variants for size/color facets — the list view
          * still wants to render "Size có sẵn" + swatches even when
          * it doesn't include the full variants array. The query is

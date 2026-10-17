@@ -20,6 +20,8 @@ import ProductListPage from './pages/customer/ProductListPage';
 import ProductDetailPage from './pages/customer/ProductDetailPage';
 import ProductCategoryPage from './pages/customer/ProductCategoryPage';
 import WishlistPage from './pages/customer/WishlistPage';
+import OrderHistory from './pages/customer/OrderHistory';
+import NotificationsPage from './pages/customer/NotificationsPage';
 
 export default function App() {
   return (
@@ -38,6 +40,8 @@ export default function App() {
             <Route path="product/:id" element={<ProductDetailPage />} />
             <Route path="wishlist" element={<WishlistPage />} />
             <Route path="cart" element={<Cart />} />
+            <Route path="orders" element={<ProtectedRoute allowedRoles={['customer', 'admin']}><OrderHistory /></ProtectedRoute>} />
+            <Route path="notifications" element={<ProtectedRoute allowedRoles={['customer', 'admin']}><NotificationsPage /></ProtectedRoute>} />
           </Route>
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
             <Route index element={<DashboardOverview />} />

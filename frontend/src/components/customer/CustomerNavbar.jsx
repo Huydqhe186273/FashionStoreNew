@@ -215,10 +215,31 @@ export default function CustomerNavbar() {
                     ))
                   )}
                 </div>
+
+                <div style={{
+                  padding: '10px 16px',
+                  textAlign: 'center',
+                  backgroundColor: '#f9fafb',
+                  borderTop: '1px solid #e5e7eb'
+                }}>
+                  <Link
+                    to="/shop/notifications"
+                    onClick={() => setShowNotif(false)}
+                    style={{
+                      color: '#2563eb',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      textDecoration: 'none'
+                    }}
+                  >
+                    Xem tất cả thông báo →
+                  </Link>
+                </div>
               </div>
             )}
           </div>
 
+          <Link to="/shop/orders" className="customer-icon-btn" title="Đơn mua / Lịch sử đơn hàng" aria-label="Đơn mua">📦</Link>
           <Link to="/shop/wishlist" className="customer-icon-btn" title="Yêu thích" aria-label="Yêu thích">♡</Link>
           <Link to="/profile" className="customer-icon-btn" title="Tài khoản" aria-label="Tài khoản">👤</Link>
           <Link to="/shop/cart" className="customer-icon-btn" title="Giỏ hàng" aria-label="Giỏ hàng">

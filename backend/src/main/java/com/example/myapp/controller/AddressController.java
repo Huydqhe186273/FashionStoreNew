@@ -19,6 +19,16 @@ public class AddressController {
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
 
+    @GetMapping
+    public ResponseEntity<?> getAddresses(@RequestParam Integer userId) {
+        try {
+            return ResponseEntity.ok(addressRepository.findByUserId(userId));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping
     public ResponseEntity<?> createAddress(@RequestParam Integer userId, @RequestBody Address address) {
         try {

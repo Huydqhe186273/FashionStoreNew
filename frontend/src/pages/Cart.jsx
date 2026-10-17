@@ -1,6 +1,18 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCart, updateQuantity, removeItem, clearCart, createPaymentLink, createAddress, createOrder, verifyPayment } from '../services/cartService';
+import {
+  getCart,
+  updateQuantity,
+  editCartItem,
+  removeItem,
+  clearCart,
+  createPaymentLink,
+  createOrder,
+  verifyPayment
+} from '../services/cartService';
+import { getProductVariants } from '../services/customerProductService';
+import { getActiveCoupons, applyCoupon } from '../services/couponService';
+import { getUserAddresses, createAddress } from '../services/addressService';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import './Cart.css';
@@ -22,6 +34,11 @@ export default function Cart() {
   const [loading, setLoading] = useState(true);
   const [updatingItemId, setUpdatingItemId] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null);
+
+  // --- Sổ địa chỉ & Form giao hàng ---
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [isAddingNewAddress, setIsAddingNewAddress] = useState(false);
   const [address, setAddress] = useState({
     recipientName: user?.fullName || user?.name || '',
     phone: user?.phone || '',
@@ -29,6 +46,23 @@ export default function Cart() {
     city: ''
   });
 
+  // --- Mã giảm giá (Coupon) ---
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [showCouponsModal, setShowCouponsModal] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(false);
+
+  // --- Modal Đổi phân loại (Variant Modal) ---
+  const [editingVariantItem, setEditingVariantItem] = useState(null);
+  const [productVariants, setProductVariants] = useState([]);
+  const [selectedVariantColor, setSelectedVariantColor] = useState('');
+  const [selectedVariantSize, setSelectedVariantSize] = useState('');
+  const [variantLoading, setVariantLoading] = useState(false);
+  const [updatingVariant, setUpdatingVariant] = useState(false);
+
+  // Tải thông tin giỏ hàng
   const loadCart = useCallback(async () => {
     if (!userId) {
       setLoading(false);
@@ -45,43 +79,81 @@ export default function Cart() {
     }
   }, [userId]);
 
-  // Tự động load lại giỏ hàng khi userId hoặc authLoading sẵn sàng
+  // Tải danh sách địa chỉ đã lưu
+  const loadAddresses = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const list = await getUserAddresses(userId);
+      setSavedAddresses(list || []);
+      if (list && list.length > 0) {
+        const defaultAddr = list.find((a) => a.isDefault) || list[0];
+        setSelectedAddressId(defaultAddr.addressId);
+        setIsAddingNewAddress(false);
+      } else {
+        setIsAddingNewAddress(true);
+      }
+    } catch (err) {
+      console.error("Lỗi tải sổ địa chỉ:", err);
+      setIsAddingNewAddress(true);
+    }
+  }, [userId]);
+
   useEffect(() => {
     if (authLoading) return;
     if (userId) {
       loadCart();
+      loadAddresses();
     } else {
       setLoading(false);
     }
-  }, [userId, authLoading, loadCart]);
+  }, [userId, authLoading, loadCart, loadAddresses]);
 
+  // Cập nhật tên/sđt mặc định nếu user load sau
   useEffect(() => {
-    // URL xem có phải vừa đi quét mã QR PayOS về không
+    if (user && !address.recipientName) {
+      setAddress((prev) => ({
+        ...prev,
+        recipientName: user.fullName || user.name || '',
+        phone: user.phone || ''
+      }));
+    }
+  }, [user]);
+
+  // Kiểm tra callback thanh toán PayOS từ URL
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
     const orderCode = urlParams.get('orderCode');
 
     if (paymentStatus === 'success' && orderCode) {
-      verifyPayment(orderCode).then(res => {
-        showToast('success', res.message || 'Thanh toán đơn hàng thành công!');
-        window.history.replaceState({}, document.title, window.location.pathname);
-        if (userId) loadCart();
-      }).catch(() => {
-        showToast('error', "Có lỗi khi xác minh thanh toán.");
-        window.history.replaceState({}, document.title, window.location.pathname);
-      });
+      verifyPayment(orderCode)
+        .then((res) => {
+          showToast('success', res.message || 'Thanh toán đơn hàng thành công!');
+          window.history.replaceState({}, document.title, window.location.pathname);
+          if (userId) loadCart();
+        })
+        .catch(() => {
+          showToast('error', "Có lỗi khi xác minh thanh toán.");
+          window.history.replaceState({}, document.title, window.location.pathname);
+        });
     } else if (paymentStatus === 'cancel') {
       showToast('error', "Bạn đã hủy thanh toán.");
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [userId, loadCart]);
+  }, [userId, loadCart, showToast]);
 
+  // --- Xử lý Cập nhật số lượng (+ / -) ---
   const handleUpdateQuantity = async (cartItemId, newQuantity) => {
     if (newQuantity < 1) return;
     try {
       setUpdatingItemId(cartItemId);
       const updatedCart = await updateQuantity(userId, cartItemId, newQuantity);
       setCartData(updatedCart);
+
+      // Tái kiểm tra coupon nếu đã áp dụng
+      if (appliedCoupon && updatedCart.totalAmount) {
+        revalidateCoupon(appliedCoupon.code, updatedCart.totalAmount);
+      }
     } catch (error) {
       console.error("Lỗi cập nhật số lượng:", error);
       showToast('error', 'Cập nhật thất bại. Có thể do hết hàng trong kho.');
@@ -90,6 +162,145 @@ export default function Cart() {
     }
   };
 
+  // --- Xử lý Đổi Phân loại (Size / Màu) ---
+  const handleOpenVariantModal = async (item) => {
+    setEditingVariantItem(item);
+    setSelectedVariantColor(item.color || '');
+    setSelectedVariantSize(item.size || '');
+    setProductVariants([]);
+    setVariantLoading(true);
+
+    try {
+      const data = await getProductVariants(item.productId);
+      setProductVariants(data || []);
+
+      const colors = [...new Set((data || []).map((v) => v.color))];
+      if (colors.length > 0) {
+        const initialColor = colors.includes(item.color) ? item.color : colors[0];
+        setSelectedVariantColor(initialColor);
+        const sizesForColor = (data || []).filter((v) => v.color === initialColor);
+        const hasSameSize = sizesForColor.some((v) => v.size === item.size);
+        setSelectedVariantSize(hasSameSize ? item.size : (sizesForColor[0]?.size || ''));
+      }
+    } catch (err) {
+      console.error("Lỗi tải phân loại:", err);
+      toast.error("Không thể tải danh sách size/màu của sản phẩm này.");
+    } finally {
+      setVariantLoading(false);
+    }
+  };
+
+  const handleConfirmChangeVariant = async () => {
+    if (!editingVariantItem || !selectedVariantColor || !selectedVariantSize) return;
+
+    const matched = productVariants.find(
+      (v) => v.color === selectedVariantColor && v.size === selectedVariantSize
+    );
+
+    if (!matched) {
+      toast.warning("Vui lòng chọn phân loại hợp lệ.");
+      return;
+    }
+
+    if (matched.stockQuantity < editingVariantItem.quantity) {
+      toast.error(`Phân loại này chỉ còn ${matched.stockQuantity} sản phẩm trong kho.`);
+      return;
+    }
+
+    if (matched.variantId === editingVariantItem.variantId) {
+      setEditingVariantItem(null);
+      return;
+    }
+
+    try {
+      setUpdatingVariant(true);
+      const updatedCart = await editCartItem(
+        userId,
+        editingVariantItem.cartItemId,
+        editingVariantItem.quantity,
+        matched.variantId
+      );
+      setCartData(updatedCart);
+      toast.success("Đã đổi phân loại sản phẩm thành công!");
+      setEditingVariantItem(null);
+
+      if (appliedCoupon && updatedCart.totalAmount) {
+        revalidateCoupon(appliedCoupon.code, updatedCart.totalAmount);
+      }
+    } catch (err) {
+      console.error("Lỗi đổi phân loại:", err);
+      toast.error(err.response?.data?.message || err.message || "Đổi phân loại thất bại.");
+    } finally {
+      setUpdatingVariant(false);
+    }
+  };
+
+  // --- Xử lý Mã giảm giá (Coupon) ---
+  const revalidateCoupon = async (code, orderTotal) => {
+    try {
+      const res = await applyCoupon(code, orderTotal);
+      if (res.valid) {
+        setAppliedCoupon(res);
+      } else {
+        setAppliedCoupon(null);
+        toast.warning(`Mã ${code} không còn đủ điều kiện: ${res.message}`);
+      }
+    } catch (_) {
+      setAppliedCoupon(null);
+    }
+  };
+
+  const handleApplyCoupon = async (codeToUse) => {
+    const code = (codeToUse || couponInput).trim();
+    if (!code) {
+      toast.warning("Vui lòng nhập mã giảm giá.");
+      return;
+    }
+    if (!cartData?.totalAmount || cartData.totalAmount <= 0) {
+      toast.warning("Giỏ hàng của bạn đang trống!");
+      return;
+    }
+
+    try {
+      setCouponLoading(true);
+      const res = await applyCoupon(code, cartData.totalAmount);
+      if (res.valid) {
+        setAppliedCoupon(res);
+        setCouponInput(res.code);
+        toast.success(res.message || `Đã áp dụng mã ${res.code}!`);
+        setShowCouponsModal(false);
+      } else {
+        toast.error(res.message || "Mã giảm giá không hợp lệ.");
+      }
+    } catch (err) {
+      console.error("Lỗi áp dụng mã:", err);
+      toast.error(err.response?.data?.message || err.message || "Không thể áp dụng mã giảm giá.");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput('');
+    toast.info("Đã gỡ mã giảm giá.");
+  };
+
+  const handleOpenAvailableCoupons = async () => {
+    setShowCouponsModal(true);
+    setLoadingCoupons(true);
+    try {
+      const list = await getActiveCoupons();
+      setAvailableCoupons(list || []);
+    } catch (err) {
+      console.error("Lỗi lấy danh sách coupon:", err);
+      toast.error("Không thể tải danh sách mã giảm giá.");
+    } finally {
+      setLoadingCoupons(false);
+    }
+  };
+
+  // --- Xử lý Xóa sản phẩm ---
   const handleRemoveItemRequest = (item) => {
     setItemToDelete(item);
   };
@@ -101,6 +312,9 @@ export default function Cart() {
       const updatedCart = await removeItem(userId, itemToDelete.cartItemId);
       setCartData(updatedCart);
       toast.success('Đã xóa sản phẩm khỏi giỏ hàng.');
+      if (appliedCoupon && updatedCart.totalAmount) {
+        revalidateCoupon(appliedCoupon.code, updatedCart.totalAmount);
+      }
     } catch (error) {
       console.error("Lỗi xóa sản phẩm:", error);
       toast.error('Xóa sản phẩm thất bại.');
@@ -128,6 +342,7 @@ export default function Cart() {
       setLoading(true);
       const updatedCart = await clearCart(userId);
       setCartData(updatedCart);
+      setAppliedCoupon(null);
       toast.success('Đã xóa tất cả sản phẩm khỏi giỏ hàng.');
     } catch (error) {
       console.error("Lỗi xóa giỏ hàng:", error);
@@ -147,19 +362,35 @@ export default function Cart() {
     }
   };
 
+  // --- Tiến hành Thanh toán PayOS ---
   const handleCheckout = async () => {
     if (!cartData || !cartData.items || cartData.items.length === 0) {
       toast.error("Giỏ hàng của bạn đang trống!");
       return;
     }
-    if (!address.recipientName.trim() || !address.phone.trim() || !address.addressLine.trim() || !address.city.trim()) {
-      toast.warning("Vui lòng điền đầy đủ thông tin địa chỉ giao hàng!");
-      return;
+
+    let finalAddressId = selectedAddressId;
+
+    if (isAddingNewAddress || !finalAddressId) {
+      if (!address.recipientName.trim() || !address.phone.trim() || !address.addressLine.trim() || !address.city.trim()) {
+        toast.warning("Vui lòng điền đầy đủ thông tin địa chỉ giao hàng!");
+        return;
+      }
+      try {
+        setLoading(true);
+        const saved = await createAddress(userId, address);
+        finalAddressId = saved.addressId;
+      } catch (err) {
+        console.error("Lỗi lưu địa chỉ:", err);
+        toast.error("Không thể lưu địa chỉ giao hàng.");
+        setLoading(false);
+        return;
+      }
     }
+
     try {
       setLoading(true);
-      const savedAddress = await createAddress(userId, address);
-      const orderResponse = await createOrder(userId, savedAddress.addressId);
+      const orderResponse = await createOrder(userId, finalAddressId, appliedCoupon?.code);
       const data = await createPaymentLink(orderResponse.orderId);
       if (data && data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
@@ -168,13 +399,25 @@ export default function Cart() {
       }
     } catch (error) {
       console.error("Lỗi thanh toán:", error);
-      toast.error("Không thể khởi tạo thanh toán. Vui lòng thử lại.");
+      toast.error(error.response?.data?.error || error.message || "Không thể khởi tạo thanh toán. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
   };
 
   const totalItemsCount = cartData?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  const rawSubTotal = cartData?.totalAmount || 0;
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const finalTotalAmount = Math.max(0, rawSubTotal - discountAmount);
+
+  // Lọc sizes khả dụng cho màu đang chọn trong modal
+  const availableSizesForSelectedColor = productVariants
+    .filter((v) => v.color === selectedVariantColor)
+    .map((v) => v.size);
+
+  const currentMatchedVariant = productVariants.find(
+    (v) => v.color === selectedVariantColor && v.size === selectedVariantSize
+  );
 
   return (
     <div className="cart-page-wrapper">
@@ -185,14 +428,14 @@ export default function Cart() {
             type="button"
             onClick={handleBack}
             className="cart-back-btn"
-            title="Quay lại xem sản phẩm / chọn size"
+            title="Quay lại xem sản phẩm"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             <span>Quay lại</span>
           </button>
-          
+
           <div className="cart-title-wrap">
             <h1 className="cart-main-title">Giỏ hàng của bạn</h1>
             {totalItemsCount > 0 && (
@@ -252,12 +495,12 @@ export default function Cart() {
           </button>
         </div>
       ) : (
-        /* Layout 2 cột rõ ràng & chuyên nghiệp */
+        /* Layout 2 cột: Bảng sản phẩm / Sổ địa chỉ & Tóm tắt / Coupon / Thanh toán */
         <div className="cart-layout-grid">
-          
-          {/* CỘT TRÁI: Bảng sản phẩm & Form địa chỉ */}
+
+          {/* CỘT TRÁI: Bảng sản phẩm & Chọn địa chỉ giao hàng */}
           <div className="cart-left-col">
-            
+
             {/* Khối danh sách sản phẩm */}
             <div className="cart-card">
               <div className="cart-card-header">
@@ -303,7 +546,7 @@ export default function Cart() {
                               <span
                                 className="cart-product-name"
                                 onClick={() => item.productId && navigate(`/shop/product/${item.productId}`)}
-                                title="Bấm để xem sản phẩm"
+                                title="Bấm để xem chi tiết sản phẩm"
                               >
                                 {item.productName}
                               </span>
@@ -315,13 +558,15 @@ export default function Cart() {
                                 </span>
                               </div>
 
+                              {/* Nút Đổi Size / Màu trực tiếp bằng Modal */}
                               {item.productId && (
                                 <button
                                   type="button"
-                                  onClick={() => navigate(`/shop/product/${item.productId}`)}
+                                  onClick={() => handleOpenVariantModal(item)}
                                   className="cart-change-size-link"
+                                  title="Đổi size hoặc màu sắc trực tiếp"
                                 >
-                                  Đổi size / màu khác
+                                  ✏️ Đổi size / màu khác
                                 </button>
                               )}
                             </div>
@@ -386,7 +631,7 @@ export default function Cart() {
               </div>
             </div>
 
-            {/* Khối thông tin giao hàng */}
+            {/* Khối thông tin giao hàng & Sổ địa chỉ */}
             <div className="cart-card">
               <div className="cart-card-header">
                 <h3>
@@ -396,68 +641,112 @@ export default function Cart() {
                     <circle cx="5.5" cy="18.5" r="2.5" />
                     <circle cx="18.5" cy="18.5" r="2.5" />
                   </svg>
-                  Thông tin người nhận & Địa chỉ giao hàng
+                  Địa chỉ nhận hàng
                 </h3>
               </div>
 
-              <div className="cart-shipping-form">
-                <div className="cart-form-group">
-                  <label className="cart-form-label">
-                    Họ và tên người nhận <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="cart-form-input"
-                    value={address.recipientName}
-                    onChange={(e) => setAddress({ ...address, recipientName: e.target.value })}
-                    placeholder="VD: Nguyễn Văn A"
-                  />
-                </div>
+              {/* Sổ địa chỉ đã lưu (Saved Addresses) */}
+              {savedAddresses && savedAddresses.length > 0 && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div className="cart-address-options-bar">
+                    <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#475569' }}>
+                      Chọn từ sổ địa chỉ của bạn:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingNewAddress(!isAddingNewAddress)}
+                      className="cart-new-address-toggle"
+                    >
+                      {isAddingNewAddress ? '← Chọn địa chỉ có sẵn' : '+ Thêm địa chỉ mới'}
+                    </button>
+                  </div>
 
-                <div className="cart-form-group">
-                  <label className="cart-form-label">
-                    Số điện thoại liên hệ <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    className="cart-form-input"
-                    value={address.phone}
-                    onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-                    placeholder="VD: 0987654321"
-                  />
+                  {!isAddingNewAddress && (
+                    <div className="cart-address-list">
+                      {savedAddresses.map((addr) => (
+                        <div
+                          key={addr.addressId}
+                          className={`cart-address-card ${selectedAddressId === addr.addressId ? 'selected' : ''}`}
+                          onClick={() => setSelectedAddressId(addr.addressId)}
+                        >
+                          <div className="cart-address-card-header">
+                            <span className="cart-address-card-name">{addr.recipientName}</span>
+                            {addr.isDefault && (
+                              <span className="cart-address-default-pill">Mặc định</span>
+                            )}
+                          </div>
+                          <span className="cart-address-card-phone">📞 {addr.phone}</span>
+                          <span className="cart-address-card-text">
+                            📍 {addr.addressLine}, {addr.city}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+              )}
 
-                <div className="cart-form-group col-span-2">
-                  <label className="cart-form-label">
-                    Tỉnh / Thành phố <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="cart-form-input"
-                    value={address.city}
-                    onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                    placeholder="VD: Hà Nội, TP. Hồ Chí Minh, Đà Nẵng..."
-                  />
-                </div>
+              {/* Form nhập địa chỉ mới (nếu chưa có hoặc chọn thêm mới) */}
+              {isAddingNewAddress && (
+                <div className="cart-shipping-form">
+                  <div className="cart-form-group">
+                    <label className="cart-form-label">
+                      Họ và tên người nhận <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="cart-form-input"
+                      value={address.recipientName}
+                      onChange={(e) => setAddress({ ...address, recipientName: e.target.value })}
+                      placeholder="VD: Nguyễn Văn A"
+                    />
+                  </div>
 
-                <div className="cart-form-group col-span-2">
-                  <label className="cart-form-label">
-                    Địa chỉ chi tiết (Số nhà, ngõ, tên đường, phường/xã) <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="cart-form-input"
-                    value={address.addressLine}
-                    onChange={(e) => setAddress({ ...address, addressLine: e.target.value })}
-                    placeholder="VD: Số 123 Đường Cầu Giấy, Phường Dịch Vọng..."
-                  />
+                  <div className="cart-form-group">
+                    <label className="cart-form-label">
+                      Số điện thoại liên hệ <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      className="cart-form-input"
+                      value={address.phone}
+                      onChange={(e) => setAddress({ ...address, phone: e.target.value })}
+                      placeholder="VD: 0987654321"
+                    />
+                  </div>
+
+                  <div className="cart-form-group col-span-2">
+                    <label className="cart-form-label">
+                      Tỉnh / Thành phố <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="cart-form-input"
+                      value={address.city}
+                      onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                      placeholder="VD: Hà Nội, TP. Hồ Chí Minh, Đà Nẵng..."
+                    />
+                  </div>
+
+                  <div className="cart-form-group col-span-2">
+                    <label className="cart-form-label">
+                      Địa chỉ chi tiết (Số nhà, ngõ, tên đường, phường/xã) <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="cart-form-input"
+                      value={address.addressLine}
+                      onChange={(e) => setAddress({ ...address, addressLine: e.target.value })}
+                      placeholder="VD: Số 123 Đường Cầu Giấy, Phường Dịch Vọng..."
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
           </div>
 
-          {/* CỘT PHẢI: Tóm tắt đơn hàng & Nút thanh toán Sticky */}
+          {/* CỘT PHẢI: Khối Coupon, Tóm tắt đơn hàng & Nút thanh toán Sticky */}
           <div className="cart-right-col">
             <div className="cart-summary-card">
               <div className="cart-card-header">
@@ -475,10 +764,65 @@ export default function Cart() {
               </div>
 
               <div className="cart-summary-body">
+
+                {/* KHỐI MÃ GIẢM GIÁ (COUPON) */}
+                <div className="cart-coupon-box">
+                  <div className="cart-coupon-box-header">
+                    <span className="cart-coupon-box-title">
+                      🏷️ Mã giảm giá / Voucher
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleOpenAvailableCoupons}
+                      className="cart-view-coupons-btn"
+                    >
+                      Xem mã có sẵn
+                    </button>
+                  </div>
+
+                  {appliedCoupon ? (
+                    <div className="cart-coupon-applied-card">
+                      <div className="cart-coupon-applied-info">
+                        <span>✓</span>
+                        <span>
+                          Mã <strong>{appliedCoupon.code}</strong> (-{appliedCoupon.discountAmount?.toLocaleString()}₫)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        className="cart-coupon-remove-btn"
+                        title="Gỡ mã giảm giá"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="cart-coupon-input-group">
+                      <input
+                        type="text"
+                        placeholder="Nhập mã ưu đãi..."
+                        className="cart-coupon-input"
+                        value={couponInput}
+                        onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleApplyCoupon()}
+                        disabled={couponLoading || !couponInput.trim()}
+                        className="cart-coupon-apply-btn"
+                      >
+                        {couponLoading ? 'Đang kiểm tra...' : 'Áp dụng'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <div className="cart-summary-row">
                   <span>Tạm tính ({cartData.items.length} món)</span>
                   <span style={{ fontWeight: '600', color: '#0f172a' }}>
-                    {cartData.totalAmount?.toLocaleString()}₫
+                    {rawSubTotal.toLocaleString()}₫
                   </span>
                 </div>
 
@@ -489,7 +833,9 @@ export default function Cart() {
 
                 <div className="cart-summary-row">
                   <span>Giảm giá</span>
-                  <span style={{ color: '#059669', fontWeight: '600' }}>-0₫</span>
+                  <span style={{ color: discountAmount > 0 ? '#059669' : '#64748b', fontWeight: '600' }}>
+                    {discountAmount > 0 ? `-${discountAmount.toLocaleString()}₫` : '-0₫'}
+                  </span>
                 </div>
 
                 <div className="cart-summary-divider" />
@@ -497,7 +843,7 @@ export default function Cart() {
                 <div className="cart-total-row">
                   <span className="cart-total-label">Tổng thanh toán:</span>
                   <span className="cart-total-amount">
-                    {cartData.totalAmount?.toLocaleString()}₫
+                    {finalTotalAmount.toLocaleString()}₫
                   </span>
                 </div>
 
@@ -540,7 +886,194 @@ export default function Cart() {
         </div>
       )}
 
-      {/* Modal Xác Nhận Xóa Từng Món */}
+      {/* MODAL 1: Đổi Phân Loại (Size & Màu Sắc Trực Tiếp Trong Giỏ) */}
+      {editingVariantItem && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px' }}>
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700', color: '#0f172a' }}>
+                Đổi phân loại sản phẩm
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingVariantItem(null)}
+                style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#94a3b8' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ margin: '0 0 16px 0', color: '#334155', fontWeight: '600', fontSize: '0.95rem' }}>
+              {editingVariantItem.productName}
+            </p>
+
+            {variantLoading ? (
+              <div style={{ padding: '30px 0', textAlign: 'center', color: '#64748b' }}>
+                Đang tải các phân loại khả dụng...
+              </div>
+            ) : (
+              <div>
+                {/* Chọn Màu Sắc */}
+                <div className="variant-modal-section">
+                  <div className="variant-modal-section-title">Chọn màu sắc:</div>
+                  <div className="variant-pill-group">
+                    {[...new Set(productVariants.map((v) => v.color))].map((col) => (
+                      <button
+                        key={col}
+                        type="button"
+                        className={`variant-pill-btn ${selectedVariantColor === col ? 'active' : ''}`}
+                        onClick={() => {
+                          setSelectedVariantColor(col);
+                          const sizes = productVariants.filter((v) => v.color === col).map((v) => v.size);
+                          if (!sizes.includes(selectedVariantSize)) {
+                            setSelectedVariantSize(sizes[0] || '');
+                          }
+                        }}
+                      >
+                        {formatColor(col)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Chọn Size */}
+                <div className="variant-modal-section">
+                  <div className="variant-modal-section-title">Chọn kích cỡ (Size):</div>
+                  <div className="variant-pill-group">
+                    {availableSizesForSelectedColor.map((s) => {
+                      const matched = productVariants.find(
+                        (v) => v.color === selectedVariantColor && v.size === s
+                      );
+                      const isOutOfStock = !matched || matched.stockQuantity <= 0;
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          disabled={isOutOfStock}
+                          className={`variant-pill-btn ${selectedVariantSize === s ? 'active' : ''}`}
+                          onClick={() => setSelectedVariantSize(s)}
+                        >
+                          Size {s} {isOutOfStock ? '(Hết)' : ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="variant-stock-hint">
+                    {currentMatchedVariant ? (
+                      currentMatchedVariant.stockQuantity > 0 ? (
+                        <span style={{ color: '#059669', fontWeight: '500' }}>
+                          ✓ Còn {currentMatchedVariant.stockQuantity} sản phẩm trong kho (Mã: {currentMatchedVariant.sku})
+                        </span>
+                      ) : (
+                        <span style={{ color: '#ef4444', fontWeight: '500' }}>
+                          ✕ Phân loại này hiện đã hết hàng
+                        </span>
+                      )
+                    ) : (
+                      <span>Vui lòng chọn màu và size</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Nút hành động modal */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setEditingVariantItem(null)}
+                    style={{ padding: '9px 16px', backgroundColor: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' }}
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmChangeVariant}
+                    disabled={updatingVariant || !currentMatchedVariant || currentMatchedVariant.stockQuantity < editingVariantItem.quantity}
+                    style={{
+                      padding: '9px 18px',
+                      backgroundColor: '#2563eb',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '0.9rem',
+                      opacity: updatingVariant ? 0.7 : 1
+                    }}
+                  >
+                    {updatingVariant ? 'Đang cập nhật...' : 'Xác nhận đổi'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Danh Sách Mã Giảm Giá Khả Dụng */}
+      {showCouponsModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px' }}>
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700', color: '#0f172a' }}>
+                Mã giảm giá ưu đãi
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowCouponsModal(false)}
+                style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#94a3b8' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {loadingCoupons ? (
+              <div style={{ padding: '30px 0', textAlign: 'center', color: '#64748b' }}>
+                Đang tìm các ưu đãi tốt nhất cho bạn...
+              </div>
+            ) : availableCoupons.length === 0 ? (
+              <div style={{ padding: '30px 0', textAlign: 'center', color: '#64748b' }}>
+                Hiện không có mã giảm giá nào đang áp dụng.
+              </div>
+            ) : (
+              <div className="coupon-list-wrap">
+                {availableCoupons.map((c) => (
+                  <div key={c.discountCodeId} className="coupon-card-item">
+                    <div>
+                      <div className="coupon-card-code">{c.code}</div>
+                      <div className="coupon-card-desc">{c.description}</div>
+                      {c.endDate && (
+                        <div className="coupon-card-date">
+                          Hạn dùng: {new Date(c.endDate).toLocaleDateString('vi-VN')}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyCoupon(c.code)}
+                      className="coupon-select-btn"
+                    >
+                      Áp dụng
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '18px' }}>
+              <button
+                type="button"
+                onClick={() => setShowCouponsModal(false)}
+                style={{ padding: '8px 16px', backgroundColor: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' }}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: Xác Nhận Xóa Từng Món */}
       {itemToDelete && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px' }}>
           <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15)' }}>
