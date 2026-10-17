@@ -26,6 +26,7 @@ public class PaymentController {
     private final PayOS payOS;
     private final OrderRepository orderRepository;
     private final OrderService orderService;
+    private final com.example.myapp.repos.PaymentRepository paymentRepository;
 
     @PostMapping("/create-payment-link")
     public ResponseEntity<?> createPaymentLink(@RequestParam Integer orderId) {
@@ -45,7 +46,6 @@ public class PaymentController {
                 items.add(item);
             }
 
-            
             long orderCode = order.getOrderId();
 
             String returnUrl = "http://localhost:3000/shop/cart?payment=success&orderCode=" + orderCode;
@@ -74,9 +74,13 @@ public class PaymentController {
     public ResponseEntity<?> verifyPayment(@RequestParam Long orderCode) {
         try {
             PaymentLink paymentData = payOS.paymentRequests().get(orderCode);
-            if ("PAID".equals(paymentData.getStatus())) {
-                // Đánh dấu đơn hàng là đã thanh toán
-                orderService.markOrderAsPaid(orderCode.intValue());
+            if (paymentData.getStatus() != null && "PAID".equalsIgnoreCase(paymentData.getStatus().toString())) {
+                // Đánh dấu đơn hàng là đã thanh toán & lưu vào bảng Payments
+                orderService.markOrderAsPaid(
+                        orderCode.intValue(),
+                        "PAYOS-" + orderCode,
+                        paymentData.getAmount()
+                );
                 return ResponseEntity.ok(Map.of("status", "success", "message", "Thanh toán thành công"));
             }
             return ResponseEntity.badRequest().body(Map.of("status", "pending", "message", "Chưa thanh toán hoặc bị hủy"));
@@ -84,6 +88,33 @@ public class PaymentController {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @PostMapping("/webhook")
+    public ResponseEntity<?> handlePayOSWebhook(@RequestBody Object webhookBody) {
+        try {
+            vn.payos.model.webhooks.WebhookData webhookData = payOS.webhooks().verify(webhookBody);
+            if (webhookData != null && webhookData.getOrderCode() != null) {
+                String txId = webhookData.getReference() != null && !webhookData.getReference().isEmpty()
+                        ? webhookData.getReference()
+                        : ("PAYOS-" + webhookData.getOrderCode());
+
+                orderService.markOrderAsPaid(
+                        webhookData.getOrderCode().intValue(),
+                        txId,
+                        webhookData.getAmount()
+                );
+            }
+            return ResponseEntity.ok(Map.of("message", "Webhook verified and processed successfully"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<?> getPaymentStatusByOrderId(@PathVariable Integer orderId) {
+        return ResponseEntity.ok(paymentRepository.findByOrderOrderId(orderId));
     }
 }
 

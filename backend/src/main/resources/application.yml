@@ -1,7 +1,9 @@
 spring:
-  datasource:
+  config:
+    import: optional:file:.env[.properties]
 
-    url: ${DB_URL:jdbc:sqlserver://localhost;instanceName=MSSQLSERVER01;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;}
+  datasource:
+    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;}
     username: ${DB_USERNAME:sa}
     password: ${DB_PASSWORD:sa}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver

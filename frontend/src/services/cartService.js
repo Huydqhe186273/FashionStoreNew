@@ -38,8 +38,10 @@ export const createAddress = async (userId, addressData) => {
   return response.data;
 };
 
-export const createOrder = async (userId, addressId) => {
-  const response = await api.post(`/orders/create-from-cart?userId=${userId}&addressId=${addressId}`);
+export const createOrder = async (userId, addressId, couponCode) => {
+  const params = { userId, addressId };
+  if (couponCode) params.couponCode = couponCode;
+  const response = await api.post(`/orders/create-from-cart`, null, { params });
   return response.data;
 };
 

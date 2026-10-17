@@ -9,6 +9,8 @@ import FavoriteButton from '../../components/customer/FavoriteButton';
 import ReviewList from '../../components/customer/ReviewList';
 import ReviewForm from '../../components/customer/ReviewForm';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
+import { getSimilarProducts } from '../../services/recommendationService';
+import { trackView, trackAddToCart } from '../../services/trackingService';
 
 const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="%23222a3a"/><text x="50%" y="50%" fill="%23667085" font-family="sans-serif" font-size="28" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>';
 
@@ -59,6 +61,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [reviewRefreshKey, setReviewRefreshKey] = useState(0);
   const [isAdding, setIsAdding] = useState(false);
+  const [similarProducts, setSimilarProducts] = useState([]);
 
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
@@ -70,6 +73,11 @@ export default function ProductDetailPage() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    
+    // Ghi nhận hành vi xem sản phẩm (Tracking)
+    trackView(id);
+
+    // Tải thông tin chi tiết sản phẩm
     getProductById(id)
       .then((data) => {
         if (cancelled) return;
@@ -87,6 +95,16 @@ export default function ProductDetailPage() {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+
+    // Tải danh sách gợi ý sản phẩm tương tự bằng AI Similarity
+    getSimilarProducts(id, 4)
+      .then((data) => {
+        if (!cancelled && data && data.length > 0) {
+          setSimilarProducts(data);
+        }
+      })
+      .catch((err) => console.warn('Lỗi tải sản phẩm tương tự:', err));
+
     return () => { cancelled = true; };
   }, [id]);
 
@@ -140,6 +158,9 @@ export default function ProductDetailPage() {
       setIsAdding(true);
       await addToCart(userId, variant.variantId, quantity);
       
+      // Ghi nhận hành vi thêm vào giỏ hàng
+      trackAddToCart(product.productId);
+
       if (isBuyNow) {
         navigate('/shop/cart');
       } else {
@@ -291,9 +312,30 @@ export default function ProductDetailPage() {
       />
 
       <section className="product-detail-related">
-        <h2>Sản phẩm liên quan</h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>✨</span> Sản phẩm tương tự
+            </h2>
+            <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#6b7280' }}>
+              Mô hình AI phân tích dựa trên chất liệu, danh mục và phong cách
+            </p>
+          </div>
+          <span style={{
+            fontSize: '0.75rem',
+            padding: '4px 10px',
+            borderRadius: '9999px',
+            backgroundColor: '#eef2ff',
+            color: '#4f46e5',
+            fontWeight: '600'
+          }}>
+            AI Content-based Similarity
+          </span>
+        </div>
         <div className="shop-grid">
-          {mockRelated.map((p) => <ProductCard key={p.productId} product={p} />)}
+          {(similarProducts.length > 0 ? similarProducts : mockRelated).map((p) => (
+            <ProductCard key={p.productId} product={p} />
+          ))}
         </div>
       </section>
     </div>

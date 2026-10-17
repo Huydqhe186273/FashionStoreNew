@@ -95,6 +95,43 @@ export default function Profile() {
             </div>
             <h1 className="profile-name">{profile?.fullName || 'My Account'}</h1>
             <p className="profile-email">{profile?.email || 'Manage your personal information and security settings.'}</p>
+            <Link
+              to="/shop/orders"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginTop: '16px',
+                padding: '10px 18px',
+                backgroundColor: '#0f172a',
+                color: '#ffffff',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontWeight: '600',
+                fontSize: '0.9rem'
+              }}
+            >
+              📦 Đơn hàng của tôi
+            </Link>
+            <Link
+              to="/shop/notifications"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginTop: '10px',
+                padding: '10px 18px',
+                backgroundColor: '#ffffff',
+                color: '#0f172a',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontWeight: '600',
+                fontSize: '0.9rem'
+              }}
+            >
+              🔔 Thông báo của tôi
+            </Link>
           </div>
           
           {/* Main Content Area */}

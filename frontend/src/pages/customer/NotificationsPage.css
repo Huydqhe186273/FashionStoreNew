@@ -1,0 +1,230 @@
+/* ==========================================================================
+   NOTIFICATIONS PAGE STYLES - TRANG THÔNG BÁO KHÁCH HÀNG
+   ========================================================================== */
+
+.notif-page-wrapper {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+  color: #1e293b;
+}
+
+.notif-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.notif-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.notif-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.notif-unread-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background-color: #fee2e2;
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  border: 1px solid #fecdd3;
+}
+
+.notif-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-mark-all-read {
+  padding: 8px 16px;
+  background-color: #f1f5f9;
+  color: #2563eb;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-mark-all-read:hover:not(:disabled) {
+  background-color: #e2e8f0;
+  color: #1d4ed8;
+}
+
+.btn-mark-all-read:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Tabs */
+.notif-filter-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 10px;
+}
+
+.notif-tab-btn {
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notif-tab-btn:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+.notif-tab-btn.active {
+  background-color: #0f172a;
+  color: #ffffff;
+}
+
+/* Danh sách Thông báo */
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notif-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.notif-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+}
+
+.notif-card.unread {
+  background-color: #f0f7ff;
+  border-color: #bfdbfe;
+}
+
+.notif-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  background-color: #eff6ff;
+  border: 1px solid #dbeafe;
+}
+
+.notif-card.unread .notif-icon-wrap {
+  background-color: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.notif-content-wrap {
+  flex: 1;
+}
+
+.notif-content-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.notif-card.unread .notif-content-text {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.notif-meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.notif-dot-unread {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  display: inline-block;
+}
+
+.notif-action-btn {
+  padding: 4px 10px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notif-action-btn:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* Empty state */
+.notif-empty-box {
+  text-align: center;
+  padding: 64px 20px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.notif-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.7;
+}
+
+.notif-empty-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.notif-empty-desc {
+  font-size: 0.9rem;
+  color: #64748b;
+}
