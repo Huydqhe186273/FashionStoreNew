@@ -5,6 +5,7 @@ import com.example.myapp.model.CreateCategoryRequestDTO;
 import com.example.myapp.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,10 +13,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/categories")
 @CrossOrigin(origins = "*")
-@RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
 public class CategoryController {
 
     private final CategoryService categoryService;
+
+    public CategoryController(CategoryService categoryService) {
+        this.categoryService = categoryService;
+    }
 
     @GetMapping
     // Xử lý GET /api/admin/categories để trả danh sách danh mục.

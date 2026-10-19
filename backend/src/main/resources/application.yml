@@ -4,9 +4,9 @@ spring:
 
   datasource:
     # Cấu hình kết nối SQL Server chuẩn (đã bật hỗ trợ Tiếng Việt Unicode)
-    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;}
+    url: ${DB_URL:jdbc:sqlserver://CUONG;instanceName=MSSQLSERVER02;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;}
     username: ${DB_USERNAME:sa}
-    password: ${DB_PASSWORD:sa}
+    password: ${DB_PASSWORD:12345}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
   jpa:

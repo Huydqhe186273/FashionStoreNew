@@ -5,6 +5,11 @@ export const getUsers = async (params) => {
   return response.data;
 };
 
+export const createUser = async (data) => {
+  const response = await api.post('/admin/users', data);
+  return response.data;
+};
+
 export const updateUser = async (userId, data) => {
   const response = await api.put(`/admin/users/${userId}`, data);
   return response.data;

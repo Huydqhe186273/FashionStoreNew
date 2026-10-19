@@ -39,6 +39,11 @@ export default function CustomerNavbar() {
                     Admin Panel
                   </Link>
                 )}
+                {user.role === 'staff' && (
+                  <Link to="/staff/orders" style={{ color: '#2563eb', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>
+                    Kênh Nhân Viên
+                  </Link>
+                )}
                 <button 
                   onClick={logout} 
                   style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
