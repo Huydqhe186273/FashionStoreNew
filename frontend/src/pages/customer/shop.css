@@ -190,7 +190,7 @@
 .product-card-price {
   font-size: 1.05rem;
   font-weight: 800;
-  color: var(--text-primary);
+  color: #dc2626;
 }
 .product-card-base-price {
   font-size: 0.8rem;

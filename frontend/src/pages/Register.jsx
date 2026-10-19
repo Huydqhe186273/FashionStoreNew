@@ -71,7 +71,11 @@ export default function Register() {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setApiError(err.response?.data || 'Đăng ký thất bại. Vui lòng thử lại.');
+      const errorData = err.response?.data;
+      const errorMsg = typeof errorData === 'string'
+        ? errorData
+        : errorData?.message || errorData?.error || 'Đăng ký thất bại. Vui lòng kiểm tra lại kết nối hoặc thông tin đăng ký.';
+      setApiError(errorMsg);
     }
   };
 

@@ -14,5 +14,7 @@ public interface ProductSimilarityRepository extends JpaRepository<ProductSimila
     @Query("SELECT s FROM ProductSimilarity s WHERE s.Id.ProductIdA = :productIdA ORDER BY s.SimilarityScore DESC")
     List<ProductSimilarity> findTopSimilar(@Param("productIdA") Integer productIdA);
 
-    void deleteByIdProductIdA(Integer productIdA);
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM ProductSimilarity s WHERE s.Id.ProductIdA = :productIdA")
+    void deleteByIdProductIdA(@Param("productIdA") Integer productIdA);
 }

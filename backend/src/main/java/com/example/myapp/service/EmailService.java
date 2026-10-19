@@ -84,16 +84,17 @@ public class EmailService {
      * Gửi email xác nhận đặt hàng kèm thông tin chi tiết đơn hàng
      */
     public void sendOrderConfirmationEmail(Order order) {
-        if (mailUsername == null || mailUsername.isBlank() || order == null || order.getUser() == null) {
-            System.out.println("⚠️ Bỏ qua gửi email xác nhận đặt hàng: MAIL_USERNAME chưa được cấu hình hoặc thông tin đơn không hợp lệ.");
+        if (mailUsername == null || mailUsername.isBlank() || mailUsername.contains("your-email") || order == null || order.getUser() == null) {
+            System.out.println("⚠️ Bỏ qua gửi email xác nhận đặt hàng: MAIL_USERNAME chưa được cấu hình hoặc là placeholder.");
             return;
         }
 
         String toEmail = order.getUser().getEmail();
         if (toEmail == null || toEmail.isBlank()) return;
 
-        try {
-            DecimalFormat df = new DecimalFormat("#,###₫");
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                DecimalFormat df = new DecimalFormat("#,###₫");
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
             MimeMessage mimeMessage = mailSender.createMimeMessage();
@@ -203,21 +204,23 @@ public class EmailService {
         } catch (Exception e) {
             System.err.println("⚠️ Lỗi gửi email xác nhận đơn hàng: " + e.getMessage());
         }
+        });
     }
 
     /**
      * Gửi email biên nhận thanh toán PayOS thành công
      */
     public void sendPaymentConfirmationEmail(Order order, String transactionId, BigDecimal amount) {
-        if (mailUsername == null || mailUsername.isBlank() || order == null || order.getUser() == null) {
-            System.out.println("⚠️ Bỏ qua gửi email thanh toán: MAIL_USERNAME chưa được cấu hình.");
+        if (mailUsername == null || mailUsername.isBlank() || mailUsername.contains("your-email") || order == null || order.getUser() == null) {
+            System.out.println("⚠️ Bỏ qua gửi email thanh toán: MAIL_USERNAME chưa được cấu hình hoặc là placeholder.");
             return;
         }
 
         String toEmail = order.getUser().getEmail();
         if (toEmail == null || toEmail.isBlank()) return;
 
-        try {
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
             DecimalFormat df = new DecimalFormat("#,###₫");
 
             MimeMessage mimeMessage = mailSender.createMimeMessage();
@@ -289,6 +292,7 @@ public class EmailService {
         } catch (Exception e) {
             System.err.println("⚠️ Lỗi gửi email biên nhận thanh toán: " + e.getMessage());
         }
+        });
     }
 
     private String generateOtp() {

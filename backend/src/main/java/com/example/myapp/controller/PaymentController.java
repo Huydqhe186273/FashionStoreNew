@@ -46,7 +46,7 @@ public class PaymentController {
                 items.add(item);
             }
 
-            long orderCode = order.getOrderId();
+            long orderCode = order.getOrderId() * 100000L + (System.currentTimeMillis() % 100000L);
 
             String returnUrl = "http://localhost:3000/shop/cart?payment=success&orderCode=" + orderCode;
             String cancelUrl = "http://localhost:3000/shop/cart?payment=cancel&orderCode=" + orderCode;
@@ -54,7 +54,7 @@ public class PaymentController {
             CreatePaymentLinkRequest request = CreatePaymentLinkRequest.builder()
                     .orderCode(orderCode)
                     .amount(order.getTotalAmount().longValue())
-                    .description("Thanh toan don " + orderCode)
+                    .description("Thanh toan #" + order.getOrderId())
                     .returnUrl(returnUrl)
                     .cancelUrl(cancelUrl)
                     .items(items)
@@ -73,11 +73,12 @@ public class PaymentController {
     @PostMapping("/verify")
     public ResponseEntity<?> verifyPayment(@RequestParam Long orderCode) {
         try {
+            int realOrderId = orderCode > 100000L ? (int)(orderCode / 100000L) : orderCode.intValue();
             PaymentLink paymentData = payOS.paymentRequests().get(orderCode);
             if (paymentData.getStatus() != null && "PAID".equalsIgnoreCase(paymentData.getStatus().toString())) {
                 // Đánh dấu đơn hàng là đã thanh toán & lưu vào bảng Payments
                 orderService.markOrderAsPaid(
-                        orderCode.intValue(),
+                        realOrderId,
                         "PAYOS-" + orderCode,
                         paymentData.getAmount()
                 );
@@ -95,12 +96,14 @@ public class PaymentController {
         try {
             vn.payos.model.webhooks.WebhookData webhookData = payOS.webhooks().verify(webhookBody);
             if (webhookData != null && webhookData.getOrderCode() != null) {
+                long oc = webhookData.getOrderCode();
+                int realOrderId = oc > 100000L ? (int)(oc / 100000L) : (int)oc;
                 String txId = webhookData.getReference() != null && !webhookData.getReference().isEmpty()
                         ? webhookData.getReference()
-                        : ("PAYOS-" + webhookData.getOrderCode());
+                        : ("PAYOS-" + oc);
 
                 orderService.markOrderAsPaid(
-                        webhookData.getOrderCode().intValue(),
+                        realOrderId,
                         txId,
                         webhookData.getAmount()
                 );

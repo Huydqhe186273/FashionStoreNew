@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useContext } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { getProductById } from '../../services/customerProductService';
+import { getProductById, getProducts } from '../../services/customerProductService';
 import { addToCart } from '../../services/cartService';
 import { AuthContext } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -11,48 +11,16 @@ import ReviewForm from '../../components/customer/ReviewForm';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
 import { getSimilarProducts } from '../../services/recommendationService';
 import { trackView, trackAddToCart } from '../../services/trackingService';
+import { resolveProductImage } from '../../utils/productImage';
 
 const PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="%23222a3a"/><text x="50%" y="50%" fill="%23667085" font-family="sans-serif" font-size="28" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>';
-
-const mockDetail = (id) => ({
-  productId: Number(id),
-  name: 'Áo Polo Nam Premium Flex (Demo)',
-  description: 'Chất liệu cotton 100% thoáng mát, form regular fit phù hợp nhiều dáng người. Đường may tỉ mỉ, bền màu theo thời gian. Phù hợp đi làm, đi chơi, dạo phố.',
-  basePrice: 350000,
-  discountPrice: 299000,
-  finalPrice: 299000,
-  discountPercent: 15,
-  soldCount: 142,
-  totalStock: 24,
-  status: 'active',
-  categoryId: 1,
-  categoryName: 'Áo Nam',
-  images: [],
-  primaryImage: '',
-  availableSizes: ['S', 'M', 'L', 'XL'],
-  availableColors: ['Đen', 'Trắng', 'Xám'],
-  variants: [
-    { variantId: 1, size: 'S', color: 'Đen', stockQuantity: 5, sku: 'POLO-S-DEN' },
-    { variantId: 2, size: 'M', color: 'Đen', stockQuantity: 8, sku: 'POLO-M-DEN' },
-    { variantId: 3, size: 'L', color: 'Đen', stockQuantity: 3, sku: 'POLO-L-DEN' },
-    { variantId: 4, size: 'M', color: 'Trắng', stockQuantity: 4, sku: 'POLO-M-WHT' },
-    { variantId: 5, size: 'L', color: 'Trắng', stockQuantity: 2, sku: 'POLO-L-WHT' },
-    { variantId: 6, size: 'XL', color: 'Xám', stockQuantity: 2, sku: 'POLO-XL-GRY' },
-  ],
-});
-
-const mockRelated = [
-  { productId: 1001, name: 'Áo Polo Nam Premium Flex', categoryName: 'Áo Nam', basePrice: 350000, discountPrice: 299000, finalPrice: 299000, soldCount: 142, images: [], primaryImage: '' },
-  { productId: 1002, name: 'Quần Jean Slimfit Co Giãn', categoryName: 'Quần Nam', basePrice: 550000, discountPrice: 480000, finalPrice: 480000, soldCount: 98, images: [], primaryImage: '' },
-  { productId: 1005, name: 'Áo Thun Cotton Basic', categoryName: 'Áo Nam', basePrice: 180000, discountPrice: 150000, finalPrice: 150000, soldCount: 220, images: [], primaryImage: '' },
-  { productId: 1008, name: 'Áo Hoodie Unisex Streetwear', categoryName: 'Áo Khoác', basePrice: 540000, discountPrice: 450000, finalPrice: 450000, soldCount: 67, images: [], primaryImage: '' },
-];
 
 const formatVND = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v || 0);
 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
   const [selectedColor, setSelectedColor] = useState(null);
@@ -73,6 +41,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setProduct(null);
     
     // Ghi nhận hành vi xem sản phẩm (Tracking)
     trackView(id);
@@ -84,13 +53,22 @@ export default function ProductDetailPage() {
         setProduct(data);
         setIsLive(true);
         setActiveImage(0);
+
+        if (data?.categoryId) {
+          getProducts({ categoryId: data.categoryId, size: 5 })
+            .then((res) => {
+              if (!cancelled && res?.content) {
+                setRelatedProducts(res.content.filter((p) => p.productId !== data.productId).slice(0, 4));
+              }
+            })
+            .catch(() => {});
+        }
       })
       .catch((err) => {
         if (cancelled) return;
-        console.warn('getProductById fallback:', err);
-        setProduct(mockDetail(id));
+        console.warn('getProductById failed:', err);
+        setProduct(null);
         setIsLive(false);
-        setActiveImage(0);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -116,7 +94,7 @@ export default function ProductDetailPage() {
   const images = useMemo(() => {
     if (!product) return [];
     const list = product.images && product.images.length > 0 ? product.images : [product.primaryImage].filter(Boolean);
-    return list.length > 0 ? list : [PLACEHOLDER];
+    return list.length > 0 ? list : [resolveProductImage(product)];
   }, [product]);
 
   const availableSizes = useMemo(() => {
@@ -311,33 +289,39 @@ export default function ProductDetailPage() {
         onSubmitted={() => setReviewRefreshKey((k) => k + 1)}
       />
 
-      <section className="product-detail-related">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-          <div>
-            <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>✨</span> Sản phẩm tương tự
-            </h2>
-            <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#6b7280' }}>
-              Mô hình AI phân tích dựa trên chất liệu, danh mục và phong cách
-            </p>
+      {((similarProducts.length > 0 ? similarProducts : relatedProducts).length > 0) && (
+        <section className="product-detail-related">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>✨</span> {similarProducts.length > 0 ? 'Sản phẩm tương tự' : 'Sản phẩm liên quan'}
+              </h2>
+              <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#6b7280' }}>
+                {similarProducts.length > 0
+                  ? 'Mô hình AI phân tích dựa trên chất liệu, danh mục và phong cách'
+                  : 'Các sản phẩm cùng danh mục được gợi ý cho bạn'}
+              </p>
+            </div>
+            {similarProducts.length > 0 && (
+              <span style={{
+                fontSize: '0.75rem',
+                padding: '4px 10px',
+                borderRadius: '9999px',
+                backgroundColor: '#eef2ff',
+                color: '#4f46e5',
+                fontWeight: '600'
+              }}>
+                AI Content-based Similarity
+              </span>
+            )}
           </div>
-          <span style={{
-            fontSize: '0.75rem',
-            padding: '4px 10px',
-            borderRadius: '9999px',
-            backgroundColor: '#eef2ff',
-            color: '#4f46e5',
-            fontWeight: '600'
-          }}>
-            AI Content-based Similarity
-          </span>
-        </div>
-        <div className="shop-grid">
-          {(similarProducts.length > 0 ? similarProducts : mockRelated).map((p) => (
-            <ProductCard key={p.productId} product={p} />
-          ))}
-        </div>
-      </section>
+          <div className="shop-grid">
+            {(similarProducts.length > 0 ? similarProducts : relatedProducts).map((p) => (
+              <ProductCard key={p.productId} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

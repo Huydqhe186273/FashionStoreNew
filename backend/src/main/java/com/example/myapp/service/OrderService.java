@@ -135,20 +135,22 @@ public class OrderService {
         }
 
         // Tự động thu thập hành vi người dùng (Purchase behavior tracking)
-        try {
-            for (OrderItem item : orderItems) {
-                if (item.getVariant() != null && item.getVariant().getProduct() != null) {
-                    com.example.myapp.model.BehaviorLogRequestDTO logReq = com.example.myapp.model.BehaviorLogRequestDTO.builder()
-                            .userId(userId)
-                            .productId(item.getVariant().getProduct().getProductId())
-                            .actionType("purchase")
-                            .build();
-                    trackingService.logBehavior(logReq);
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                for (OrderItem item : orderItems) {
+                    if (item.getVariant() != null && item.getVariant().getProduct() != null) {
+                        com.example.myapp.model.BehaviorLogRequestDTO logReq = com.example.myapp.model.BehaviorLogRequestDTO.builder()
+                                .userId(userId)
+                                .productId(item.getVariant().getProduct().getProductId())
+                                .actionType("purchase")
+                                .build();
+                        trackingService.logBehavior(logReq);
+                    }
                 }
+            } catch (Exception e) {
+                System.err.println("Lỗi ghi nhận hành vi mua hàng: " + e.getMessage());
             }
-        } catch (Exception e) {
-            System.err.println("Lỗi ghi nhận hành vi mua hàng: " + e.getMessage());
-        }
+        });
 
         return order;
     }

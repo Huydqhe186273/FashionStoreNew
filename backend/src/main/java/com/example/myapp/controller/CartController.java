@@ -29,11 +29,14 @@ public class CartController {
         return ResponseEntity.ok(cart);
     }
 
+    // API Cập nhật số lượng của 1 sản phẩm trong giỏ hàng (Nút + / -)
+    // Nhận userId, cartItemId từ URL và quantity mới từ request param
     @PutMapping("/update/{cartItemId}")
     public ResponseEntity<CartDTO> updateQuantity(
             @RequestParam Integer userId,
             @PathVariable Integer cartItemId,
             @RequestParam Integer quantity) {
+        // Gọi Service kiểm tra tồn kho, cập nhật số lượng mới và tính lại tổng tiền
         CartDTO cart = cartService.updateCartItemQuantity(userId, cartItemId, quantity);
         return ResponseEntity.ok(cart);
     }
@@ -48,11 +51,15 @@ public class CartController {
         return ResponseEntity.ok(cart);
     }
 
+    // API Xóa 1 sản phẩm khỏi giỏ hàng
+    // Nhận userId từ param (?userId=...) và cartItemId từ path variable (/remove/{cartItemId})
     @DeleteMapping("/remove/{cartItemId}")
     public ResponseEntity<CartDTO> removeItem(
             @RequestParam Integer userId,
             @PathVariable Integer cartItemId) {
+        // Gọi Service xử lý xóa trong DB, tính lại tổng tiền và nhận về CartDTO mới
         CartDTO cart = cartService.removeCartItem(userId, cartItemId);
+        // Trả về dữ liệu CartDTO dạng JSON với mã HTTP 200 OK
         return ResponseEntity.ok(cart);
     }
 

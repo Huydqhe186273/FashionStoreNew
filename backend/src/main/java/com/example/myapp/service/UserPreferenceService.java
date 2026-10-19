@@ -39,7 +39,7 @@ public class UserPreferenceService {
     /**
      * Updates or builds the preference profile for the given user by aggregating recent behavior logs.
      */
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public UserPreference updatePreferences(Integer userId) {
         if (userId == null) return null;
 

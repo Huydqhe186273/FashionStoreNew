@@ -24,7 +24,7 @@ public class TrackingService {
     private final UserRepository userRepository;
     private final UserPreferenceService userPreferenceService;
 
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public UserBehaviorLog logBehavior(BehaviorLogRequestDTO req) {
         if (req == null || req.getProductId() == null) {
             throw new IllegalArgumentException("ProductId is required for tracking behavior.");

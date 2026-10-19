@@ -507,14 +507,9 @@ public class CustomerProductService {
         List<ProductImage> imgs = productImageRepository.findByProductId(p.getProductId());
         for (ProductImage img : imgs) {
             String url = img.getImageUrl();
-            if (url == null) continue;
-            // Skip placeholder / random-photo URLs that don't actually
-            // match the product name. The frontend will synthesise a
-            // name-aware SVG artwork instead — see productArtwork.js.
-            // Tested against the demo seed which uses picsum.photos.
-            if (isStockPhotoPlaceholder(url)) continue;
-            images.add(url);
-            if (Boolean.TRUE.equals(img.getIsPrimary())) primary = url;
+            if (url == null || url.trim().isEmpty()) continue;
+            images.add(url.trim());
+            if (Boolean.TRUE.equals(img.getIsPrimary())) primary = url.trim();
         }
         if (primary == null && !images.isEmpty()) primary = images.get(0);
 

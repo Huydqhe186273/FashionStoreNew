@@ -2,11 +2,14 @@ package com.example.myapp.repos;
 
 import com.example.myapp.entity.UserPreference;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
 public interface UserPreferenceRepository extends JpaRepository<UserPreference, Integer> {
-    Optional<UserPreference> findByUserId(Integer userId);
+    @Query("SELECT up FROM UserPreference up WHERE up.UserId = :userId")
+    Optional<UserPreference> findByUserId(@Param("userId") Integer userId);
 }

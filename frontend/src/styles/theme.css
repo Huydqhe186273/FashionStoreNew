@@ -1262,8 +1262,8 @@ tr:hover td { background: var(--bg-soft); }
 .product-detail-price {
   font-family: var(--font-serif);
   font-size: var(--fs-3xl);
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: #dc2626;
   letter-spacing: -0.02em;
 }
 .product-detail-base-price {
