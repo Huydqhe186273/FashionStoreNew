@@ -114,15 +114,15 @@ export default function DashboardOverview() {
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon" style={{ color: '#6366f1' }}>💵</div>
-          <div>
-            <div className="stat-val">{formatCurrency(data.totalRevenue)}</div>
+          <div className="stat-info">
+            <div className="stat-val" title={formatCurrency(data.totalRevenue)}>{formatCurrency(data.totalRevenue)}</div>
             <div className="stat-label">Tổng Doanh Thu</div>
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-icon" style={{ color: '#3b82f6' }}>🛍️</div>
-          <div>
+          <div className="stat-info">
             <div className="stat-val">{data.totalOrders || 0}</div>
             <div className="stat-label">Tổng Đơn Hàng</div>
           </div>
@@ -130,7 +130,7 @@ export default function DashboardOverview() {
 
         <div className="stat-card">
           <div className="stat-icon" style={{ color: '#10b981' }}>📦</div>
-          <div>
+          <div className="stat-info">
             <div className="stat-val">{data.totalProducts || 0}</div>
             <div className="stat-label">Sản Phẩm (Tồn kho: {data.totalStockQuantity || 0})</div>
           </div>
@@ -138,7 +138,7 @@ export default function DashboardOverview() {
 
         <div className="stat-card">
           <div className="stat-icon" style={{ color: '#f59e0b' }}>👤</div>
-          <div>
+          <div className="stat-info">
             <div className="stat-val">{data.totalUsers || 0}</div>
             <div className="stat-label">Khách Hàng (Customer: {data.customerCount || 0})</div>
           </div>
@@ -171,7 +171,7 @@ export default function DashboardOverview() {
                 <tr key={o.orderId}>
                   <td><strong>#ORD-{o.orderId}</strong></td>
                   <td>{o.customerName || 'N/A'}</td>
-                  <td><strong style={{ color: '#ffffff' }}>{formatCurrency(o.totalAmount)}</strong></td>
+                  <td><strong style={{ color: 'var(--text-main, #111827)' }}>{formatCurrency(o.totalAmount)}</strong></td>
                   <td><span className="badge badge-active">{o.orderStatus}</span></td>
                 </tr>
               ))}

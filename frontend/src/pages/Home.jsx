@@ -25,6 +25,9 @@ export default function Home() {
               {user.role === 'admin' && (
                 <Link to="/admin" className="btn-outline">Dashboard</Link>
               )}
+              {user.role === 'staff' && (
+                <Link to="/staff/orders" className="btn-outline">Xử lý Đơn Hàng</Link>
+              )}
               <Link to="/shop/cart" className="btn-outline">Giỏ hàng</Link>
               <Link to="/profile" className="btn-outline">Profile</Link>
               <button onClick={logout} className="btn-primary" style={{ padding: '8px 16px', borderRadius: '8px' }}>
@@ -47,10 +50,10 @@ export default function Home() {
         <div className="hero-content">
           <h1>ELEVATE YOUR STYLE</h1>
           <p>
-            Discover the latest trends in fashion and explore our new collections. 
+            Discover the latest trends in fashion and explore our new collections.
             Designed for the modern trendsetter.
           </p>
-          <Link to="/shop" className="hero-btn">Shop Now</Link>   // ra shop now
+          <Link to="/shop" className="hero-btn">Shop Now</Link>
         </div>
       </section>
 

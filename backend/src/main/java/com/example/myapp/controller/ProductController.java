@@ -5,6 +5,7 @@ import com.example.myapp.model.ProductDTO;
 import com.example.myapp.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,10 +13,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/products")
 @CrossOrigin(origins = "*")
-@RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
 public class ProductController {
 
     private final ProductService productService;
+
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
 
     @GetMapping
     // Xử lý GET /api/admin/products để tìm/lọc danh sách sản phẩm.

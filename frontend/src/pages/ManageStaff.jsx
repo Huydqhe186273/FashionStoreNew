@@ -15,13 +15,12 @@ export default function ManageStaff() {
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  // Modals State
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedStaff, setSelectedStaff] = useState(null);
+  // Modal State (Gộp Thêm & Sửa làm 1)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingStaff, setEditingStaff] = useState(null); // null: Thêm mới, object: Đang sửa
 
-  const [addForm, setAddForm] = useState({ fullName: '', email: '', password: '', phone: '', role: 'staff' });
-  const [editForm, setEditForm] = useState({ fullName: '', role: 'staff', status: 'active' });
+  const initialForm = { fullName: '', email: '', password: '', phone: '', role: 'staff', status: 'active' };
+  const [formData, setFormData] = useState(initialForm);
 
   const loadStaff = async () => {
     try {
@@ -54,34 +53,56 @@ export default function ManageStaff() {
     }
   };
 
-  const handleCreateStaff = async (e) => {
-    e.preventDefault();
-    try {
-      await createStaff(addForm);
-      setIsAddOpen(false);
-      setAddForm({ fullName: '', email: '', password: '', phone: '', role: 'staff' });
-      loadStaff();
-    } catch (err) {
-      setStaffList(prev => [...prev, { ...addForm, userId: prev.length + 1, status: 'active' }]);
-      setIsAddOpen(false);
-    }
+  const handleOpenAdd = () => {
+    setEditingStaff(null);
+    setFormData(initialForm);
+    setIsModalOpen(true);
   };
 
   const handleOpenEdit = (staff) => {
-    setSelectedStaff(staff);
-    setEditForm({ fullName: staff.fullName || '', role: staff.role || 'staff', status: staff.status || 'active' });
-    setIsEditOpen(true);
+    setEditingStaff(staff);
+    setFormData({
+      fullName: staff.fullName || '',
+      email: staff.email || '',
+      password: '',
+      phone: staff.phone || '',
+      role: staff.role || 'staff',
+      status: staff.status || 'active'
+    });
+    setIsModalOpen(true);
   };
 
-  const handleSaveEdit = async (e) => {
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingStaff(null);
+    setFormData(initialForm);
+  };
+
+  const handleSubmitStaff = async (e) => {
     e.preventDefault();
-    try {
-      await updateStaff(selectedStaff.userId, editForm);
-      setIsEditOpen(false);
-      loadStaff();
-    } catch (err) {
-      setStaffList(prev => prev.map(s => s.userId === selectedStaff.userId ? { ...s, ...editForm } : s));
-      setIsEditOpen(false);
+    if (editingStaff) {
+      try {
+        await updateStaff(editingStaff.userId, {
+          fullName: formData.fullName,
+          phone: formData.phone,
+          role: formData.role,
+          status: formData.status
+        });
+        handleCloseModal();
+        loadStaff();
+      } catch (err) {
+        setStaffList(prev => prev.map(s => s.userId === editingStaff.userId ? { ...s, ...formData } : s));
+        handleCloseModal();
+      }
+    } else {
+      try {
+        await createStaff(formData);
+        handleCloseModal();
+        loadStaff();
+      } catch (err) {
+        setStaffList(prev => [...prev, { ...formData, userId: prev.length + 1, status: 'active' }]);
+        handleCloseModal();
+      }
     }
   };
 
@@ -138,7 +159,7 @@ export default function ManageStaff() {
             <option value="locked">Locked (Khóa)</option>
           </select>
         </div>
-        <button className="btn-primary" onClick={() => setIsAddOpen(true)}>➕ Thêm Nhân Viên Mới</button>
+        <button className="btn-primary" onClick={handleOpenAdd}>➕ Thêm Nhân Viên Mới</button>
       </div>
 
       <div className="panel-card">
@@ -184,63 +205,84 @@ export default function ManageStaff() {
         </div>
       </div>
 
-      {/* Modal Add Staff */}
-      <Modal isOpen={isAddOpen} title="Thêm Nhân Viên Mới" onClose={() => setIsAddOpen(false)}>
-        <form onSubmit={handleCreateStaff}>
+      {/* Modal Unified Staff (Thêm / Sửa gộp làm 1) */}
+      <Modal 
+        isOpen={isModalOpen} 
+        title={editingStaff ? `Cập Nhật Hồ Sơ Nhân Viên (#STF-${editingStaff.userId})` : "Thêm Nhân Viên Mới"} 
+        onClose={handleCloseModal}
+      >
+        <form onSubmit={handleSubmitStaff}>
           <div className="form-group">
             <label>Họ và Tên</label>
-            <input type="text" className="input-control" value={addForm.fullName} onChange={e => setAddForm({ ...addForm, fullName: e.target.value })} required />
+            <input 
+              type="text" 
+              className="input-control" 
+              value={formData.fullName} 
+              onChange={e => setFormData({ ...formData, fullName: e.target.value })} 
+              required 
+            />
           </div>
           <div className="form-group">
             <label>Email Đăng Nhập</label>
-            <input type="email" className="input-control" value={addForm.email} onChange={e => setAddForm({ ...addForm, email: e.target.value })} required />
+            <input 
+              type="email" 
+              className="input-control" 
+              value={formData.email} 
+              onChange={e => setFormData({ ...formData, email: e.target.value })} 
+              required={!editingStaff} 
+              disabled={!!editingStaff}
+            />
           </div>
-          <div className="form-group">
-            <label>Mật Khẩu Phân Phối</label>
-            <input type="password" className="input-control" value={addForm.password} onChange={e => setAddForm({ ...addForm, password: e.target.value })} required />
-          </div>
+          {!editingStaff && (
+            <div className="form-group">
+              <label>Mật Khẩu Ban Đầu</label>
+              <input 
+                type="password" 
+                className="input-control" 
+                value={formData.password} 
+                onChange={e => setFormData({ ...formData, password: e.target.value })} 
+                required 
+              />
+            </div>
+          )}
           <div className="form-group">
             <label>Số Điện Thoại</label>
-            <input type="text" className="input-control" value={addForm.phone} onChange={e => setAddForm({ ...addForm, phone: e.target.value })} />
+            <input 
+              type="text" 
+              className="input-control" 
+              value={formData.phone} 
+              onChange={e => setFormData({ ...formData, phone: e.target.value })} 
+            />
           </div>
           <div className="form-group">
             <label>Phân Quyền Vai Trò</label>
-            <select className="select-control" value={addForm.role} onChange={e => setAddForm({ ...addForm, role: e.target.value })}>
+            <select 
+              className="select-control" 
+              value={formData.role} 
+              onChange={e => setFormData({ ...formData, role: e.target.value })}
+            >
               <option value="staff">Staff (Nhân viên)</option>
               <option value="admin">Admin (Quản trị viên)</option>
             </select>
           </div>
+          {editingStaff && (
+            <div className="form-group">
+              <label>Trạng Thái Tài Khoản</label>
+              <select 
+                className="select-control" 
+                value={formData.status} 
+                onChange={e => setFormData({ ...formData, status: e.target.value })}
+              >
+                <option value="active">Active (Hoạt động)</option>
+                <option value="locked">Locked (Khóa)</option>
+              </select>
+            </div>
+          )}
           <div className="modal-footer">
-            <button type="button" className="btn-cancel" onClick={() => setIsAddOpen(false)}>Hủy</button>
-            <button type="submit" className="btn-primary">Tạo Nhân Viên</button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Modal Edit Staff */}
-      <Modal isOpen={isEditOpen} title="Cập Nhật Vai Trò & Hồ Sơ" onClose={() => setIsEditOpen(false)}>
-        <form onSubmit={handleSaveEdit}>
-          <div className="form-group">
-            <label>Họ và Tên</label>
-            <input type="text" className="input-control" value={editForm.fullName} onChange={e => setEditForm({ ...editForm, fullName: e.target.value })} required />
-          </div>
-          <div className="form-group">
-            <label>Phân Quyền Vai Trò</label>
-            <select className="select-control" value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })}>
-              <option value="staff">Staff (Nhân viên)</option>
-              <option value="admin">Admin (Quản trị viên)</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Trạng Thái</label>
-            <select className="select-control" value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
-              <option value="active">Active (Hoạt động)</option>
-              <option value="locked">Locked (Khóa)</option>
-            </select>
-          </div>
-          <div className="modal-footer">
-            <button type="button" className="btn-cancel" onClick={() => setIsEditOpen(false)}>Hủy</button>
-            <button type="submit" className="btn-primary">Lưu Thay Đổi</button>
+            <button type="button" className="btn-cancel" onClick={handleCloseModal}>Hủy</button>
+            <button type="submit" className="btn-primary">
+              {editingStaff ? "Lưu Thay Đổi" : "Tạo Nhân Viên"}
+            </button>
           </div>
         </form>
       </Modal>

@@ -27,6 +27,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException e) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("message", e.getMessage());
+        errorResponse.put("error", e.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationException(MethodArgumentNotValidException e) {
         Map<String, String> errorResponse = new HashMap<>();
@@ -35,6 +43,7 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getDefaultMessage())
                 .orElse("Dữ liệu không hợp lệ");
         errorResponse.put("message", message);
+        errorResponse.put("error", message);
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 }

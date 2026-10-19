@@ -12,10 +12,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Transactional(readOnly = true)
     // Lấy danh sách người dùng, có thể lọc theo từ khóa, vai trò và trạng thái.
@@ -30,6 +33,29 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + userId));
         return mapToDTO(user);
+    }
+
+    @Transactional
+    // Tạo mới tài khoản khách hàng từ trang quản trị.
+    public UserDTO createUser(UpdateUserRequestDTO dto) {
+        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email không được để trống");
+        }
+        String email = dto.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email '" + email + "' đã tồn tại trong hệ thống");
+        }
+        User user = new User();
+        user.setFullName(dto.getFullName() != null && !dto.getFullName().trim().isEmpty() ? dto.getFullName().trim() : "Khách hàng mới");
+        user.setEmail(email);
+        user.setPhone(dto.getPhone() != null ? dto.getPhone().trim() : null);
+        user.setPasswordHash("admin123");
+        user.setRole(dto.getRole() != null && !dto.getRole().trim().isEmpty() ? dto.getRole().trim().toLowerCase() : "customer");
+        user.setStatus(dto.getStatus() != null && !dto.getStatus().trim().isEmpty() ? dto.getStatus().trim().toLowerCase() : "active");
+        user.setCreatedAt(java.time.LocalDateTime.now());
+
+        User saved = userRepository.save(user);
+        return mapToDTO(saved);
     }
 
     @Transactional

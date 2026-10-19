@@ -9,6 +9,11 @@ import ManageUsers from './pages/ManageUsers';
 import ManageStaff from './pages/ManageStaff';
 import ManageCategories from './pages/ManageCategories';
 import ManageProducts from './pages/ManageProducts';
+import ManageVariants from './pages/ManageVariants';
+import ManageOrders from './pages/ManageOrders';
+import ManageInbound from './pages/ManageInbound';
+import ManageCoupons from './pages/ManageCoupons';
+import ManageReports from './pages/ManageReports';
 import Cart from './pages/Cart';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -29,7 +34,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer', 'admin']}><Profile /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer', 'admin', 'staff']}><Profile /></ProtectedRoute>} />
           <Route path="/shop" element={<CustomerLayout />}>
             <Route index element={<ProductListPage />} />
             <Route path="category/:id" element={<ProductCategoryPage />} />
@@ -37,12 +42,26 @@ export default function App() {
             <Route path="wishlist" element={<WishlistPage />} />
             <Route path="cart" element={<Cart />} />
           </Route>
-          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
-            <Route index element={<DashboardOverview />} />
-            <Route path="users" element={<ManageUsers />} />
-            <Route path="staff" element={<ManageStaff />} />
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin', 'staff']}><AdminLayout /></ProtectedRoute>}>
+            <Route index element={<ProtectedRoute allowedRoles={['admin']}><DashboardOverview /></ProtectedRoute>} />
+            <Route path="users" element={<ProtectedRoute allowedRoles={['admin']}><ManageUsers /></ProtectedRoute>} />
+            <Route path="staff" element={<ProtectedRoute allowedRoles={['admin']}><ManageStaff /></ProtectedRoute>} />
+            <Route path="coupons" element={<ProtectedRoute allowedRoles={['admin']}><ManageCoupons /></ProtectedRoute>} />
+            <Route path="reports" element={<ProtectedRoute allowedRoles={['admin']}><ManageReports /></ProtectedRoute>} />
+            {/* Shared management features */}
             <Route path="categories" element={<ManageCategories />} />
             <Route path="products" element={<ManageProducts />} />
+            <Route path="variants" element={<ManageVariants />} />
+            <Route path="inbound" element={<ManageInbound />} />
+            <Route path="orders" element={<ManageOrders />} />
+          </Route>
+          <Route path="/staff" element={<ProtectedRoute allowedRoles={['admin', 'staff']}><AdminLayout /></ProtectedRoute>}>
+            <Route index element={<Navigate to="/staff/orders" replace />} />
+            <Route path="orders" element={<ManageOrders />} />
+            <Route path="inbound" element={<ManageInbound />} />
+            <Route path="products" element={<ManageProducts />} />
+            <Route path="variants" element={<ManageVariants />} />
+            <Route path="categories" element={<ManageCategories />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

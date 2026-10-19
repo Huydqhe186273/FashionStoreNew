@@ -15,7 +15,10 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // If not allowed, redirect to profile or home
+    // If not allowed: redirect staff to staff orders, otherwise home
+    if (user.role === 'staff') {
+      return <Navigate to="/staff/orders" replace />;
+    }
     return <Navigate to="/" replace />;
   }
 
