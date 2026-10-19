@@ -29,4 +29,36 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
            "GROUP BY FUNCTION('MONTH', o.CreatedAt) " +
            "ORDER BY month ASC")
     List<Object[]> findMonthlyRevenueStats();
+
+    @Query("SELECT o FROM Order o ORDER BY o.CreatedAt DESC")
+    List<Order> findAllByOrderByCreatedAtDesc();
+
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.OrderItems oi LEFT JOIN FETCH oi.Variant v LEFT JOIN FETCH v.Product p WHERE o.OrderId = :id")
+    java.util.Optional<Order> findByIdWithItems(@Param("id") Integer id);
+
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.User u LEFT JOIN FETCH o.Address a WHERE " +
+           "(:startDateTime IS NULL OR o.CreatedAt >= :startDateTime) AND " +
+           "(:endDateTime IS NULL OR o.CreatedAt <= :endDateTime) " +
+           "ORDER BY o.CreatedAt DESC")
+    List<Order> findOrdersBetweenDates(
+            @Param("startDateTime") java.time.LocalDateTime startDateTime,
+            @Param("endDateTime") java.time.LocalDateTime endDateTime);
+
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.User u LEFT JOIN FETCH o.Address a WHERE " +
+           "LOWER(o.OrderStatus) = 'delivered' AND " +
+           "(:startDateTime IS NULL OR o.CreatedAt >= :startDateTime) AND " +
+           "(:endDateTime IS NULL OR o.CreatedAt <= :endDateTime) " +
+           "ORDER BY o.CreatedAt ASC")
+    List<Order> findDeliveredOrdersBetweenDates(
+            @Param("startDateTime") java.time.LocalDateTime startDateTime,
+            @Param("endDateTime") java.time.LocalDateTime endDateTime);
+
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.OrderItems oi LEFT JOIN FETCH oi.Variant v LEFT JOIN FETCH v.Product p WHERE " +
+           "LOWER(o.OrderStatus) <> 'cancelled' AND " +
+           "(:startDateTime IS NULL OR o.CreatedAt >= :startDateTime) AND " +
+           "(:endDateTime IS NULL OR o.CreatedAt <= :endDateTime)")
+    List<Order> findValidOrdersWithItemsBetweenDates(
+            @Param("startDateTime") java.time.LocalDateTime startDateTime,
+            @Param("endDateTime") java.time.LocalDateTime endDateTime);
 }
+

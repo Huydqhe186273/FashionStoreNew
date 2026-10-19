@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
 import { getProducts, createProduct, updateProduct, toggleProductStatus } from '../services/productService';
+import { getCategories } from '../services/categoryService';
 
 const mockProducts = [
   { productId: 1, name: "Áo Polo Nam Premium Flex", categoryId: 1, categoryName: "Áo", basePrice: 350000, discountPrice: 299000, status: "active", soldCount: 142, description: "Áo Polo cotton thoáng mát" },
@@ -12,19 +14,37 @@ const mockProducts = [
 
 export default function ManageProducts() {
   const [products, setProducts] = useState(mockProducts);
+  const [categories, setCategories] = useState([]);
   const [isLive, setIsLive] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedProd, setSelectedProd] = useState(null);
+  // Modal State (Gộp Thêm & Sửa làm 1)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null); // null: Thêm mới, object: Đang sửa
 
-  const [addForm, setAddForm] = useState({ name: '', categoryId: 1, basePrice: '', discountPrice: '', status: 'active', description: '' });
-  const [editForm, setEditForm] = useState({ name: '', categoryId: 1, basePrice: '', discountPrice: '', status: 'active', description: '' });
+  const initialForm = {
+    name: '',
+    categoryId: 1,
+    basePrice: '',
+    status: 'active',
+    description: ''
+  };
+  const [formData, setFormData] = useState(initialForm);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
+  };
+
+  const loadCategories = async () => {
+    try {
+      const data = await getCategories();
+      if (Array.isArray(data) && data.length > 0) {
+        setCategories(data);
+      }
+    } catch (err) {
+      console.warn('Could not load categories for product form:', err);
+    }
   };
 
   const loadProducts = async () => {
@@ -48,6 +68,10 @@ export default function ManageProducts() {
     loadProducts();
   }, [search, statusFilter]);
 
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
   const handleToggleStatus = async (id) => {
     try {
       await toggleProductStatus(id);
@@ -57,59 +81,71 @@ export default function ManageProducts() {
     }
   };
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    const payload = {
-      name: addForm.name,
-      categoryId: parseInt(addForm.categoryId),
-      basePrice: parseFloat(addForm.basePrice),
-      discountPrice: addForm.discountPrice ? parseFloat(addForm.discountPrice) : null,
-      status: addForm.status,
-      description: addForm.description
-    };
-
-    try {
-      await createProduct(payload);
-      setIsAddOpen(false);
-      setAddForm({ name: '', categoryId: 1, basePrice: '', discountPrice: '', status: 'active', description: '' });
-      loadProducts();
-    } catch (err) {
-      setProducts(prev => [...prev, { ...payload, productId: prev.length + 1, categoryName: 'Áo', soldCount: 0 }]);
-      setIsAddOpen(false);
-    }
+  const handleOpenAdd = () => {
+    setEditingProduct(null);
+    setFormData({
+      ...initialForm,
+      categoryId: categories.length > 0 ? categories[0].categoryId : 1
+    });
+    setIsModalOpen(true);
   };
 
   const handleOpenEdit = (prod) => {
-    setSelectedProd(prod);
-    setEditForm({
+    setEditingProduct(prod);
+    setFormData({
       name: prod.name || '',
-      categoryId: prod.categoryId || 1,
-      basePrice: prod.basePrice || '',
-      discountPrice: prod.discountPrice || '',
+      categoryId: prod.categoryId || (categories.length > 0 ? categories[0].categoryId : 1),
+      basePrice: prod.basePrice !== undefined && prod.basePrice !== null ? prod.basePrice : (prod.discountPrice || ''),
       status: prod.status || 'active',
       description: prod.description || ''
     });
-    setIsEditOpen(true);
+    setIsModalOpen(true);
   };
 
-  const handleSaveEdit = async (e) => {
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingProduct(null);
+    setFormData(initialForm);
+  };
+
+  const handleSubmitProduct = async (e) => {
     e.preventDefault();
+    const priceVal = parseFloat(formData.basePrice) || 0;
     const payload = {
-      name: editForm.name,
-      categoryId: parseInt(editForm.categoryId),
-      basePrice: parseFloat(editForm.basePrice),
-      discountPrice: editForm.discountPrice ? parseFloat(editForm.discountPrice) : null,
-      status: editForm.status,
-      description: editForm.description
+      name: formData.name,
+      categoryId: parseInt(formData.categoryId),
+      basePrice: priceVal,
+      discountPrice: null,
+      status: formData.status,
+      description: formData.description
     };
 
-    try {
-      await updateProduct(selectedProd.productId, payload);
-      setIsEditOpen(false);
-      loadProducts();
-    } catch (err) {
-      setProducts(prev => prev.map(p => p.productId === selectedProd.productId ? { ...p, ...payload } : p));
-      setIsEditOpen(false);
+    if (editingProduct) {
+      // Cập nhật sản phẩm
+      try {
+        await updateProduct(editingProduct.productId, payload);
+        handleCloseModal();
+        loadProducts();
+      } catch (err) {
+        setProducts(prev => prev.map(p => p.productId === editingProduct.productId ? { ...p, ...payload } : p));
+        handleCloseModal();
+      }
+    } else {
+      // Tạo sản phẩm mới
+      try {
+        await createProduct(payload);
+        handleCloseModal();
+        loadProducts();
+      } catch (err) {
+        const cat = categories.find(c => c.categoryId === payload.categoryId);
+        setProducts(prev => [...prev, {
+          ...payload,
+          productId: prev.length + 1,
+          categoryName: cat ? cat.name : 'Khác',
+          soldCount: 0
+        }]);
+        handleCloseModal();
+      }
     }
   };
 
@@ -161,21 +197,21 @@ export default function ManageProducts() {
             <option value="inactive">Inactive (Ngừng bán)</option>
           </select>
         </div>
-        <button className="btn-primary" onClick={() => setIsAddOpen(true)}>➕ Thêm Sản Phẩm Mới</button>
+        <button className="btn-primary" onClick={handleOpenAdd}>➕ Thêm Sản Phẩm Mới</button>
       </div>
 
       <div className="panel-card">
         <div className="table-responsive">
-          <table>
+          <table style={{ minWidth: '950px', width: '100%' }}>
             <thead>
               <tr>
-                <th>Mã SP</th>
-                <th>Tên Sản Phẩm / Mô Tả</th>
-                <th>Danh Mục</th>
-                <th>Giá Bán</th>
-                <th>Đã Bán</th>
-                <th>Trạng Thái</th>
-                <th>Thao Tác</th>
+                <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Mã SP</th>
+                <th style={{ minWidth: '220px', whiteSpace: 'nowrap' }}>Tên Sản Phẩm / Mô Tả</th>
+                <th style={{ minWidth: '150px', whiteSpace: 'nowrap' }}>Danh Mục</th>
+                <th style={{ width: '140px', whiteSpace: 'nowrap' }}>Giá Bán Ra</th>
+                <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Đã Bán</th>
+                <th style={{ width: '130px', whiteSpace: 'nowrap' }}>Trạng Thái</th>
+                <th style={{ width: '180px', textAlign: 'center', whiteSpace: 'nowrap' }}>Thao Tác</th>
               </tr>
             </thead>
             <tbody>
@@ -183,20 +219,39 @@ export default function ManageProducts() {
                 const isActive = p.status === 'active';
                 return (
                   <tr key={p.productId}>
-                    <td><strong>#PRD-{p.productId}</strong></td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        backgroundColor: '#eff6ff',
+                        color: '#2563eb',
+                        fontFamily: 'monospace',
+                        fontSize: '0.9rem',
+                        fontWeight: 700,
+                        border: '1px solid #dbeafe',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        #PRD-{p.productId}
+                      </span>
+                    </td>
                     <td>
-                      <div style={{ fontWeight: 600, color: '#ffffff' }}>{p.name}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-main, #111827)' }}>{p.name}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.description || ''}</div>
                     </td>
                     <td><span className="role-tag role-staff">{p.categoryName || 'N/A'}</span></td>
-                    <td>
-                      <div style={{ fontWeight: 700, color: '#ffffff' }}>{formatCurrency(p.discountPrice || p.basePrice)}</div>
-                      {p.discountPrice ? <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatCurrency(p.basePrice)}</div> : null}
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <strong style={{ color: 'var(--text-main, #111827)', fontSize: '0.95rem' }}>
+                        {formatCurrency(p.basePrice || p.discountPrice)}
+                      </strong>
                     </td>
                     <td><strong style={{ color: 'var(--success)' }}>{p.soldCount || 0}</strong> đã bán</td>
                     <td><span className={`badge ${isActive ? 'badge-active' : 'badge-inactive'}`}>{isActive ? '✅ Kinh doanh' : '⛔ Ngừng bán'}</span></td>
-                    <td>
-                      <div className="action-buttons">
+                    <td style={{ textAlign: 'center' }}>
+                      <div className="action-buttons" style={{ justifyContent: 'center' }}>
+                        <Link to={`/admin/variants?productId=${p.productId}`} className="btn-action" style={{ textDecoration: 'none' }} title="Xem và quản lý các size, màu sắc của sản phẩm này">
+                          🏷️ Biến thể
+                        </Link>
                         <button className="btn-action" onClick={() => handleOpenEdit(p)}>✏️ Sửa</button>
                         <button className={`btn-action ${isActive ? 'btn-lock' : 'btn-unlock'}`} onClick={() => handleToggleStatus(p.productId)}>
                           {isActive ? '⛔ Vô hiệu' : '✅ Kích hoạt'}
@@ -211,76 +266,87 @@ export default function ManageProducts() {
         </div>
       </div>
 
-      {/* Modal Add Product */}
-      <Modal isOpen={isAddOpen} title="Thêm Sản Phẩm Mới" onClose={() => setIsAddOpen(false)}>
-        <form onSubmit={handleCreate}>
+      {/* Modal Unified Product (Thêm / Sửa gộp làm 1) */}
+      <Modal 
+        isOpen={isModalOpen} 
+        title={editingProduct ? `Chỉnh Sửa Sản Phẩm (#PRD-${editingProduct.productId})` : "Thêm Sản Phẩm Mới"} 
+        onClose={handleCloseModal}
+      >
+        <form onSubmit={handleSubmitProduct}>
           <div className="form-group">
             <label>Tên Sản Phẩm</label>
-            <input type="text" className="input-control" value={addForm.name} onChange={e => setAddForm({ ...addForm, name: e.target.value })} required />
+            <input 
+              type="text" 
+              className="input-control" 
+              value={formData.name} 
+              onChange={e => setFormData({ ...formData, name: e.target.value })} 
+              required 
+              placeholder="ví dụ: Áo Polo Nam Premium Flex..." 
+            />
           </div>
           <div className="form-group">
-            <label>Mã Danh Mục (CategoryId)</label>
-            <input type="number" className="input-control" value={addForm.categoryId} onChange={e => setAddForm({ ...addForm, categoryId: e.target.value })} required />
+            <label>Danh Mục</label>
+            {categories.length > 0 ? (
+              <select 
+                className="select-control" 
+                value={formData.categoryId} 
+                onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
+                required
+              >
+                {categories.map(cat => (
+                  <option key={cat.categoryId} value={cat.categoryId}>
+                    {cat.name} ({cat.gender || 'unisex'})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input 
+                type="number" 
+                className="input-control" 
+                value={formData.categoryId} 
+                onChange={e => setFormData({ ...formData, categoryId: e.target.value })} 
+                required 
+              />
+            )}
           </div>
           <div className="form-group">
-            <label>Giá Gốc (Base Price - VNĐ)</label>
-            <input type="number" className="input-control" value={addForm.basePrice} onChange={e => setAddForm({ ...addForm, basePrice: e.target.value })} required />
-          </div>
-          <div className="form-group">
-            <label>Giá Khuyến Mãi (Discount Price - VNĐ)</label>
-            <input type="number" className="input-control" value={addForm.discountPrice} onChange={e => setAddForm({ ...addForm, discountPrice: e.target.value })} />
+            <label>Giá Bán Ra (VNĐ)</label>
+            <input 
+              type="number" 
+              className="input-control" 
+              value={formData.basePrice} 
+              onChange={e => setFormData({ ...formData, basePrice: e.target.value })} 
+              required 
+              min="0"
+              placeholder="ví dụ: 350000" 
+            />
           </div>
           <div className="form-group">
             <label>Trạng Thái</label>
-            <select className="select-control" value={addForm.status} onChange={e => setAddForm({ ...addForm, status: e.target.value })}>
-              <option value="active">Active (Bán ngay)</option>
+            <select 
+              className="select-control" 
+              value={formData.status} 
+              onChange={e => setFormData({ ...formData, status: e.target.value })}
+            >
+              <option value="active">Active (Đang bán)</option>
               <option value="inactive">Inactive (Tạm ngừng)</option>
             </select>
           </div>
           <div className="form-group">
             <label>Mô Tả Sản Phẩm</label>
-            <textarea className="input-control" rows="3" value={addForm.description} onChange={e => setAddForm({ ...addForm, description: e.target.value })}></textarea>
+            <textarea 
+              className="input-control" 
+              rows="3" 
+              value={formData.description} 
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Mô tả chất liệu, form dáng, tính năng..."
+            ></textarea>
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn-cancel" onClick={() => setIsAddOpen(false)}>Hủy</button>
-            <button type="submit" className="btn-primary">Tạo Sản Phẩm</button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Modal Edit Product */}
-      <Modal isOpen={isEditOpen} title="Chỉnh Sửa Sản Phẩm" onClose={() => setIsEditOpen(false)}>
-        <form onSubmit={handleSaveEdit}>
-          <div className="form-group">
-            <label>Tên Sản Phẩm</label>
-            <input type="text" className="input-control" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} required />
-          </div>
-          <div className="form-group">
-            <label>Mã Danh Mục (CategoryId)</label>
-            <input type="number" className="input-control" value={editForm.categoryId} onChange={e => setEditForm({ ...editForm, categoryId: e.target.value })} required />
-          </div>
-          <div className="form-group">
-            <label>Giá Gốc (Base Price - VNĐ)</label>
-            <input type="number" className="input-control" value={editForm.basePrice} onChange={e => setEditForm({ ...editForm, basePrice: e.target.value })} required />
-          </div>
-          <div className="form-group">
-            <label>Giá Khuyến Mãi (Discount Price - VNĐ)</label>
-            <input type="number" className="input-control" value={editForm.discountPrice} onChange={e => setEditForm({ ...editForm, discountPrice: e.target.value })} />
-          </div>
-          <div className="form-group">
-            <label>Trạng Thái</label>
-            <select className="select-control" value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
-              <option value="active">Active (Kinh doanh)</option>
-              <option value="inactive">Inactive (Ngừng bán)</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Mô Tả Sản Phẩm</label>
-            <textarea className="input-control" rows="3" value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })}></textarea>
-          </div>
-          <div className="modal-footer">
-            <button type="button" className="btn-cancel" onClick={() => setIsEditOpen(false)}>Hủy</button>
-            <button type="submit" className="btn-primary">Lưu Thay Đổi</button>
+            <button type="button" className="btn-cancel" onClick={handleCloseModal}>Hủy</button>
+            <button type="submit" className="btn-primary">
+              {editingProduct ? "Lưu Thay Đổi" : "Tạo Sản Phẩm"}
+            </button>
           </div>
         </form>
       </Modal>

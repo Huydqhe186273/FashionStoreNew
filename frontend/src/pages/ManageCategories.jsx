@@ -16,12 +16,12 @@ export default function ManageCategories() {
   const [search, setSearch] = useState('');
   const [genderFilter, setGenderFilter] = useState('');
 
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedCat, setSelectedCat] = useState(null);
+  // Modal State (Gộp Thêm & Sửa làm 1)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null); // null: Thêm mới, object: Đang sửa
 
-  const [addForm, setAddForm] = useState({ name: '', gender: 'unisex', season: 'Tất cả', parentId: '' });
-  const [editForm, setEditForm] = useState({ name: '', gender: 'unisex', season: 'Tất cả', parentId: '' });
+  const initialForm = { name: '', gender: 'unisex', season: 'Tất cả', parentId: '' };
+  const [formData, setFormData] = useState(initialForm);
 
   const loadCategories = async () => {
     try {
@@ -44,54 +44,59 @@ export default function ManageCategories() {
     loadCategories();
   }, [search, genderFilter]);
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    const payload = {
-      name: addForm.name,
-      gender: addForm.gender,
-      season: addForm.season,
-      parentId: addForm.parentId ? parseInt(addForm.parentId) : null
-    };
-
-    try {
-      await createCategory(payload);
-      setIsAddOpen(false);
-      setAddForm({ name: '', gender: 'unisex', season: 'Tất cả', parentId: '' });
-      loadCategories();
-    } catch (err) {
-      const parent = mockCategories.find(x => x.categoryId === payload.parentId);
-      setCategories(prev => [...prev, { ...payload, categoryId: prev.length + 1, parentName: parent ? parent.name : null }]);
-      setIsAddOpen(false);
-    }
+  const handleOpenAdd = () => {
+    setEditingCategory(null);
+    setFormData(initialForm);
+    setIsModalOpen(true);
   };
 
   const handleOpenEdit = (cat) => {
-    setSelectedCat(cat);
-    setEditForm({
+    setEditingCategory(cat);
+    setFormData({
       name: cat.name || '',
       gender: cat.gender || 'unisex',
       season: cat.season || '',
       parentId: cat.parentId || ''
     });
-    setIsEditOpen(true);
+    setIsModalOpen(true);
   };
 
-  const handleSaveEdit = async (e) => {
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingCategory(null);
+    setFormData(initialForm);
+  };
+
+  const handleSubmitCategory = async (e) => {
     e.preventDefault();
     const payload = {
-      name: editForm.name,
-      gender: editForm.gender,
-      season: editForm.season,
-      parentId: editForm.parentId ? parseInt(editForm.parentId) : null
+      name: formData.name,
+      gender: formData.gender,
+      season: formData.season,
+      parentId: formData.parentId ? parseInt(formData.parentId) : null
     };
 
-    try {
-      await updateCategory(selectedCat.categoryId, payload);
-      setIsEditOpen(false);
-      loadCategories();
-    } catch (err) {
-      setCategories(prev => prev.map(c => c.categoryId === selectedCat.categoryId ? { ...c, ...payload } : c));
-      setIsEditOpen(false);
+    if (editingCategory) {
+      // Cập nhật danh mục
+      try {
+        await updateCategory(editingCategory.categoryId, payload);
+        handleCloseModal();
+        loadCategories();
+      } catch (err) {
+        setCategories(prev => prev.map(c => c.categoryId === editingCategory.categoryId ? { ...c, ...payload } : c));
+        handleCloseModal();
+      }
+    } else {
+      // Tạo danh mục mới
+      try {
+        await createCategory(payload);
+        handleCloseModal();
+        loadCategories();
+      } catch (err) {
+        const parent = mockCategories.find(x => x.categoryId === payload.parentId);
+        setCategories(prev => [...prev, { ...payload, categoryId: prev.length + 1, parentName: parent ? parent.name : null }]);
+        handleCloseModal();
+      }
     }
   };
 
@@ -107,8 +112,8 @@ export default function ManageCategories() {
 
   return (
     <main>
-      <Header 
-        title="Quản Lý Danh Mục Sản Phẩm" 
+      <Header
+        title="Quản Lý Danh Mục Sản Phẩm"
         subtitle="Thêm danh mục mới, chỉnh sửa phân cấp danh mục (Parent-Child), giới tính và mùa thời trang"
         isLive={isLive}
         onRefresh={loadCategories}
@@ -126,12 +131,12 @@ export default function ManageCategories() {
 
       <div className="toolbar-card">
         <div className="filter-group">
-          <input 
-            type="text" 
-            className="input-control" 
-            placeholder="Tìm tên danh mục..." 
-            value={search} 
-            onChange={(e) => setSearch(e.target.value)} 
+          <input
+            type="text"
+            className="input-control"
+            placeholder="Tìm tên danh mục..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
           <select className="select-control" value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)}>
             <option value="">Tất cả Giới tính</option>
@@ -140,7 +145,7 @@ export default function ManageCategories() {
             <option value="unisex">Unisex</option>
           </select>
         </div>
-        <button className="btn-primary" onClick={() => setIsAddOpen(true)}>➕ Thêm Danh Mục Mới</button>
+        <button className="btn-primary" onClick={handleOpenAdd}>➕ Thêm Danh Mục Mới</button>
       </div>
 
       <div className="panel-card">
@@ -160,7 +165,7 @@ export default function ManageCategories() {
               {categories.map(c => (
                 <tr key={c.categoryId}>
                   <td><strong>#CAT-{c.categoryId}</strong></td>
-                  <td><strong style={{ color: '#ffffff' }}>{c.name}</strong></td>
+                  <td><strong style={{ color: '#0f0f0fff' }}>{c.name}</strong></td>
                   <td>{c.parentName ? <span className="role-tag role-staff">📁 {c.parentName}</span> : <span style={{ color: 'var(--text-muted)' }}>Gốc (Root)</span>}</td>
                   <td><span className="role-tag role-customer">{c.gender || 'Unisex'}</span></td>
                   <td>{c.season || 'Tất cả'}</td>
@@ -177,25 +182,46 @@ export default function ManageCategories() {
         </div>
       </div>
 
-      {/* Modal Add Category */}
-      <Modal isOpen={isAddOpen} title="Thêm Danh Mục Mới" onClose={() => setIsAddOpen(false)}>
-        <form onSubmit={handleCreate}>
+      {/* Modal Thêm & Sửa Danh Mục (Đã gộp làm 1) */}
+      <Modal
+        isOpen={isModalOpen}
+        title={editingCategory ? `Chỉnh Sửa Danh Mục (#CAT-${editingCategory.categoryId})` : "Thêm Danh Mục Mới"}
+        onClose={handleCloseModal}
+      >
+        <form onSubmit={handleSubmitCategory}>
           <div className="form-group">
             <label>Tên Danh Mục</label>
-            <input type="text" className="input-control" value={addForm.name} onChange={e => setAddForm({ ...addForm, name: e.target.value })} required placeholder="ví dụ: Áo Sơ Mi..." />
+            <input
+              type="text"
+              className="input-control"
+              value={formData.name}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
+              required
+              placeholder="ví dụ: Áo Sơ Mi..."
+            />
           </div>
           <div className="form-group">
             <label>Danh Mục Cha</label>
-            <select className="select-control" value={addForm.parentId} onChange={e => setAddForm({ ...addForm, parentId: e.target.value })}>
+            <select
+              className="select-control"
+              value={formData.parentId}
+              onChange={e => setFormData({ ...formData, parentId: e.target.value })}
+            >
               <option value="">-- Không có (Danh mục gốc) --</option>
-              {categories.map(cat => (
-                <option key={cat.categoryId} value={cat.categoryId}>{cat.name}</option>
-              ))}
+              {categories
+                .filter(cat => !editingCategory || cat.categoryId !== editingCategory.categoryId)
+                .map(cat => (
+                  <option key={cat.categoryId} value={cat.categoryId}>{cat.name}</option>
+                ))}
             </select>
           </div>
           <div className="form-group">
             <label>Giới Tính</label>
-            <select className="select-control" value={addForm.gender} onChange={e => setAddForm({ ...addForm, gender: e.target.value })}>
+            <select
+              className="select-control"
+              value={formData.gender}
+              onChange={e => setFormData({ ...formData, gender: e.target.value })}
+            >
               <option value="unisex">Unisex</option>
               <option value="nam">Nam</option>
               <option value="nu">Nữ</option>
@@ -203,46 +229,19 @@ export default function ManageCategories() {
           </div>
           <div className="form-group">
             <label>Mùa Thích Hợp</label>
-            <input type="text" className="input-control" value={addForm.season} onChange={e => setAddForm({ ...addForm, season: e.target.value })} placeholder="Xuân Hè, Thu Đông, Tất cả..." />
+            <input
+              type="text"
+              className="input-control"
+              value={formData.season}
+              onChange={e => setFormData({ ...formData, season: e.target.value })}
+              placeholder="Xuân Hè, Thu Đông, Tất cả..."
+            />
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn-cancel" onClick={() => setIsAddOpen(false)}>Hủy</button>
-            <button type="submit" className="btn-primary">Tạo Danh Mục</button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Modal Edit Category */}
-      <Modal isOpen={isEditOpen} title="Chỉnh Sửa Danh Mục" onClose={() => setIsEditOpen(false)}>
-        <form onSubmit={handleSaveEdit}>
-          <div className="form-group">
-            <label>Tên Danh Mục</label>
-            <input type="text" className="input-control" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} required />
-          </div>
-          <div className="form-group">
-            <label>Danh Mục Cha</label>
-            <select className="select-control" value={editForm.parentId} onChange={e => setEditForm({ ...editForm, parentId: e.target.value })}>
-              <option value="">-- Không có (Danh mục gốc) --</option>
-              {categories.map(cat => (
-                <option key={cat.categoryId} value={cat.categoryId}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Giới Tính</label>
-            <select className="select-control" value={editForm.gender} onChange={e => setEditForm({ ...editForm, gender: e.target.value })}>
-              <option value="unisex">Unisex</option>
-              <option value="nam">Nam</option>
-              <option value="nu">Nữ</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Mùa Thích Hợp</label>
-            <input type="text" className="input-control" value={editForm.season} onChange={e => setEditForm({ ...editForm, season: e.target.value })} />
-          </div>
-          <div className="modal-footer">
-            <button type="button" className="btn-cancel" onClick={() => setIsEditOpen(false)}>Hủy</button>
-            <button type="submit" className="btn-primary">Lưu Thay Đổi</button>
+            <button type="button" className="btn-cancel" onClick={handleCloseModal}>Hủy</button>
+            <button type="submit" className="btn-primary">
+              {editingCategory ? "Lưu Thay Đổi" : "Tạo Danh Mục"}
+            </button>
           </div>
         </form>
       </Modal>

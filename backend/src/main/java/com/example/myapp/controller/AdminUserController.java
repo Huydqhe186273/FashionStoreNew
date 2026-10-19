@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,11 +26,16 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/admin")
 @CrossOrigin(origins = "*")
-@RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminUserController {
 
     private final UserService userService;
     private final AdminUserService adminUserService;
+
+    public AdminUserController(UserService userService, AdminUserService adminUserService) {
+        this.userService = userService;
+        this.adminUserService = adminUserService;
+    }
 
     // --- CUSTOMERS MANAGEMENT ---
     @GetMapping("/users")
@@ -38,6 +44,12 @@ public class AdminUserController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status) {
         return ResponseEntity.ok(userService.getUsers(keyword, "customer", status));
+    }
+
+    @PostMapping("/users")
+    // Xử lý POST /api/admin/users để tạo tài khoản người dùng mới.
+    public ResponseEntity<UserDTO> createUser(@RequestBody UpdateUserRequestDTO dto) {
+        return ResponseEntity.ok(userService.createUser(dto));
     }
 
     @PutMapping("/users/{id}")
