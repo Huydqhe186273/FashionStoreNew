@@ -2,7 +2,14 @@ import api from './api';
 
 export const getNotifications = async (userId) => {
   const response = await api.get('/notifications', { params: { userId } });
-  return response.data;
+  const rawList = Array.isArray(response.data) ? response.data : [];
+  return rawList.map((n) => ({
+    notificationId: n.notificationId ?? n.NotificationId,
+    type: n.type ?? n.Type,
+    content: n.content ?? n.Content,
+    isRead: Boolean(n.isRead ?? n.IsRead),
+    createdAt: n.createdAt ?? n.CreatedAt,
+  }));
 };
 
 export const markNotificationRead = async (notificationId) => {
