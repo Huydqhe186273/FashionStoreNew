@@ -184,14 +184,14 @@ export default function ProductDetailPage() {
       <div className="product-detail-grid">
         <div className="product-detail-images">
           <div className="product-detail-main-image">
-            <img src={images[activeImage] || PLACEHOLDER} alt={product.name} onError={(e) => { e.currentTarget.src = PLACEHOLDER; }} />
+            <img src={images[activeImage] || PLACEHOLDER} alt={product.name} decoding="async" onError={(e) => { e.currentTarget.src = PLACEHOLDER; }} />
             {product.discountPercent ? <span className="product-card-discount">-{product.discountPercent}%</span> : null}
           </div>
           {images.length > 1 && (
             <div className="product-detail-thumbs">
               {images.map((img, idx) => (
                 <button type="button" key={idx} className={`product-detail-thumb ${idx === activeImage ? 'active' : ''}`} onClick={() => setActiveImage(idx)}>
-                  <img src={img} alt="" onError={(e) => { e.currentTarget.src = PLACEHOLDER; }} />
+                  <img src={img} alt="" loading="lazy" decoding="async" onError={(e) => { e.currentTarget.src = PLACEHOLDER; }} />
                 </button>
               ))}
             </div>

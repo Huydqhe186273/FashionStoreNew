@@ -62,21 +62,21 @@ export default function Home() {
         <h2 className="section-title">Shop by Category</h2>
         <div className="categories-grid">
           <div className="category-card">
-            <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Women" />
+            <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Women" loading="lazy" decoding="async" />
             <div className="category-overlay">
               <h3>Women's Collection</h3>
               <p>Explore latest styles</p>
             </div>
           </div>
           <div className="category-card">
-            <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Men" />
+            <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Men" loading="lazy" decoding="async" />
             <div className="category-overlay">
               <h3>Men's Collection</h3>
               <p>Sharp and sophisticated</p>
             </div>
           </div>
           <div className="category-card">
-            <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Shoes" />
+            <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Shoes" loading="lazy" decoding="async" />
             <div className="category-overlay">
               <h3>Footwear</h3>
               <p>Step up your game</p>

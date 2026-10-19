@@ -30,7 +30,21 @@ export default defineConfig({
       output: {
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash][extname]'
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('chart.js') || id.includes('react-chartjs-2')) {
+              return 'vendor-charts';
+            }
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-react';
+            }
+            if (id.includes('axios')) {
+              return 'vendor-axios';
+            }
+            return 'vendor';
+          }
+        }
       }
     }
   }

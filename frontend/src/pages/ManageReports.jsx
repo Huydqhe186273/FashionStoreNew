@@ -520,6 +520,8 @@ export default function ManageReports() {
                                 <img
                                   src={p.primaryImageUrl}
                                   alt={p.productName}
+                                  loading="lazy"
+                                  decoding="async"
                                   style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px' }}
                                 />
                               ) : (
