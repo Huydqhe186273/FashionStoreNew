@@ -601,7 +601,7 @@ tr:hover td {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(17, 24, 39, 0.92);
+  background: #ffffff;
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border-color);
 }

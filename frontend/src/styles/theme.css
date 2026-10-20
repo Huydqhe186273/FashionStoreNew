@@ -1022,12 +1022,25 @@ tr:hover td { background: var(--bg-soft); }
   min-height: 2.6em;
   margin: var(--s-1) 0;
 }
-.product-card-pricing { display: flex; align-items: baseline; gap: var(--s-2); margin-top: auto; padding-top: var(--s-2); }
-.product-card-price { font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); }
+.product-card-pricing {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  margin-top: auto;
+  padding-top: var(--s-2);
+}
+.product-card-price {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
 .product-card-base-price {
   font-size: var(--fs-xs);
   color: var(--text-muted);
   text-decoration: line-through;
+  white-space: nowrap;
 }
 .product-card-meta { font-size: var(--fs-xs); color: var(--text-muted); }
 

@@ -67,19 +67,60 @@ export default function ForgotPassword() {
 
   return (
     <div className="auth-container">
-      <div className="auth-image-side">
+      <div className="auth-image-side" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1445205170230-053b83016050?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}>
         <div className="auth-image-overlay"></div>
+        <div className="auth-image-top">
+          <div className="auth-image-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span>Bảo mật tài khoản</span>
+          </div>
+        </div>
+        <div className="auth-image-content">
+          <div className="auth-quote-card">
+            <div className="auth-quote-stars">★★★★★</div>
+            <p className="auth-quote-text">
+              "Khôi phục mật khẩu nhanh chóng và an toàn qua mã xác thực OTP gửi trực tiếp tới hòm thư cá nhân của bạn."
+            </p>
+            <div className="auth-quote-author">
+              <strong>FashionStore Security</strong>
+              <span>Bảo vệ quyền lợi & tài khoản khách hàng</span>
+            </div>
+          </div>
+        </div>
       </div>
       
       <div className="auth-form-side">
         <div className="auth-form-container">
-          <Link to="/" className="auth-logo">FASHION STORE.</Link>
+          <div className="auth-top-nav">
+            <Link to="/" className="auth-brand" title="Quay lại trang chủ">
+              <img 
+                src="/logo.png" 
+                alt="FashionStore Logo" 
+                className="auth-brand-logo" 
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <span className="auth-brand-name">
+                FASHION<span>STORE</span>
+              </span>
+            </Link>
+
+            <Link to="/" className="auth-back-link" title="Quay lại trang chủ">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              <span>Trang chủ</span>
+            </Link>
+          </div>
           
-          <h1 className="auth-title">Reset Password</h1>
+          <h1 className="auth-title">Khôi phục mật khẩu</h1>
           <p className="auth-subtitle">
-            {step === 1 && 'Enter your email to receive an OTP.'}
-            {step === 2 && 'Enter the OTP sent to your email.'}
-            {step === 3 && 'Enter your new password.'}
+            {step === 1 && 'Nhập địa chỉ email của bạn để nhận mã xác thực OTP.'}
+            {step === 2 && 'Nhập mã OTP 6 số đã được gửi tới email của bạn.'}
+            {step === 3 && 'Nhập mật khẩu mới cho tài khoản của bạn.'}
           </p>
 
           {error && <div className="auth-error">{error}</div>}
@@ -88,11 +129,11 @@ export default function ForgotPassword() {
           {step === 1 ? (
             <form className="auth-form" onSubmit={handleRequestOtp}>
               <div className="auth-input-group">
-                <label className="auth-label">Email Address</label>
+                <label className="auth-label">Địa chỉ Email</label>
                 <input
                   type="email"
                   className="auth-input"
-                  placeholder="Enter your email"
+                  placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -100,17 +141,21 @@ export default function ForgotPassword() {
               </div>
 
               <button type="submit" className="auth-btn">
-                Send OTP
+                <span>Gửi mã OTP</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
               </button>
             </form>
           ) : step === 2 ? (
             <form className="auth-form" onSubmit={handleVerifyOtp}>
               <div className="auth-input-group">
-                <label className="auth-label">OTP Code</label>
+                <label className="auth-label">Mã OTP</label>
                 <input
                   type="text"
                   className="auth-input"
-                  placeholder="Enter OTP"
+                  placeholder="Nhập mã OTP 6 số"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   required
@@ -118,17 +163,21 @@ export default function ForgotPassword() {
               </div>
               
               <button type="submit" className="auth-btn">
-                Verify OTP
+                <span>Xác nhận OTP</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
               </button>
             </form>
           ) : (
             <form className="auth-form" onSubmit={handleResetPassword}>
               <div className="auth-input-group">
-                <label className="auth-label">New Password</label>
+                <label className="auth-label">Mật khẩu mới</label>
                 <input
                   type="password"
                   className="auth-input"
-                  placeholder="At least 6 characters"
+                  placeholder="Tối thiểu 6 ký tự"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
@@ -136,13 +185,17 @@ export default function ForgotPassword() {
               </div>
 
               <button type="submit" className="auth-btn">
-                Reset Password
+                <span>Đặt lại mật khẩu</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
               </button>
             </form>
           )}
 
           <p className="auth-footer-text">
-            Remember your password? <Link to="/login" className="auth-link">Sign in</Link>
+            Đã nhớ lại mật khẩu? <Link to="/login" className="auth-link">Đăng nhập</Link>
           </p>
         </div>
       </div>

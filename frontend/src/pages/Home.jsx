@@ -1,13 +1,14 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import CustomerNavbar from '../components/CustomerNavbar';
 import ProductCard from '../components/customer/ProductCard';
 import { getPersonalizedRecommendations, getColdStartRecommendations } from '../services/recommendationService';
 import api from '../services/api';
 import './Home.css';
 
 export default function Home() {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [recommendations, setRecommendations] = useState([]);
   const [bestsellers, setBestsellers] = useState([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
@@ -50,57 +51,8 @@ export default function Home() {
 
   return (
     <div className="home-container">
-      {/* Navbar */}
-      <nav className="navbar">
-        <Link to="/" className="nav-brand" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img 
-            src="/logo.png" 
-            alt="FS Clothing Logo" 
-            style={{ 
-              width: '44px', 
-              height: '44px', 
-              borderRadius: '50%', 
-              objectFit: 'cover',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
-            }} 
-          />
-          <span style={{
-            fontSize: '20px',
-            fontWeight: '800',
-            letterSpacing: '-0.5px',
-            color: '#111827'
-          }}>
-            Fashion<span style={{ color: '#d29f96' }}>Store</span>
-          </span>
-        </Link>
-        <div className="nav-links">
-          <Link to="/" className="nav-link">Home</Link>
-          <Link to="/shop" className="nav-link">Shop</Link>
-          <Link to="/shop/orders" className="nav-link">Đơn hàng</Link>
-          <Link to="/shop/notifications" className="nav-link">Thông báo</Link>
-        </div>
-        <div className="nav-actions">
-          {user ? (
-            <>
-              {user.role === 'admin' && (
-                <Link to="/admin" className="btn-outline">Dashboard</Link>
-              )}
-              <Link to="/shop/cart" className="btn-outline">🛒 Giỏ hàng</Link>
-              <Link to="/profile" className="btn-outline">👤 {user.fullName || 'Tài khoản'}</Link>
-              <button onClick={logout} className="btn-primary" style={{ padding: '8px 16px', borderRadius: '8px' }}>
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="btn-outline">Login</Link>
-              <Link to="/register" className="btn-primary" style={{ padding: '8px 16px', borderRadius: '8px' }}>
-                Sign Up
-              </Link>
-            </>
-          )}
-        </div>
-      </nav>
+      {/* Unified Navbar */}
+      <CustomerNavbar />
 
       {/* Hero Section */}
       <section className="hero-section">

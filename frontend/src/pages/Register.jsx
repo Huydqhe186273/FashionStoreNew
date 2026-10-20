@@ -83,21 +83,61 @@ export default function Register() {
     <div className="auth-container">
       <div className="auth-image-side" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}>
         <div className="auth-image-overlay"></div>
+        <div className="auth-image-top">
+          <div className="auth-image-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span>Thành viên mới</span>
+          </div>
+        </div>
+        <div className="auth-image-content">
+          <div className="auth-quote-card">
+            <div className="auth-quote-stars">★★★★★</div>
+            <p className="auth-quote-text">
+              "Đăng ký thành viên để nhận ưu đãi độc quyền, cập nhật xu hướng thời trang sớm nhất và trải nghiệm mua sắm tiện lợi."
+            </p>
+            <div className="auth-quote-author">
+              <strong>FashionStore Community</strong>
+              <span>Gia nhập cùng hơn 10.000 tín đồ thời trang</span>
+            </div>
+          </div>
+        </div>
       </div>
       
       <div className="auth-form-side">
         <div className="auth-form-container">
-          <Link to="/" className="auth-logo">FASHION STORE.</Link>
+          <div className="auth-top-nav">
+            <Link to="/" className="auth-brand" title="Quay lại trang chủ">
+              <img 
+                src="/logo.png" 
+                alt="FashionStore Logo" 
+                className="auth-brand-logo" 
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <span className="auth-brand-name">
+                FASHION<span>STORE</span>
+              </span>
+            </Link>
+
+            <Link to="/" className="auth-back-link" title="Quay lại trang chủ">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              <span>Trang chủ</span>
+            </Link>
+          </div>
           
-          <h2 className="auth-title">Create Account</h2>
-          <p className="auth-subtitle">Join us to get the latest fashion updates.</p>
+          <h2 className="auth-title">Đăng ký tài khoản</h2>
+          <p className="auth-subtitle">Trở thành thành viên để nhận những ưu đãi hấp dẫn nhất.</p>
           
           {apiError && <div className="auth-error">{apiError}</div>}
           {success && <div className="auth-success">{success}</div>}
           
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
             <div className="auth-input-group">
-              <label className="auth-label">Họ và tên / Full Name</label>
+              <label className="auth-label">Họ và tên</label>
               <input
                 type="text"
                 className={`auth-input ${errors.fullName ? 'input-error' : ''}`}
@@ -109,11 +149,11 @@ export default function Register() {
             </div>
             
             <div className="auth-input-group">
-              <label className="auth-label">Email</label>
+              <label className="auth-label">Địa chỉ Email</label>
               <input
                 type="email"
                 className={`auth-input ${errors.email ? 'input-error' : ''}`}
-                placeholder="email@example.com"
+                placeholder="name@example.com"
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
               />
@@ -121,11 +161,11 @@ export default function Register() {
             </div>
             
             <div className="auth-input-group">
-              <label className="auth-label">Mật khẩu / Password</label>
+              <label className="auth-label">Mật khẩu</label>
               <input
                 type="password"
                 className={`auth-input ${errors.password ? 'input-error' : ''}`}
-                placeholder="Min. 6 characters"
+                placeholder="Tối thiểu 6 ký tự"
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
               />
@@ -133,22 +173,28 @@ export default function Register() {
             </div>
 
             <div className="auth-input-group">
-              <label className="auth-label">Xác nhận mật khẩu / Confirm Password</label>
+              <label className="auth-label">Xác nhận mật khẩu</label>
               <input
                 type="password"
                 className={`auth-input ${errors.confirmPassword ? 'input-error' : ''}`}
-                placeholder="Re-enter password"
+                placeholder="Nhập lại mật khẩu"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
               />
               {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
             </div>
 
-            <button type="submit" className="auth-btn">Sign Up</button>
+            <button type="submit" className="auth-btn">
+              <span>Đăng ký</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
           </form>
           
           <div className="auth-footer-text">
-            Already have an account? <Link to="/login" className="auth-link">Sign in here</Link>
+            Đã có tài khoản? <Link to="/login" className="auth-link">Đăng nhập ngay</Link>
           </div>
         </div>
       </div>

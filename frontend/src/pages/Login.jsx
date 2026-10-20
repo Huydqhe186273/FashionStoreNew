@@ -90,29 +90,82 @@ export default function Login() {
     }
   };
 
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div className="auth-container">
+      {/* Visual Brand Image Side */}
       <div className="auth-image-side">
         <div className="auth-image-overlay"></div>
+        <div className="auth-image-top">
+          <div className="auth-image-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span>Bộ sưu tập 2026</span>
+          </div>
+        </div>
+        <div className="auth-image-content">
+          <div className="auth-quote-card">
+            <div className="auth-quote-stars">★★★★★</div>
+            <p className="auth-quote-text">
+              "Khám phá thế giới thời trang hiện đại, phong cách tối giản và tinh tế được tuyển chọn riêng cho bạn."
+            </p>
+            <div className="auth-quote-author">
+              <strong>FashionStore Vietnam</strong>
+              <span>Phong cách sống & Xu hướng thời trang</span>
+            </div>
+          </div>
+        </div>
       </div>
       
+      {/* Form Side */}
       <div className="auth-form-side">
         <div className="auth-form-container">
-          <Link to="/" className="auth-logo">FASHION STORE.</Link>
+          <div className="auth-top-nav">
+            <Link to="/" className="auth-brand" title="Quay lại trang chủ">
+              <img 
+                src="/logo.png" 
+                alt="FashionStore Logo" 
+                className="auth-brand-logo" 
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <span className="auth-brand-name">
+                FASHION<span>STORE</span>
+              </span>
+            </Link>
+
+            <Link to="/" className="auth-back-link" title="Quay lại trang chủ">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              <span>Trang chủ</span>
+            </Link>
+          </div>
           
-          <h2 className="auth-title">Welcome back</h2>
-          <p className="auth-subtitle">Please enter your details to sign in.</p>
+          <h2 className="auth-title">Chào mừng trở lại</h2>
+          <p className="auth-subtitle">Vui lòng nhập thông tin để đăng nhập vào tài khoản của bạn.</p>
           
-          {error && <div className="auth-error">{error}</div>}
+          {error && (
+            <div className="auth-error">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>{error}</span>
+            </div>
+          )}
           
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="auth-input-group">
-              <label className="auth-label">Email</label>
+              <label className="auth-label">Địa chỉ Email</label>
               <input
                 type="email"
                 required
                 className="auth-input"
-                placeholder="Enter your email"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -120,41 +173,59 @@ export default function Login() {
             
             <div className="auth-input-group">
               <div className="auth-links">
-                <label className="auth-label">Password</label>
-                <Link to="/forgot-password" className="auth-link">Forgot password?</Link>
+                <label className="auth-label">Mật khẩu</label>
+                <Link to="/forgot-password" className="auth-link">Quên mật khẩu?</Link>
               </div>
-              <input
-                type="password"
-                required
-                className="auth-input"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="auth-input-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  className="auth-input"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{ paddingRight: '44px' }}
+                />
+                <button
+                  type="button"
+                  className="auth-password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  tabIndex="-1"
+                >
+                  {showPassword ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="23" x2="23" y2="1"></line>
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
-            <button type="submit" className="auth-btn">Sign In</button>
+            <button type="submit" className="auth-btn">
+              <span>Đăng nhập</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
           </form>
 
-          <div style={{ margin: '16px 0', textAlign: 'center', position: 'relative' }}>
-            <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb' }} />
-            <span style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', backgroundColor: '#ffffff', padding: '0 12px', fontSize: '0.8rem', color: '#6b7280' }}>
-              hoặc
-            </span>
+          <div className="auth-divider">
+            <hr />
+            <span>hoặc</span>
           </div>
 
           <button
             type="button"
+            className="auth-google-btn"
             onClick={() => setShowGoogleModal(true)}
-            style={{
-              width: '100%', padding: '12px', backgroundColor: '#ffffff', color: '#374151',
-              border: '1px solid #d1d5db', borderRadius: '8px', cursor: 'pointer',
-              fontWeight: '600', fontSize: '0.95rem', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', gap: '10px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-              transition: 'all 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
           >
             <svg width="20" height="20" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -162,11 +233,11 @@ export default function Login() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
             </svg>
-            Đăng nhập bằng Gmail / Google
+            <span>Tiếp tục với Google</span>
           </button>
 
-          <div className="auth-footer-text" style={{ marginTop: '20px' }}>
-            Don't have an account? <Link to="/register" className="auth-link">Sign up for free</Link>
+          <div className="auth-footer-text">
+            Chưa có tài khoản? <Link to="/register" className="auth-link">Đăng ký ngay</Link>
           </div>
         </div>
       </div>

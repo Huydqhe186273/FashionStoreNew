@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api";
 
 export const getCart = async (userId) => {
   const response = await api.get(`/cart`, { params: { userId } });
@@ -6,11 +6,18 @@ export const getCart = async (userId) => {
 };
 
 export const updateQuantity = async (userId, cartItemId, quantity) => {
-  const response = await api.put(`/cart/update/${cartItemId}?userId=${userId}&quantity=${quantity}`);
+  const response = await api.put(
+    `/cart/update/${cartItemId}?userId=${userId}&quantity=${quantity}`,
+  );
   return response.data;
 };
 
-export const editCartItem = async (userId, cartItemId, quantity, newVariantId) => {
+export const editCartItem = async (
+  userId,
+  cartItemId,
+  quantity,
+  newVariantId,
+) => {
   const params = { userId };
   if (quantity != null) params.quantity = quantity;
   if (newVariantId != null) params.newVariantId = newVariantId;
@@ -19,7 +26,9 @@ export const editCartItem = async (userId, cartItemId, quantity, newVariantId) =
 };
 
 export const removeItem = async (userId, cartItemId) => {
-  const response = await api.delete(`/cart/remove/${cartItemId}?userId=${userId}`);
+  const response = await api.delete(
+    `/cart/remove/${cartItemId}?userId=${userId}`,
+  );
   return response.data;
 };
 
@@ -29,7 +38,11 @@ export const clearCart = async (userId) => {
 };
 
 export const addToCart = async (userId, variantId, quantity) => {
-  const response = await api.post(`/cart/add`, { variantId, quantity }, { params: { userId } });
+  const response = await api.post(
+    `/cart/add`,
+    { variantId, quantity },
+    { params: { userId } },
+  );
   return response.data;
 };
 
@@ -47,7 +60,9 @@ export const createOrder = async (userId, addressId, couponCode) => {
 
 export const createPaymentLink = async (orderId) => {
   try {
-    const response = await api.post(`/payment/create-payment-link?orderId=${orderId}`);
+    const response = await api.post(
+      `/payment/create-payment-link?orderId=${orderId}`,
+    );
     return response.data;
   } catch (error) {
     console.error("Lỗi tạo link thanh toán PayOS:", error);

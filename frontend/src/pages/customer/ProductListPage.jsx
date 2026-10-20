@@ -158,7 +158,7 @@ export default function ProductListPage() {
       <div className="shop-hero">
         <h1>{banner}</h1>
         <p>
-          {totalElements} sản phẩm
+          <span className="shop-hero-count">{totalElements} sản phẩm</span>
           {loading && <span className="shop-hero-sort-hint"> — đang tải…</span>}
           {!loading && sortLabel && sortBy !== 'newest' && (
             <span className="shop-hero-sort-hint"> — đang lọc theo: {sortLabel}</span>

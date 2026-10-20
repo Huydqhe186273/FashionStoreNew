@@ -1,0 +1,236 @@
+/* ============================================================
+ * CustomerNavbar.css
+ * Unified top navigation for Home, Shop, and all Customer pages
+ * ============================================================ */
+
+.customer-navbar {
+  width: 100%;
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.customer-navbar-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 68px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: transparent;
+}
+
+/* Brand */
+.customer-navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.customer-navbar-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.customer-navbar-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #111827 !important;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.customer-navbar-title span {
+  color: #d29f96 !important;
+}
+
+/* Navigation Links (Tabs) */
+.customer-navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.customer-navbar-link {
+  color: #4b5563 !important;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 8px 4px;
+  position: relative;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.customer-navbar-link:hover {
+  color: #d29f96 !important;
+}
+
+.customer-navbar-link.active {
+  color: #d29f96 !important;
+  font-weight: 700;
+}
+
+.customer-navbar-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: #d29f96;
+  border-radius: 2px;
+}
+
+/* Actions */
+.customer-navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.navbar-action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid #e2e8f0 !important;
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border-radius: 9999px !important;
+  text-decoration: none;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.navbar-action-pill:hover {
+  border-color: #d29f96 !important;
+  color: #d29f96 !important;
+  background-color: #fdfaf9 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(210, 159, 150, 0.15);
+}
+
+.navbar-action-pill svg {
+  flex-shrink: 0;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+/* User pill with avatar badge */
+.user-pill {
+  padding-left: 8px;
+  padding-right: 16px;
+}
+
+.navbar-user-avatar-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f4e8e6;
+  color: #a36d64;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.navbar-user-name {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Logout pill */
+.logout-pill {
+  background-color: #ffffff !important;
+  color: #64748b !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.logout-pill:hover {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #e11d48 !important;
+  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.12);
+}
+
+.logout-pill:hover svg {
+  color: #e11d48 !important;
+}
+
+/* Login & Register (when logged out) */
+.login-pill {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+}
+
+.login-pill:hover {
+  border-color: #d29f96 !important;
+  color: #d29f96 !important;
+}
+
+.register-pill {
+  background: #d29f96 !important;
+  border-color: #d29f96 !important;
+  color: #ffffff !important;
+}
+
+.register-pill:hover {
+  background: #be867d !important;
+  border-color: #be867d !important;
+  color: #ffffff !important;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .customer-navbar-inner {
+    padding: 0 16px;
+    height: 60px;
+  }
+  .customer-navbar-links {
+    gap: 16px;
+  }
+  .customer-navbar-link {
+    font-size: 0.88rem;
+    padding: 6px 2px;
+  }
+  .customer-navbar-btn-outline {
+    padding: 6px 12px;
+    font-size: 0.82rem;
+  }
+  .customer-navbar-btn-primary {
+    padding: 6px 14px;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .customer-navbar-title {
+    display: none;
+  }
+  .customer-navbar-links {
+    gap: 12px;
+  }
+}
