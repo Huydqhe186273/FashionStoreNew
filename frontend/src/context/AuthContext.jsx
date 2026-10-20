@@ -3,29 +3,35 @@ import { jwtDecode } from 'jwt-decode';
 
 export const AuthContext = createContext();
 
+const getUserFromToken = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+        const decoded = jwtDecode(token);
+        if (decoded.exp * 1000 > Date.now()) {
+            return {
+                id: decoded.userId,
+                email: decoded.sub,
+                role: decoded.role ? decoded.role.replace('ROLE_', '').toLowerCase() : ''
+            };
+        } else {
+            localStorage.removeItem('token');
+            return null;
+        }
+    } catch (err) {
+        localStorage.removeItem('token');
+        return null;
+    }
+};
+
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    // Khởi tạo state user đồng bộ từ token trong localStorage để không bị null khi F5
+    const [user, setUser] = useState(getUserFromToken);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            try {
-                const decoded = jwtDecode(token);
-                // check expiration
-                if (decoded.exp * 1000 < Date.now()) {
-                    localStorage.removeItem('token');
-                } else {
-                    setUser({
-                        id: decoded.userId,
-                        email: decoded.sub,
-                        role: decoded.role ? decoded.role.replace('ROLE_', '').toLowerCase() : ''
-                    });
-                }
-            } catch (err) {
-                localStorage.removeItem('token');
-            }
-        }
+        const currentUser = getUserFromToken();
+        setUser(currentUser);
         setLoading(false);
     }, []);
 

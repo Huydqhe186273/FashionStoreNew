@@ -20,6 +20,14 @@ import java.util.List;
 public class CustomerProductController {
 
     private final CustomerProductService customerProductService;
+    private final com.example.myapp.service.ProductSimilarityService productSimilarityService;
+
+    @GetMapping("/products/{id}/similar")
+    public ResponseEntity<List<CustomerProductDTO>> getSimilarProducts(
+            @PathVariable("id") Integer id,
+            @RequestParam(required = false, defaultValue = "6") int limit) {
+        return ResponseEntity.ok(productSimilarityService.getSimilarProducts(id, limit));
+    }
 
     @GetMapping("/products")
     public ResponseEntity<PageResponseDTO<CustomerProductDTO>> getProducts(

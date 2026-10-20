@@ -29,3 +29,13 @@ export const disableCoupon = async (id) => {
   const response = await api.delete(`/admin/coupons/${id}`);
   return response.data;
 };
+
+export const getActiveCoupons = async () => {
+  const response = await api.get('/coupons/active');
+  return response.data;
+};
+
+export const applyCoupon = async (code, orderTotal) => {
+  const response = await api.post('/coupons/apply', { code, orderTotal });
+  return response.data;
+};

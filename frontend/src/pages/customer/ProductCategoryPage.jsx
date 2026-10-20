@@ -12,12 +12,6 @@ const SORT_OPTIONS = [
   { value: 'discount', label: 'Giảm giá nhiều' },
 ];
 
-const mockCategory = (id) => ({ categoryId: Number(id), name: 'Áo Nam', gender: 'nam', season: 'summer', productCount: 24, children: [] });
-const mockProductsForCategory = (catId) => [
-  { productId: 1001, name: 'Áo Polo Nam Premium Flex', categoryId: catId, categoryName: 'Áo Nam', basePrice: 350000, discountPrice: 299000, finalPrice: 299000, discountPercent: 15, soldCount: 142, images: [], primaryImage: '' },
-  { productId: 1005, name: 'Áo Thun Cotton Basic', categoryId: catId, categoryName: 'Áo Nam', basePrice: 180000, discountPrice: 150000, finalPrice: 150000, discountPercent: 17, soldCount: 220, images: [], primaryImage: '' },
-];
-
 export default function ProductCategoryPage() {
   const { id } = useParams();
   const [category, setCategory] = useState(null);
@@ -36,7 +30,7 @@ export default function ProductCategoryPage() {
     setLoading(true);
     getCategoryById(id)
       .then((cat) => { if (!cancelled) setCategory(cat); })
-      .catch((err) => { console.warn('getCategoryById fallback:', err); if (!cancelled) setCategory(mockCategory(id)); });
+      .catch((err) => { console.warn('getCategoryById error:', err); if (!cancelled) setCategory(null); });
     return () => { cancelled = true; };
   }, [id]);
 
@@ -54,12 +48,10 @@ export default function ProductCategoryPage() {
       })
       .catch((err) => {
         if (cancelled) return;
-        console.warn('getProductsByCategory fallback:', err);
-        const all = mockProductsForCategory(Number(id));
-        const from = page * size;
-        setProducts(all.slice(from, from + size));
-        setTotalElements(all.length);
-        setTotalPages(Math.max(1, Math.ceil(all.length / size)));
+        console.warn('getProductsByCategory error:', err);
+        setProducts([]);
+        setTotalElements(0);
+        setTotalPages(1);
         setIsLive(false);
       })
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -91,7 +83,7 @@ export default function ProductCategoryPage() {
       <div className="shop-content">
         <div className="shop-toolbar">
           <div className="shop-toolbar-info">
-            {isLive ? <span className="shop-live-badge">● Trực tiếp</span> : <span className="shop-offline-badge">● Chế độ demo</span>}
+            {isLive && <span className="shop-live-badge">● Trực tiếp</span>}
             {loading && <span className="shop-loading">Đang tải…</span>}
           </div>
           <div className="shop-toolbar-sort">

@@ -12,6 +12,9 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
 
+    @Query("SELECT o FROM Order o WHERE o.User.UserId = :userId ORDER BY o.CreatedAt DESC")
+    List<Order> findByUserIdOrderByCreatedAtDesc(@Param("userId") Integer userId);
+
     @Query("SELECT COALESCE(SUM(o.TotalAmount), 0) FROM Order o WHERE o.OrderStatus <> 'cancelled'")
     BigDecimal sumTotalRevenue();
 

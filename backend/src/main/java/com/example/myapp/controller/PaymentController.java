@@ -26,6 +26,7 @@ public class PaymentController {
     private final PayOS payOS;
     private final OrderRepository orderRepository;
     private final OrderService orderService;
+    private final com.example.myapp.repos.PaymentRepository paymentRepository;
 
     @PostMapping("/create-payment-link")
     public ResponseEntity<?> createPaymentLink(@RequestParam Integer orderId) {
@@ -45,8 +46,7 @@ public class PaymentController {
                 items.add(item);
             }
 
-            
-            long orderCode = order.getOrderId();
+            long orderCode = order.getOrderId() * 100000L + (System.currentTimeMillis() % 100000L);
 
             String returnUrl = "http://localhost:3000/shop/cart?payment=success&orderCode=" + orderCode;
             String cancelUrl = "http://localhost:3000/shop/cart?payment=cancel&orderCode=" + orderCode;
@@ -54,7 +54,7 @@ public class PaymentController {
             CreatePaymentLinkRequest request = CreatePaymentLinkRequest.builder()
                     .orderCode(orderCode)
                     .amount(order.getTotalAmount().longValue())
-                    .description("Thanh toan don " + orderCode)
+                    .description("Thanh toan #" + order.getOrderId())
                     .returnUrl(returnUrl)
                     .cancelUrl(cancelUrl)
                     .items(items)
@@ -73,10 +73,15 @@ public class PaymentController {
     @PostMapping("/verify")
     public ResponseEntity<?> verifyPayment(@RequestParam Long orderCode) {
         try {
+            int realOrderId = orderCode > 100000L ? (int)(orderCode / 100000L) : orderCode.intValue();
             PaymentLink paymentData = payOS.paymentRequests().get(orderCode);
-            if ("PAID".equals(paymentData.getStatus())) {
-                // Đánh dấu đơn hàng là đã thanh toán
-                orderService.markOrderAsPaid(orderCode.intValue());
+            if (paymentData.getStatus() != null && "PAID".equalsIgnoreCase(paymentData.getStatus().toString())) {
+                // Đánh dấu đơn hàng là đã thanh toán & lưu vào bảng Payments
+                orderService.markOrderAsPaid(
+                        realOrderId,
+                        "PAYOS-" + orderCode,
+                        paymentData.getAmount()
+                );
                 return ResponseEntity.ok(Map.of("status", "success", "message", "Thanh toán thành công"));
             }
             return ResponseEntity.badRequest().body(Map.of("status", "pending", "message", "Chưa thanh toán hoặc bị hủy"));
@@ -84,6 +89,35 @@ public class PaymentController {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @PostMapping("/webhook")
+    public ResponseEntity<?> handlePayOSWebhook(@RequestBody Object webhookBody) {
+        try {
+            vn.payos.model.webhooks.WebhookData webhookData = payOS.webhooks().verify(webhookBody);
+            if (webhookData != null && webhookData.getOrderCode() != null) {
+                long oc = webhookData.getOrderCode();
+                int realOrderId = oc > 100000L ? (int)(oc / 100000L) : (int)oc;
+                String txId = webhookData.getReference() != null && !webhookData.getReference().isEmpty()
+                        ? webhookData.getReference()
+                        : ("PAYOS-" + oc);
+
+                orderService.markOrderAsPaid(
+                        realOrderId,
+                        txId,
+                        webhookData.getAmount()
+                );
+            }
+            return ResponseEntity.ok(Map.of("message", "Webhook verified and processed successfully"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<?> getPaymentStatusByOrderId(@PathVariable Integer orderId) {
+        return ResponseEntity.ok(paymentRepository.findByOrderOrderId(orderId));
     }
 }
 

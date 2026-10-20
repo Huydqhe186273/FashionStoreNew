@@ -29,3 +29,4 @@ frontend/screenshot.mjs
 frontend/verify_3000.mjs
 backend/start_*.log
 backend/spring_boot*.log
+update_notifs.sql

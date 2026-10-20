@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './layouts/AdminLayout';
 import CustomerLayout from './layouts/CustomerLayout';
@@ -16,6 +17,8 @@ const ProductListPage = lazy(() => import('./pages/customer/ProductListPage'));
 const ProductDetailPage = lazy(() => import('./pages/customer/ProductDetailPage'));
 const ProductCategoryPage = lazy(() => import('./pages/customer/ProductCategoryPage'));
 const WishlistPage = lazy(() => import('./pages/customer/WishlistPage'));
+const OrderHistory = lazy(() => import('./pages/customer/OrderHistory'));
+const NotificationsPage = lazy(() => import('./pages/customer/NotificationsPage'));
 
 // Admin & Staff Pages (Lazy Loaded - Code Splitting)
 const DashboardOverview = lazy(() => import('./pages/DashboardOverview'));
@@ -44,7 +47,7 @@ function PageLoader() {
         width: '36px',
         height: '36px',
         border: '3px solid #e5e7eb',
-        borderTopColor: '#6366f1',
+        borderTopColor: '#d29f96',
         borderRadius: '50%',
         animation: 'spin 0.8s linear infinite'
       }} />
@@ -57,46 +60,50 @@ function PageLoader() {
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer', 'admin', 'staff']}><Profile /></ProtectedRoute>} />
-            <Route path="/shop" element={<CustomerLayout />}>
-              <Route index element={<ProductListPage />} />
-              <Route path="category/:id" element={<ProductCategoryPage />} />
-              <Route path="product/:id" element={<ProductDetailPage />} />
-              <Route path="wishlist" element={<WishlistPage />} />
-              <Route path="cart" element={<Cart />} />
-            </Route>
-            <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin', 'staff']}><AdminLayout /></ProtectedRoute>}>
-              <Route index element={<ProtectedRoute allowedRoles={['admin']}><DashboardOverview /></ProtectedRoute>} />
-              <Route path="users" element={<ProtectedRoute allowedRoles={['admin']}><ManageUsers /></ProtectedRoute>} />
-              <Route path="staff" element={<ProtectedRoute allowedRoles={['admin']}><ManageStaff /></ProtectedRoute>} />
-              <Route path="coupons" element={<ProtectedRoute allowedRoles={['admin']}><ManageCoupons /></ProtectedRoute>} />
-              <Route path="reports" element={<ProtectedRoute allowedRoles={['admin']}><ManageReports /></ProtectedRoute>} />
-              {/* Shared management features */}
-              <Route path="categories" element={<ManageCategories />} />
-              <Route path="products" element={<ManageProducts />} />
-              <Route path="variants" element={<ManageVariants />} />
-              <Route path="inbound" element={<ManageInbound />} />
-              <Route path="orders" element={<ManageOrders />} />
-            </Route>
-            <Route path="/staff" element={<ProtectedRoute allowedRoles={['admin', 'staff']}><AdminLayout /></ProtectedRoute>}>
-              <Route index element={<Navigate to="/staff/orders" replace />} />
-              <Route path="orders" element={<ManageOrders />} />
-              <Route path="inbound" element={<ManageInbound />} />
-              <Route path="products" element={<ManageProducts />} />
-              <Route path="variants" element={<ManageVariants />} />
-              <Route path="categories" element={<ManageCategories />} />
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-      </Router>
+      <ToastProvider>
+        <Router>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer', 'admin', 'staff']}><Profile /></ProtectedRoute>} />
+              <Route path="/shop" element={<CustomerLayout />}>
+                <Route index element={<ProductListPage />} />
+                <Route path="category/:id" element={<ProductCategoryPage />} />
+                <Route path="product/:id" element={<ProductDetailPage />} />
+                <Route path="wishlist" element={<WishlistPage />} />
+                <Route path="cart" element={<Cart />} />
+                <Route path="orders" element={<ProtectedRoute allowedRoles={['customer', 'admin', 'staff']}><OrderHistory /></ProtectedRoute>} />
+                <Route path="notifications" element={<ProtectedRoute allowedRoles={['customer', 'admin', 'staff']}><NotificationsPage /></ProtectedRoute>} />
+              </Route>
+              <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin', 'staff']}><AdminLayout /></ProtectedRoute>}>
+                <Route index element={<ProtectedRoute allowedRoles={['admin']}><DashboardOverview /></ProtectedRoute>} />
+                <Route path="users" element={<ProtectedRoute allowedRoles={['admin']}><ManageUsers /></ProtectedRoute>} />
+                <Route path="staff" element={<ProtectedRoute allowedRoles={['admin']}><ManageStaff /></ProtectedRoute>} />
+                <Route path="coupons" element={<ProtectedRoute allowedRoles={['admin']}><ManageCoupons /></ProtectedRoute>} />
+                <Route path="reports" element={<ProtectedRoute allowedRoles={['admin']}><ManageReports /></ProtectedRoute>} />
+                {/* Shared management features */}
+                <Route path="categories" element={<ManageCategories />} />
+                <Route path="products" element={<ManageProducts />} />
+                <Route path="variants" element={<ManageVariants />} />
+                <Route path="inbound" element={<ManageInbound />} />
+                <Route path="orders" element={<ManageOrders />} />
+              </Route>
+              <Route path="/staff" element={<ProtectedRoute allowedRoles={['admin', 'staff']}><AdminLayout /></ProtectedRoute>}>
+                <Route index element={<Navigate to="/staff/orders" replace />} />
+                <Route path="orders" element={<ManageOrders />} />
+                <Route path="inbound" element={<ManageInbound />} />
+                <Route path="products" element={<ManageProducts />} />
+                <Route path="variants" element={<ManageVariants />} />
+                <Route path="categories" element={<ManageCategories />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }

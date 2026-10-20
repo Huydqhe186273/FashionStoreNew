@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../services/categoryService';
+import { useToast } from '../context/ToastContext';
 
 const mockCategories = [
   { categoryId: 1, name: "Áo", gender: "unisex", season: "Tất cả", parentId: null, parentName: null, productCount: 15 },
@@ -11,6 +12,7 @@ const mockCategories = [
 ];
 
 export default function ManageCategories() {
+  const { toast, confirm } = useToast();
   const [categories, setCategories] = useState(mockCategories);
   const [isLive, setIsLive] = useState(false);
   const [search, setSearch] = useState('');
@@ -101,12 +103,21 @@ export default function ManageCategories() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Bạn có chắc muốn xóa danh mục này?')) return;
+    const ok = await confirm({
+      title: 'Xóa danh mục',
+      message: 'Bạn có chắc chắn muốn xóa danh mục này không?',
+      confirmText: 'Xóa',
+      cancelText: 'Hủy',
+      type: 'danger'
+    });
+    if (!ok) return;
     try {
       await deleteCategory(id);
       loadCategories();
+      toast.success('Đã xóa danh mục thành công!');
     } catch (err) {
       setCategories(prev => prev.filter(c => c.categoryId !== id));
+      toast.success('Đã xóa danh mục!');
     }
   };
 

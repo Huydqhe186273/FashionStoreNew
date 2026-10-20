@@ -71,52 +71,86 @@ public class CartService {
 
     @Transactional
     public CartDTO updateCartItemQuantity(Integer userId, Integer cartItemId, Integer quantity) {
+        // Cập nhật nhanh số lượng cho 1 món hàng
+        return updateCartItem(userId, cartItemId, quantity, null);
+    }
+
+    @Transactional
+    public CartDTO updateCartItem(Integer userId, Integer cartItemId, Integer quantity, Integer newVariantId) {
+        // 1. Lấy giỏ hàng hiện tại của user
         Cart cart = getOrCreateCart(userId);
+
+        // 2. Tìm món hàng cần cập nhật trong bảng cart_item
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new RuntimeException("Cart item not found"));
                 
+        // 3. Kiểm tra bảo mật: đảm bảo món hàng thuộc về giỏ hàng của user hiện tại
         if (!item.getCart().getCartId().equals(cart.getCartId())) {
             throw new RuntimeException("Item does not belong to user's cart");
         }
 
-        if (quantity <= 0) {
-            cartItemRepository.delete(item);
-            cart.getCartItems().remove(item);
-        } else {
+        // 4. Nếu có yêu cầu đổi phân loại sản phẩm (ví dụ đổi size/màu mới)
+        if (newVariantId != null) {
+            ProductVariant newVariant = productVariantRepository.findById(newVariantId)
+                    .orElseThrow(() -> new RuntimeException("Variant not found"));
+            item.setVariant(newVariant);
+        }
+
+        // 5. Cập nhật số lượng sản phẩm
+        if (quantity != null) {
+            // Nếu số lượng giảm về <= 0 thì tự động xóa món này khỏi giỏ hàng
+            if (quantity <= 0) {
+                cartItemRepository.delete(item);
+                cart.getCartItems().remove(item);
+                return mapToDTO(cart);
+            }
+            // Kiểm tra số lượng tồn kho có đủ đáp ứng không
             if (item.getVariant().getStockQuantity() < quantity) {
                 throw new RuntimeException("Not enough stock");
             }
             item.setQuantity(quantity);
-            cartItemRepository.save(item);
         }
 
+        // 6. Lưu thông tin cập nhật vào CSDL và tính toán trả về DTO
+        cartItemRepository.save(item);
         return mapToDTO(cart);
     }
 
     @Transactional
     public CartDTO removeCartItem(Integer userId, Integer cartItemId) {
+        // 1. Tìm hoặc lấy giỏ hàng hiện tại của user trong database
         Cart cart = getOrCreateCart(userId);
+
+        // 2. Tìm món hàng cần xóa trong bảng cart_item theo cartItemId
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new RuntimeException("Cart item not found"));
 
+        // 3. Kiểm tra bảo mật: đảm bảo món hàng này thực sự thuộc về giỏ hàng của user
         if (!item.getCart().getCartId().equals(cart.getCartId())) {
             throw new RuntimeException("Item does not belong to user's cart");
         }
 
+        // 4. Xóa món hàng khỏi database (bảng cart_item) và xóa khỏi danh sách bộ nhớ Java
         cartItemRepository.delete(item);
         cart.getCartItems().remove(item);
 
+        // 5. Tính toán lại tổng tiền giỏ hàng và đóng gói vào CartDTO trả về cho Controller
         return mapToDTO(cart);
     }
 
     @Transactional
     public CartDTO clearCart(Integer userId) {
+        // 1. Lấy giỏ hàng của user
         Cart cart = getOrCreateCart(userId);
+        // 2. Xóa toàn bộ các dòng cart_item của giỏ này trong database
         cartItemRepository.deleteAll(cart.getCartItems());
+        // 3. Làm rỗng danh sách trong bộ nhớ Java
         cart.getCartItems().clear();
+        // 4. Trả về CartDTO giỏ hàng rỗng (items = [], totalAmount = 0)
         return mapToDTO(cart);
     }
 
+    // Hàm phụ trợ: Lấy giỏ hàng của user, nếu user mới chưa có giỏ thì tự động tạo mới vào DB
     private Cart getOrCreateCart(Integer userId) {
         return cartRepository.findByUserId(userId)
                 .orElseGet(() -> {

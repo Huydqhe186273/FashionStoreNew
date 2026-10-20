@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api";
 
 export const getCart = async (userId) => {
   const response = await api.get(`/cart`, { params: { userId } });
@@ -6,12 +6,29 @@ export const getCart = async (userId) => {
 };
 
 export const updateQuantity = async (userId, cartItemId, quantity) => {
-  const response = await api.put(`/cart/update/${cartItemId}?userId=${userId}&quantity=${quantity}`);
+  const response = await api.put(
+    `/cart/update/${cartItemId}?userId=${userId}&quantity=${quantity}`,
+  );
+  return response.data;
+};
+
+export const editCartItem = async (
+  userId,
+  cartItemId,
+  quantity,
+  newVariantId,
+) => {
+  const params = { userId };
+  if (quantity != null) params.quantity = quantity;
+  if (newVariantId != null) params.newVariantId = newVariantId;
+  const response = await api.put(`/cart/edit/${cartItemId}`, null, { params });
   return response.data;
 };
 
 export const removeItem = async (userId, cartItemId) => {
-  const response = await api.delete(`/cart/remove/${cartItemId}?userId=${userId}`);
+  const response = await api.delete(
+    `/cart/remove/${cartItemId}?userId=${userId}`,
+  );
   return response.data;
 };
 
@@ -21,7 +38,11 @@ export const clearCart = async (userId) => {
 };
 
 export const addToCart = async (userId, variantId, quantity) => {
-  const response = await api.post(`/cart/add`, { variantId, quantity }, { params: { userId } });
+  const response = await api.post(
+    `/cart/add`,
+    { variantId, quantity },
+    { params: { userId } },
+  );
   return response.data;
 };
 
@@ -30,14 +51,18 @@ export const createAddress = async (userId, addressData) => {
   return response.data;
 };
 
-export const createOrder = async (userId, addressId) => {
-  const response = await api.post(`/orders/create-from-cart?userId=${userId}&addressId=${addressId}`);
+export const createOrder = async (userId, addressId, couponCode) => {
+  const params = { userId, addressId };
+  if (couponCode) params.couponCode = couponCode;
+  const response = await api.post(`/orders/create-from-cart`, null, { params });
   return response.data;
 };
 
 export const createPaymentLink = async (orderId) => {
   try {
-    const response = await api.post(`/payment/create-payment-link?orderId=${orderId}`);
+    const response = await api.post(
+      `/payment/create-payment-link?orderId=${orderId}`,
+    );
     return response.data;
   } catch (error) {
     console.error("Lỗi tạo link thanh toán PayOS:", error);
