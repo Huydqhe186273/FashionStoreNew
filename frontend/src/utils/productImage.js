@@ -49,11 +49,11 @@ export function resolveProductImage(product, options) {
     product?.primaryImage ||
     (Array.isArray(product?.images) && product.images[0]) ||
     null;
-  if (backendImg && /^https?:\/\//.test(backendImg)) return backendImg;
-  if (backendImg && backendImg.startsWith('/')) {
-    // Local backend image path — return as-is. If the file is
-    // missing the <img onError> fallback will kick in.
-    return backendImg;
+  if (backendImg && typeof backendImg === 'string') {
+    const trimmed = backendImg.trim();
+    if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed;
+    if (trimmed.startsWith('/')) return trimmed;
+    if (trimmed.length > 0) return `/${trimmed}`;
   }
 
   // No backend image (or it's a relative path we can't trust):

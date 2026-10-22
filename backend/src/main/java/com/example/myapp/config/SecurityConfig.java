@@ -11,7 +11,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -45,7 +45,26 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new PasswordEncoder() {
+            private final BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();
+
+            @Override
+            public String encode(CharSequence rawPassword) {
+                return bcrypt.encode(rawPassword);
+            }
+
+            @Override
+            public boolean matches(CharSequence rawPassword, String encodedPassword) {
+                if (encodedPassword == null) {
+                    return false;
+                }
+                if (encodedPassword.startsWith("$2a$") || encodedPassword.startsWith("$2b$") || encodedPassword.startsWith("$2y$")) {
+                    return bcrypt.matches(rawPassword, encodedPassword);
+                }
+                // Fallback ho tro so khop neu con tai khoan cu luu plaintext
+                return rawPassword.toString().equals(encodedPassword);
+            }
+        };
     }
 
     @Bean
@@ -56,11 +75,23 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> 
-                auth.requestMatchers("/api/auth/**").permitAll()
+                auth.requestMatchers("/api/auth/**", "/api/payment/webhook").permitAll()
+                    .requestMatchers("/api/customer/**").permitAll()
+                    .requestMatchers("/api/staff/**").hasAnyRole("STAFF", "ADMIN")
+                    .requestMatchers("/api/admin/dashboard/**", "/api/admin/users/**", "/api/admin/staff/**", "/api/admin/coupons/**", "/api/admin/reports/**").hasRole("ADMIN")
+                    .requestMatchers("/api/admin/orders/**", "/api/admin/products/**", "/api/admin/variants/**", "/api/admin/categories/**", "/api/admin/inbound/**").hasAnyRole("STAFF", "ADMIN")
                     .requestMatchers("/api/manager/**").hasRole("ADMIN")
                     .requestMatchers("/api/profile/**", "/api/cart/**", "/api/orders/**", "/api/payment/**").authenticated()
                     .anyRequest().permitAll()
             );
+
+        http.exceptionHandling(ex -> ex
+            .authenticationEntryPoint((request, response, authException) -> {
+                response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"" + authException.getMessage() + "\"}");
+            })
+        );
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

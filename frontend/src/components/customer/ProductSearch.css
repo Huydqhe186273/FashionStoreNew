@@ -1,0 +1,124 @@
+/* ============================================================
+ * src/components/customer/ProductSearch.css
+ * ------------------------------------------------------------
+ * Hero-center keyword search input for the /shop page. Sits
+ * between the page heading and the filter bar. Centered, max
+ * width ~640px on desktop, full-width on mobile.
+ *
+ * Class prefix `ps-` avoids colliding with the legacy
+ * `.shop-search-bar` / `.shop-search-input` rules in
+ * styles/theme.css.
+ * ============================================================ */
+
+.ps-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 620px;
+  margin: 18px auto 2px;
+  height: 50px;
+  padding: 0 6px 0 46px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+.ps-search:hover {
+  border-color: #94a3b8;
+}
+.ps-search:focus-within {
+  border-color: #d29f96;
+  box-shadow: 0 0 0 3px rgba(210, 159, 150, 0.2);
+}
+
+.ps-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: #64748b;
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+.ps-search:focus-within .ps-search-icon {
+  color: #d29f96;
+}
+
+.ps-search-input {
+  flex: 1;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #0f172a;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0;
+  min-width: 0;
+}
+.ps-search-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.ps-search-clear {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 4px;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ps-search-clear:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.ps-search-submit {
+  flex: 0 0 auto;
+  height: 38px;
+  padding: 0 22px;
+  margin-right: 2px;
+  border: 0;
+  border-radius: 999px;
+  background: #d29f96;
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+.ps-search-submit:hover {
+  background: #be867d;
+  box-shadow: 0 2px 6px rgba(210, 159, 150, 0.4);
+}
+.ps-search-submit:active {
+  transform: translateY(0);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 720px) {
+  .ps-search {
+    height: 46px;
+    padding-left: 42px;
+    margin: 14px auto 2px;
+  }
+  .ps-search-icon   { left: 15px; width: 16px; height: 16px; }
+  .ps-search-input  { font-size: 0.9rem; }
+  .ps-search-submit { height: 34px; padding: 0 18px; font-size: 0.85rem; }
+}

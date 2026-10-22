@@ -46,11 +46,7 @@ export default function WishlistPage() {
       <div className="shop-content">
         <div className="shop-toolbar">
           <div className="shop-toolbar-info">
-            {isLive ? (
-              <span className="shop-live-badge">● Trực tiếp</span>
-            ) : (
-              <span className="shop-offline-badge">● Chế độ demo</span>
-            )}
+            {isLive && <span className="shop-live-badge">● Trực tiếp</span>}
             {loading && <span className="shop-loading">Đang tải…</span>}
           </div>
         </div>

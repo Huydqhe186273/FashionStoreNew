@@ -12,10 +12,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/manager/users")
 @CrossOrigin(origins = "*")
-@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     // Xử lý GET /api/manager/users để trả danh sách người dùng đã lọc.

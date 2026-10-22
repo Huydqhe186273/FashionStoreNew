@@ -43,17 +43,8 @@ public class CustomerProductService {
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
 
-    /**
-     * Catalog query. Every parameter is optional; null/blank means
-     * "do not filter on this field". The pipeline is a stream of
-     * small predicates — each new smart filter is one more line
-     * here plus a corresponding @RequestParam on the controller.
-     *
-     * The "quality" filters (hasImage, hasDescription, hasDiscount,
-     * minDiscountPercent, minSoldCount, minViewCount, minSizeCount,
-     * minColorCount) feed the smart sidebar chips and are computed
-     * lazily per product so adding a new flag is cheap.
-     */
+   
+
     @Transactional(readOnly = true)
     public PageResponseDTO<CustomerProductDTO> getProducts(
             String keyword,
@@ -504,7 +495,7 @@ public class CustomerProductService {
                 .build();
     }
 
-    private CustomerProductDTO mapToDTO(Product p, boolean includeVariants) {
+    public CustomerProductDTO mapToDTO(Product p, boolean includeVariants) {
         /* Always load variants for size/color facets — the list view
          * still wants to render "Size có sẵn" + swatches even when
          * it doesn't include the full variants array. The query is
@@ -516,14 +507,9 @@ public class CustomerProductService {
         List<ProductImage> imgs = productImageRepository.findByProductId(p.getProductId());
         for (ProductImage img : imgs) {
             String url = img.getImageUrl();
-            if (url == null) continue;
-            // Skip placeholder / random-photo URLs that don't actually
-            // match the product name. The frontend will synthesise a
-            // name-aware SVG artwork instead — see productArtwork.js.
-            // Tested against the demo seed which uses picsum.photos.
-            if (isStockPhotoPlaceholder(url)) continue;
-            images.add(url);
-            if (Boolean.TRUE.equals(img.getIsPrimary())) primary = url;
+            if (url == null || url.trim().isEmpty()) continue;
+            images.add(url.trim());
+            if (Boolean.TRUE.equals(img.getIsPrimary())) primary = url.trim();
         }
         if (primary == null && !images.isEmpty()) primary = images.get(0);
 

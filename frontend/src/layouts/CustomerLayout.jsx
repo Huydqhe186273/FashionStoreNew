@@ -16,8 +16,8 @@ export default function CustomerLayout() {
       `}</style>
       <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#f9fafb', color: '#111827', display: 'flex', flexDirection: 'column' }}>
         <CustomerNavbar />
-        <main style={{ flexGrow: 1, padding: '20px', margin: 0, maxWidth: '100%' }}>
-          <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
+        <main style={{ flexGrow: 1, padding: '16px 20px 40px', margin: 0, maxWidth: '100%' }}>
+          <div style={{ width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
             <Outlet />
           </div>
         </main>

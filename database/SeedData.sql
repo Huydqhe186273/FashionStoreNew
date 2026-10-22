@@ -1,895 +1,1553 @@
 /* ============================================================
-   FASHION STORE - SEED DATA
-   Dữ liệu mẫu đầy đủ: Users, Categories, Products, Variants, Images, Orders
+   FASHION STORE - SEED DATA (CHÍNH THỨC, HOÀN TOÀN KHÔNG LỖI)
+   - Toàn bộ cột tiếng Việt dùng NVARCHAR (Unicode N'...')
+   - Cố định ID bằng SET IDENTITY_INSERT
+   - Đầy đủ 147 Sản phẩm, 48 Danh mục, 100% có Variant, Stock > 0, Ảnh
    ============================================================ */
+
+USE FashionStoreDB;
+GO
+
+SET NOCOUNT ON;
+GO
+
+-- 0. Xóa sạch dữ liệu cũ và reset ID tự tăng
+ALTER TABLE Reviews NOCHECK CONSTRAINT ALL;
+ALTER TABLE ReturnRequests NOCHECK CONSTRAINT ALL;
+ALTER TABLE Payments NOCHECK CONSTRAINT ALL;
+ALTER TABLE OrderItems NOCHECK CONSTRAINT ALL;
+ALTER TABLE Orders NOCHECK CONSTRAINT ALL;
+ALTER TABLE CartItems NOCHECK CONSTRAINT ALL;
+ALTER TABLE Carts NOCHECK CONSTRAINT ALL;
+ALTER TABLE Favorites NOCHECK CONSTRAINT ALL;
+ALTER TABLE UserBehaviorLogs NOCHECK CONSTRAINT ALL;
+ALTER TABLE ProductImages NOCHECK CONSTRAINT ALL;
+ALTER TABLE ProductVariants NOCHECK CONSTRAINT ALL;
+ALTER TABLE Products NOCHECK CONSTRAINT ALL;
+ALTER TABLE Categories NOCHECK CONSTRAINT ALL;
+ALTER TABLE Addresses NOCHECK CONSTRAINT ALL;
+ALTER TABLE DiscountCodes NOCHECK CONSTRAINT ALL;
+ALTER TABLE Users NOCHECK CONSTRAINT ALL;
+GO
+
+DELETE FROM Reviews;
+DELETE FROM ReturnRequests;
+DELETE FROM Payments;
+DELETE FROM OrderItems;
+DELETE FROM Orders;
+DELETE FROM CartItems;
+DELETE FROM Carts;
+DELETE FROM Favorites;
+DELETE FROM UserBehaviorLogs;
+DELETE FROM ProductImages;
+DELETE FROM ProductVariants;
+DELETE FROM Products;
+UPDATE Categories SET ParentId = NULL;
+DELETE FROM Categories;
+DELETE FROM Addresses;
+DELETE FROM DiscountCodes;
+DELETE FROM Users;
+GO
+
+DBCC CHECKIDENT ('Users', RESEED, 0);
+DBCC CHECKIDENT ('Addresses', RESEED, 0);
+DBCC CHECKIDENT ('Categories', RESEED, 0);
+DBCC CHECKIDENT ('Products', RESEED, 0);
+DBCC CHECKIDENT ('ProductVariants', RESEED, 0);
+DBCC CHECKIDENT ('ProductImages', RESEED, 0);
+DBCC CHECKIDENT ('Carts', RESEED, 0);
+DBCC CHECKIDENT ('CartItems', RESEED, 0);
+DBCC CHECKIDENT ('Orders', RESEED, 0);
+DBCC CHECKIDENT ('OrderItems', RESEED, 0);
+DBCC CHECKIDENT ('Payments', RESEED, 0);
+DBCC CHECKIDENT ('DiscountCodes', RESEED, 0);
+GO
 
 /* ============================================================
-   1. USERS (Users)
+   1. USERS
    ============================================================ */
-
-INSERT INTO Users (FullName, Email, PasswordHash, Phone, Role, Status) VALUES
-(N'Admin Hệ Thống', 'admin@fashionstore.vn', 'admin123', '0909123456', 'admin', 'active'),
-(N'Nhân Viên Kho', 'staff@fashionstore.vn', 'admin123', '0909234567', 'staff', 'active'),
-(N'Nguyễn Minh Tuấn', 'tuan.nguyen@email.com', 'admin123', '0912345678', 'customer', 'active'),
-(N'Trần Thu Hà', 'ha.tran@email.com', 'admin123', '0923456789', 'customer', 'active'),
-(N'Lê Hoàng Nam', 'nam.le@email.com', 'admin123', '0934567890', 'customer', 'active'),
-(N'Phạm Thị Mai', 'mai.pham@email.com', 'admin123', '0945678901', 'customer', 'active'),
-(N'Vũ Đình Phong', 'phong.vu@email.com', 'admin123', '0956789012', 'customer', 'active'),
-(N'Hồ Ngọc Hân', 'han.ho@email.com', 'admin123', '0967890123', 'customer', 'active');
+SET IDENTITY_INSERT Users ON;
+INSERT INTO Users (UserId, FullName, Email, PasswordHash, Phone, Role, Status) VALUES
+(1, N'Admin Hệ Thống', 'admin@fashionstore.vn', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0909123456', 'admin', 'active'),
+(2, N'Nhân Viên Kho', 'staff@fashionstore.vn', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0909234567', 'staff', 'active'),
+(3, N'Nguyễn Minh Tuấn', 'tuan.nguyen@email.com', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0912345678', 'customer', 'active'),
+(4, N'Trần Thu Hà', 'ha.tran@email.com', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0923456789', 'customer', 'active'),
+(5, N'Lê Hoàng Nam', 'nam.le@email.com', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0934567890', 'customer', 'active'),
+(6, N'Phạm Thị Mai', 'mai.pham@email.com', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0945678901', 'customer', 'active'),
+(7, N'Đào Huy', 'daohuy1@gmail.com', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0956789012', 'customer', 'active'),
+(8, N'Hồ Ngọc Hân', 'han.ho@email.com', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0967890123', 'customer', 'active');
+SET IDENTITY_INSERT Users OFF;
+GO
 
 /* ============================================================
    2. ADDRESSES
    ============================================================ */
-
-INSERT INTO Addresses (UserId, RecipientName, Phone, AddressLine, City, IsDefault) VALUES
-(3, N'Nguyễn Minh Tuấn', '0912345678', N'123 Đường Nguyễn Trãi, Quận 1', N'TP Hồ Chí Minh', 1),
-(4, N'Trần Thu Hà', '0923456789', N'456 Đường Lê Lợi, Quận Hoàn Kiếm', N'Hà Nội', 1),
-(5, N'Lê Hoàng Nam', '0934567890', N'789 Đường Điện Biên Phủ, Quận 3', N'TP Hồ Chí Minh', 1),
-(6, N'Phạm Thị Mai', '0945678901', N'321 Đường Trần Hưng Đạo, Quận 5', N'TP Hồ Chí Minh', 1);
-
-/* ============================================================
-   3. CATEGORIES (Danh mục đầy đủ)
-   ============================================================ */
-
--- Parent Categories (Danh mục cha)
-INSERT INTO Categories (Name, ParentId, Gender, Season) VALUES
-(N'Áo thun', NULL, 'unisex', NULL),
-(N'Áo sơ mi', NULL, 'unisex', NULL),
-(N'Áo khoác', NULL, 'unisex', NULL),
-(N'Quần jeans', NULL, 'unisex', NULL),
-(N'Quần short', NULL, 'unisex', NULL),
-(N'Váy', NULL, 'nu', NULL),
-(N'Đầm', NULL, 'nu', NULL),
-(N'Giày', NULL, 'unisex', NULL),
-(N'Túi xách', NULL, 'unisex', NULL),
-(N'Phụ kiện', NULL, 'unisex', NULL),
-(N'Áo hoodie', NULL, 'unisex', NULL),
-(N'Áo polo', NULL, 'unisex', NULL);
-
--- Sub Categories (Danh mục con)
-INSERT INTO Categories (Name, ParentId, Gender, Season) VALUES
--- Áo thun (ParentId = 1)
-(N'Áo thun nam', 1, 'nam', NULL),
-(N'Áo thun nữ', 1, 'nu', NULL),
--- Áo sơ mi (ParentId = 2)
-(N'Áo sơ mi nam', 2, 'nam', NULL),
-(N'Áo sơ mi nữ', 2, 'nu', NULL),
--- Áo khoác (ParentId = 3)
-(N'Áo khoác nam', 3, 'nam', NULL),
-(N'Áo khoác nữ', 3, 'nu', NULL),
-(N'Áo phao', 3, 'unisex', 'winter'),
-(N'Áo vest', 3, 'unisex', NULL),
--- Quần jeans (ParentId = 4)
-(N'Quần jeans nam', 4, 'nam', NULL),
-(N'Quần jeans nữ', 4, 'nu', NULL),
--- Quần short (ParentId = 5)
-(N'Quần short nam', 5, 'nam', NULL),
-(N'Quần short nữ', 5, 'nu', NULL),
-(N'Quần baggy', 5, 'nu', NULL),
--- Váy (ParentId = 6)
-(N'Váy ngắn', 6, 'nu', NULL),
-(N'Váy dài', 6, 'nu', NULL),
-(N'Chân váy', 6, 'nu', NULL),
--- Đầm (ParentId = 7)
-(N'Đầm ngắn', 7, 'nu', NULL),
-(N'Đầm dài', 7, 'nu', NULL),
-(N'Đầm công sở', 7, 'nu', NULL),
--- Giày (ParentId = 8)
-(N'Giày thể thao', 8, 'unisex', NULL),
-(N'Giày da', 8, 'unisex', NULL),
-(N'Sandal', 8, 'unisex', 'summer'),
-(N'Giày cao gót', 8, 'nu', NULL),
--- Túi xách (ParentId = 9)
-(N'Balo', 9, 'unisex', NULL),
-(N'Túi đeo chéo', 9, 'unisex', NULL),
-(N'Túi xách tay', 9, 'nu', NULL),
-(N'Ví nam', 9, 'nam', NULL),
--- Phụ kiện (ParentId = 10)
-(N'Đồng hồ', 10, 'unisex', NULL),
-(N'Kính mát', 10, 'unisex', NULL),
-(N'Mũ', 10, 'unisex', NULL),
-(N'Khăn', 10, 'unisex', NULL),
--- Áo hoodie (ParentId = 11)
-(N'Áo hoodie nam', 11, 'nam', NULL),
-(N'Áo hoodie nữ', 11, 'nu', NULL),
--- Áo polo (ParentId = 12)
-(N'Áo polo nam', 12, 'nam', NULL),
-(N'Áo polo nữ', 12, 'nu', NULL);
+SET IDENTITY_INSERT Addresses ON;
+INSERT INTO Addresses (AddressId, UserId, RecipientName, Phone, AddressLine, City, IsDefault) VALUES
+(1, 3, N'Nguyễn Minh Tuấn', '0912345678', N'123 Đường Nguyễn Trãi, Quận 1', N'TP Hồ Chí Minh', 1),
+(2, 4, N'Trần Thu Hà', '0923456789', N'456 Đường Lê Lợi, Quận Hoàn Kiếm', N'Hà Nội', 1),
+(3, 5, N'Lê Hoàng Nam', '0934567890', N'789 Đường Điện Biên Phủ, Quận 3', N'TP Hồ Chí Minh', 1),
+(4, 6, N'Phạm Thị Mai', '0945678901', N'321 Đường Trần Hưng Đạo, Quận 5', N'TP Hồ Chí Minh', 1);
+SET IDENTITY_INSERT Addresses OFF;
+GO
 
 /* ============================================================
-   4. PRODUCTS (50 sản phẩm mẫu)
+   3. CATEGORIES
    ============================================================ */
-
--- Áo thun nam
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(13, N'Áo Thun Nam Cổ Tròn Basic', N'Áo thun nam cổ tròn basic, chất cotton 100%, co giãn thoải mái. Phù hợp mặc hàng ngày, đi chơi, đi làm đều OK. Thiết kế đơn giản, dễ phối đồ với quần jeans, quần short.', 299000, 249000, 'active', 1250, 89, DATEADD(day, -30, SYSDATETIME())),
-(13, N'Áo Thun Nam Cổ Vuông Oversize', N'Áo thun nam cổ vuông phong cách oversize, chất vải cotton pha spandex mềm mại. Màu sắc trẻ trung, phù hợp giới trẻ năng động.', 399000, NULL, 'active', 890, 45, DATEADD(day, -25, SYSDATETIME())),
-(13, N'Áo Thun Nam Tay Dài Graphic', N'Áo thun tay dài nam với họa tiết graphic trẻ trung. Chất cotton 95%, thoáng mát, thấm hút mồ hôi tốt.', 449000, 379000, 'active', 670, 32, DATEADD(day, -20, SYSDATETIME()));
-
--- Áo thun nữ
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(14, N'Áo Thun Nữ Cổ Tròn Minimalist', N'Áo thun nữ cổ tròn kiểu minimalist, chất cotton Modal mềm mịn như lụa. Ôm nhẹ form body, tôn dáng. Đủ màu sắc trung tính dễ phối.', 349000, 299000, 'active', 1580, 112, DATEADD(day, -28, SYSDATETIME())),
-(14, N'Áo Thun Nữ Oversize Phong Cách', N'Áo thun oversize nữ 2024, rộng rãi thoải mái, có thể phối với quần jeans, chân váy. Chất vải cotton 100%', 379000, NULL, 'active', 1340, 78, DATEADD(day, -22, SYSDATETIME())),
-(14, N'Áo Thun Nữ Crop Top', N'Áo thun crop top nữ, crop ngang eo, tôn dáng. Phong cách Y2K đang hot. Chất cotton co giãn.', 259000, 199000, 'active', 2100, 156, DATEADD(day, -15, SYSDATETIME()));
-
--- Áo sơ mi nam
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(15, N'Áo Sơ Mi Nam Dài Tay Oxford', N'Áo sơ mi nam dài tay chất Oxford cao cấp, cổ điển lịch lãm. Phù hợp đi làm, đi chơi, dự tiệc. May đo chuẩn form.', 599000, 499000, 'active', 980, 67, DATEADD(day, -35, SYSDATETIME())),
-(15, N'Áo Sơ Mi Nam Ngắn Tay Havana', N'Áo sơ mi nam ngắn tay chất Havana, phong cách casual. Màu sắc tươi sáng, phù hợp mùa hè. Có thể mặc ngoài hoặc tuck vào.', 449000, NULL, 'active', 720, 41, DATEADD(day, -18, SYSDATETIME())),
-(15, N'Áo Sơ Mi Nam Slim Fit Korean (Hàn Quốc)', N'Áo sơ mi nam slim fit, ôm sát cơ thể, lịch lãm. Chất vải cotton pha poly, ít nhăn, dễ giặt.', 699000, 599000, 'active', 540, 28, DATEADD(day, -12, SYSDATETIME()));
-
--- Áo sơ mi nữ
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(16, N'Áo Sơ Mi Nữ Dài Tay Lụa', N'Áo sơ mi nữ dài tay chất lụa cao cấp, sang trọng. Thiết kế thanh lịch, phù hợp công sở hoặc dự tiệc.', 749000, 649000, 'active', 860, 52, DATEADD(day, -30, SYSDATETIME())),
-(16, N'Áo Sơ Mi Nữ Ngắn Tay Caro', N'Áo sơ mi nữ ngắn tay họa tiết caro, phong cách trẻ trung. Chất vải cotton thoáng mát, phù hợp mùa hè.', 399000, NULL, 'active', 1100, 73, DATEADD(day, -20, SYSDATETIME())),
-(16, N'Áo Sơ Mi Nữ Oversize phong cách Hàn Quốc', N'Áo sơ mi nữ oversize phong cách Hàn Quốc, mượt mà. Có thể mặc như áo khoác nhẹ bên ngoài.', 529000, 459000, 'active', 920, 48, DATEADD(day, -25, SYSDATETIME()));
-
--- Áo khoác nam
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(17, N'Áo Khoác Nam Jeans Wash Xanh', N'Áo khoác jeans nam wash xanh nhạt, phong cách streetwear. Chất denim dày dặn, bền đẹp theo thời gian.', 899000, 799000, 'active', 760, 44, DATEADD(day, -40, SYSDATETIME())),
-(17, N'Áo Khoác Nam Nỉ Đen Classic', N'Áo khoác nỉ nam phong cách Bum, màu đen cổ điển. Ấm áp, phù hợp mùa thu đông. Có mũ trùm đầu.', 649000, NULL, 'active', 630, 35, DATEADD(day, -22, SYSDATETIME())),
-(17, N'Áo Khoác Nam Gió 2 Lớp', N'Áo khoác gió nam 2 lớp chống nắng, chống gió. Nhẹ nhàng, dễ gấp gọn, tiện lợi mang theo.', 499000, 399000, 'active', 480, 22, DATEADD(day, -10, SYSDATETIME()));
-
--- Áo khoác nữ
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(18, N'Áo Khoác Nữ Tweed Cao Cấp', N'Áo khoác tweed nữ cao cấp, thiết kế sang trọng. Phù hợp đi làm công sở, dự tiệc. Phom dáng A-line.', 1299000, 1099000, 'active', 580, 31, DATEADD(day, -35, SYSDATETIME())),
-(18, N'Áo Khoác Nữ Cardigan Len', N'Áo khoác cardigan len nữ, mềm mại, ấm áp. Phong cách Hàn Quốc, dễ phối đồ.', 549000, 479000, 'active', 890, 56, DATEADD(day, -18, SYSDATETIME())),
-(18, N'Áo Khoác Nữ Parka Phong Cách', N'Áo khoác parka nữ phong cách Military, nhiều túi, có đai eo. Chống nước, chống gió tốt.', 899000, NULL, 'active', 720, 42, DATEADD(day, -28, SYSDATETIME()));
-
--- Áo phao
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(19, N'Áo Phao Nam Lông Vũ 700FP', N'Áo phao nam lông vũ 700FP cao cấp, siêu nhẹ nhưng cực ấm. Chống nước tốt, phù hợp leo núi, du lịch.', 2499000, 1999000, 'active', 450, 18, DATEADD(day, -50, SYSDATETIME())),
-(19, N'Áo Phao Nữ Lông Vũ 650FP', N'Áo phao nữ lông vũ 650FP, thiết kế nữ tính với đường cong nhẹ. Màu pastel dịu dàng. Siêu ấm -20 độ C.', 2199000, 1799000, 'active', 620, 27, DATEADD(day, -45, SYSDATETIME())),
-(19, N'Áo Phao Unisex Puffer Minimal', N'Áo phao unisex puffer style tối giản, form rộng thoải mái. Hot trend 2024. Có nhiều màu trung tính.', 1299000, NULL, 'active', 980, 53, DATEADD(day, -20, SYSDATETIME()));
-
--- Quần jeans nam
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(21, N'Quần Jeans Nam Slim Fit Rách Gối', N'Quần jeans nam slim fit wash xanh đậm, có đứt gối trendy. Phong cách streetwear, phù hợp giới trẻ.', 699000, 599000, 'active', 1100, 76, DATEADD(day, -25, SYSDATETIME())),
-(21, N'Quần Jeans Nam Straight Leg Classic', N'Quần jeans nam straight leg classic, form thẳng truyền thống. Chất denim 100% cotton, bền đẹp.', 799000, NULL, 'active', 850, 52, DATEADD(day, -30, SYSDATETIME())),
-(21, N'Quần Jeans Nam Wide Leg Wash Nhạt', N'Quần jeans nam wide leg (ống rộng), wash nhạt phong cách Y2K. Hot trend mới nhất.', 749000, 649000, 'active', 670, 38, DATEADD(day, -15, SYSDATETIME()));
-
--- Quần jeans nữ
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(22, N'Quần Jeans Nữ Skinny Co Giãn', N'Quần jeans nữ skinny co giãn, ôm chân tôn dáng. Mềm mại, thoải mái vận động. Đủ size S-XXL.', 599000, 499000, 'active', 1650, 124, DATEADD(day, -20, SYSDATETIME())),
-(22, N'Quần Jeans Nữ Wide Leg Caro', N'Quần jeans nữ ống rộng họa tiết caro, phong cách Hàn Quốc. Form dáng thoải mái, trẻ trung.', 649000, NULL, 'active', 980, 61, DATEADD(day, -18, SYSDATETIME())),
-(22, N'Quần Jeans Nữ Baggy Cao Cấp', N'Quần jeans nữ baggy cao cấp, ống cực rộng phong cách 90s. Raw edge thời trang. Must-have item!', 799000, 699000, 'active', 1420, 98, DATEADD(day, -12, SYSDATETIME()));
-
--- Quần short nam
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(23, N'Quần Short Nam Jean Phong Cách', N'Quần short jeans nam phong cách, dáng vừa. Wash xanh nhạt trendy. Phù hợp mùa hè, đi biển.', 449000, 379000, 'active', 780, 45, DATEADD(day, -22, SYSDATETIME())),
-(23, N'Quần Short Nam Kaki Chino', N'Quần short nam kaki chino, chất vải kaki mềm mại. Cổ điển, dễ phối. Phù hợp đi làm casual Friday.', 399000, NULL, 'active', 560, 32, DATEADD(day, -28, SYSDATETIME())),
-(23, N'Quần Short Nam Thể Thao 2 Chiều', N'Quần short nam thể thao 2 chiều, co giãn 4 chiều. Thấm hút mồ hôi, khô nhanh. Phù hợp gym, chạy bộ.', 349000, 299000, 'active', 890, 67, DATEADD(day, -10, SYSDATETIME()));
-
--- Quần short nữ
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(24, N'Quần Short Nữ Jean Mini', N'Quần short jeans nữ mini, ngắn trên gối, phong cách sexy. Denim co giãn nhẹ.', 349000, 299000, 'active', 1340, 89, DATEADD(day, -15, SYSDATETIME())),
-(24, N'Quần Short Nữ Kaki Caro', N'Quần short nữ kaki họa tiết caro, dáng regular. Cute, trẻ trung, dễ mix.', 329000, NULL, 'active', 920, 54, DATEADD(day, -20, SYSDATETIME())),
-(24, N'Quần Short Nữ Cycling Bike', N'Quần short nữ cycling bike short, phong cách Hàn Quốc. Có lớp đệm, phù hợp đạp xe, gym.', 399000, 349000, 'active', 760, 43, DATEADD(day, -8, SYSDATETIME()));
-
--- Quần baggy
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(25, N'Quần Baggy Nữ Nỉ Caro', N'Quần baggy nữ chất nỉ bông họa tiết caro, siêu mềm. Ống cực rộng, thoải mái tuyệt đối. Trend 2024!', 449000, 379000, 'active', 1680, 112, DATEADD(day, -18, SYSDATETIME())),
-(25, N'Quần Baggy Nữ Jeans Vintage', N'Quần baggy nữ jeans vintage wash đẹp. Phong cách retro, cực kỳ trendy. Phải có trong tủ đồ!', 649000, NULL, 'active', 1420, 88, DATEADD(day, -25, SYSDATETIME())),
-(25, N'Quần Baggy Nữ Thun Phong Cách', N'Quần baggy nữ chất thun cotton, phong cách oversize. Siêu thoải mái, mặc ngủ cũng được.', 299000, 249000, 'active', 2100, 156, DATEADD(day, -12, SYSDATETIME()));
-
--- Váy ngắn
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(26, N'Váy Ngắn Nữ Mini A-Line', N'Váy ngắn nữ mini A-line, kiểu dáng trẻ trung. Chất vải tweed cao cấp, sang trọng. Nhiều màu xinh xắn.', 549000, 479000, 'active', 890, 52, DATEADD(day, -22, SYSDATETIME())),
-(26, N'Váy Ngắn Nữ Tennis Skater', N'Váy tennis nữ skater style, chất thun polo co giãn. Phong cách sporty chic, năng động.', 399000, NULL, 'active', 720, 41, DATEADD(day, -15, SYSDATETIME())),
-(26, N'Váy Ngắn Nữ Wrap Ruffle', N'Váy ngắn nữ wrap ruffle, có đai buộc eo. Phong cách bohemian, lãng mạn. Đi biển, đi dạo perfect!', 449000, 379000, 'active', 1100, 68, DATEADD(day, -20, SYSDATETIME()));
-
--- Váy dài
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(27, N'Váy Dài Nữ Midi Pleated', N'Váy dài midi nữ pleated (xếp nếp), sang trọng. Chất vải chiffon nhẹ nhàng, bay bổng. Dự tiệc, đi event cực đỉnh.', 799000, 699000, 'active', 640, 35, DATEADD(day, -28, SYSDATETIME())),
-(27, N'Váy Dài Nữ Maxi Boho', N'Váy maxi nữ bohemian style, hoa văn ethnic. Chất vải voan nhẹ. Đi biển, festival là best choice!', 649000, NULL, 'active', 880, 47, DATEADD(day, -18, SYSDATETIME())),
-(27, N'Váy Dài Nữ Linen Tối Giản', N'Váy dài nữ linen tối giản, form thẳng. Phong cách minimal, thanh lịch. Đi làm, đi dạo đều phù hợp.', 549000, 479000, 'active', 560, 29, DATEADD(day, -10, SYSDATETIME()));
-
--- Đầm ngắn
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(29, N'Đầm Ngắn Nữ Bodycon Co Giãn', N'Đầm ngắn bodycon nữ co giãn, ôm sát body. Phong cách sexy, quyến rũ. Đi party, đi bar cực chất!', 599000, 499000, 'active', 1250, 82, DATEADD(day, -15, SYSDATETIME())),
-(29, N'Đầm Ngắn Nữ Shirt Dress', N'Đầm shirt dress nữ, phong cách Hàn Quốc. Mặc như áo khoác cũng được. Đa năng, tiện lợi.', 649000, NULL, 'active', 980, 56, DATEADD(day, -20, SYSDATETIME())),
-(29, N'Đầm Ngắn Nữ Babydoll Xòe', N'Đầm babydoll nữ xòe nhẹ, dễ thương. Phong cách vintage, cute. Phù hợp đi chơi, cafe với bạn bè.', 529000, 449000, 'active', 1420, 94, DATEADD(day, -12, SYSDATETIME()));
-
--- Đầm dài
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(30, N'Đầm Dài Nữ Evening Gown', N'Đầm dài evening gown nữ, sang trọng bậc nhất. Chất sequin lấp lánh. Dự tiệc, gala, event quan trọng.', 1999000, 1699000, 'active', 380, 12, DATEADD(day, -45, SYSDATETIME())),
-(30, N'Đầm Dài Nữ Maxi Casual', N'Đầm maxi nữ casual, thoải mái. Chất vải cotton lụa, mát mẻ. Đi biển, đi dạo phố đều OK.', 649000, NULL, 'active', 760, 44, DATEADD(day, -25, SYSDATETIME())),
-(30, N'Đầm Dài Nữ Slip Quây Lụa', N'Đầm slip nữ chất lụa quây, phong cách minimal. Lịch lãm, sang trọng. Hot trend từ Jennie!', 899000, 799000, 'active', 1120, 67, DATEADD(day, -18, SYSDATETIME()));
-
--- Đầm công sở
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(31, N'Đầm Công Sở Nữ Pencil Dress', N'Đầm pencil nữ công sở, chuyên nghiệp. Chất vải kre cao cấp, không nhăn. Phải có cho dân văn phòng!', 899000, 799000, 'active', 720, 41, DATEADD(day, -30, SYSDATETIME())),
-(31, N'Đầm Công Sở Nữ Blazer Dress', N'Đầm blazer dress nữ, phong cách power dressing. Mạnh mẽ, lịch lãm. Gặp khách hàng, họp quan trọng.', 1299000, 1099000, 'active', 540, 28, DATEADD(day, -35, SYSDATETIME())),
-(31, N'Đầm Công Sở Nữ A-Line Office', N'Đầm A-line nữ công sở, dáng vừa phải. Thoải mái mà vẫn chuyên nghiệp. Nhiều màu trung tính.', 749000, 649000, 'active', 680, 39, DATEADD(day, -20, SYSDATETIME()));
-
--- Giày thể thao
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(33, N'Giày Thể Thao Nam Classic White', N'Giày thể thao nam classic trắng, minimal style. Da tổng hợp cao cấp, êm chân. Phối đồ với mọi thứ!', 899000, 799000, 'active', 1560, 98, DATEADD(day, -25, SYSDATETIME())),
-(33, N'Giày Thể Thao Nam Running Pro', N'Giày chạy bộ nam running pro, công nghệ đệm Air. Nhẹ, êm, hỗ trợ chạy bộ tốt. Dành cho runner!', 1499000, 1299000, 'active', 890, 45, DATEADD(day, -30, SYSDATETIME())),
-(33, N'Giày Thể Thao Nam High Top Street', N'Giày high top nam phong cách streetwear, chunky design. Hot trend 2024. Cực ngầu!', 1199000, NULL, 'active', 1240, 72, DATEADD(day, -15, SYSDATETIME())),
-(33, N'Giày Thể Thao Nữ Sneaker Platform', N'Giày sneaker nữ platform cao, tăng chiều cao. Phong cách Hàn Quốc, cực kỳ xinh. Must-have!', 999000, 899000, 'active', 2100, 145, DATEADD(day, -20, SYSDATETIME())),
-(33, N'Giày Thể Thao Nữ Classic Pink', N'Giày thể thao nữ classic màu hồng, ngọt ngào. Da mềm, đế cao su bền. Đi chơi, đi làm đều xinh.', 799000, NULL, 'active', 1680, 112, DATEADD(day, -22, SYSDATETIME())),
-(33, N'Giày Thể Thao Nữ Slip-On Canvas', N'Giày slip-on nữ canvas, không cần buộc dây. Tiện lợi, nhanh chóng. Phong cách casual.', 549000, 479000, 'active', 1320, 88, DATEADD(day, -12, SYSDATETIME()));
-
--- Giày da
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(34, N'Giày Da Nam Oxford Classic', N'Giày da oxford nam cao cấp, giày lịch lãm. Da thật 100%, đế leather. Phù hợp công sở, dự tiệc.', 1899000, 1599000, 'active', 420, 18, DATEADD(day, -40, SYSDATETIME())),
-(34, N'Giày Da Nam Derby Casual', N'Giày derby nam da thật, phong cách casual. Thoải mái hơn oxford, vẫn lịch sự. Đi chơi cuối tuần perfect!', 1499000, NULL, 'active', 560, 29, DATEADD(day, -28, SYSDATETIME())),
-(34, N'Giày Da Nữ Bít Toe Kitten Heel', N'Giày da nữ bít toe kitten heel, thanh lịch. Màu đen/nude cổ điển. Đi làm, đi tiệc đều OK.', 1199000, 999000, 'active', 780, 42, DATEADD(day, -25, SYSDATETIME())),
-(34, N'Giày Da Nữ Loafer Penny', N'Giày loafer nữ penny style, không dây tiện lợi. Phong cách preppy, trẻ trung. Đi học, đi làm đều xinh.', 899000, NULL, 'active', 640, 35, DATEADD(day, -18, SYSDATETIME()));
-
--- Sandal
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(35, N'Sandal Nữ Đế Ruột Bánh Mì', N'Sandal nữ đế ruột bánh mì, siêu trend 2024. Chất da lộn mềm mại. Đi biển, đi phố đều cool!', 599000, 499000, 'active', 980, 62, DATEADD(day, -15, SYSDATETIME())),
-(35, N'Sandal Nữ Cao Gót Strappy', N'Sandal cao gót nữ strappy, gợi cảm. Phong cách sexy, quyến rũ. Đi tiệc, đi bar cực chất!', 799000, NULL, 'active', 720, 38, DATEADD(day, -20, SYSDATETIME())),
-(35, N'Sandal Nam Leather Slide', N'Sandal nam slide da, đơn giản nam tính. Đế EVA êm ái. Mặc với quần shorts, rất cool!', 449000, 399000, 'active', 540, 31, DATEADD(day, -10, SYSDATETIME()));
-
--- Giày cao gót
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(36, N'Giày Cao Gót Nữ Stiletto Classic', N'Giày cao gót stiletto nữ cổ điển, mũi nhọn. Cao 8cm, thanh lịch. Màu đen/nude cơ bản. Đi tiệc must-have!', 799000, 699000, 'active', 1120, 67, DATEADD(day, -22, SYSDATETIME())),
-(36, N'Giày Cao Gót Nữ Block Heel Comfort', N'Giày cao gót block nữ, đế vuông vững chắc. Êm chân, không đau. Phù hợp đứng lâu, đi nhiều.', 899000, NULL, 'active', 860, 48, DATEADD(day, -18, SYSDATETIME())),
-(36, N'Giày Cao Gót Nữ Wedge Sandal', N'Giày cao gót wedge sandal nữ, đế hình nêm. Kết hợp tiện lợi của sandal và chiều cao của gót. Cực kỳ trendy!', 999000, 849000, 'active', 680, 36, DATEADD(day, -25, SYSDATETIME()));
-
--- Balo
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(37, N'Balo Laptop Nam Minimal', N'Balo laptop nam minimal, thiết kế tối giản. Chứa laptop 15.6 inch, nhiều ngăn. Đi học, đi làm đều OK.', 699000, 599000, 'active', 920, 54, DATEADD(day, -28, SYSDATETIME())),
-(37, N'Balo Laptop Nữ Canvas', N'Balo nữ canvas phong cách Hàn Quốc, xinh xắn. Có túi nước uống, túi laptop. Đi học cực yêu!', 549000, NULL, 'active', 1340, 88, DATEADD(day, -15, SYSDATETIME())),
-(37, N'Balo Du Lịch Nam Travel Pro', N'Balo du lịch nam travel pro, 45L siêu to. Có ngăn đựng giày, quần áo riêng. Đi phượt perfect!', 1199000, 999000, 'active', 460, 22, DATEADD(day, -35, SYSDATETIME()));
-
--- Túi đeo chéo
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(38, N'Túi Đeo Chéo Nam Crossbody', N'Túi đeo chéo nam crossbody, phong cách streetwear. Chất vải canvas bền bỉ. Đi chơi, đi phố cực ngầu!', 449000, 379000, 'active', 780, 45, DATEADD(day, -20, SYSDATETIME())),
-(38, N'Túi Đeo Chéo Nữ Mini Bag', N'Túi mini nữ đeo chéo, xinh xắn. Chất da tổng hợp cao cấp. Đi cafe, đi mall perfect!', 349000, NULL, 'active', 1560, 102, DATEADD(day, -12, SYSDATETIME())),
-(38, N'Túi Đeo Chéo Unisex Messenger', N'Túi messenger unisex, phong cách vintage. Có nhiều ngăn, đựng được tablet. Đi học, đi làm đều OK.', 649000, 549000, 'active', 620, 34, DATEADD(day, -25, SYSDATETIME()));
-
--- Túi xách tay
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(39, N'Túi Xách Nữ Tote Bag Classic', N'Túi tote nữ cổ điển, đựng vừa laptop 14 inch. Da PU cao cấp, sang trọng. Đi làm, đi meeting chuyên nghiệp.', 899000, 799000, 'active', 1080, 65, DATEADD(day, -22, SYSDATETIME())),
-(39, N'Túi Xách Nữ Satchel Elegant', N'Túi satchel nữ thanh lịch, có khóa kim loại. Đeo chéo hoặc cầm tay đều xinh. Đi tiệc, đi chơi đều OK.', 1199000, NULL, 'active', 840, 47, DATEADD(day, -30, SYSDATETIME())),
-(39, N'Túi Xách Nữ Bucket Hobo', N'Túi bucket/hobo nữ, form mềm. Chất vải nỉ cao cấp, nhẹ. Phong cách casual, thoải mái. Trend 2024!', 599000, 499000, 'active', 1260, 82, DATEADD(day, -18, SYSDATETIME()));
-
--- Ví nam
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(40, N'Ví Nam Da Dài Bifold', N'Ví da nam dài bifold cao cấp, da bò thật. Nhiều ngăn đựng tiền, thẻ. Sang trọng, bền đẹp.', 599000, 499000, 'active', 540, 32, DATEADD(day, -30, SYSDATETIME())),
-(40, N'Ví Nam Ngắn Trifold', N'Ví ngắn nam trifold, nhỏ gọn. Đựng vừa trong túi quần. Da tổng hợp cao cấp.', 349000, NULL, 'active', 420, 25, DATEADD(day, -20, SYSDATETIME())),
-(40, N'Ví Nam RFID Chống Trộm', N'Ví nam chống trộm RFID, công nghệ bảo mật. Da thật, nhiều ngăn. An tâm khi đi du lịch.', 799000, 699000, 'active', 380, 19, DATEADD(day, -25, SYSDATETIME()));
-
--- Đồng hồ
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(41, N'Đồng Hồ Nam Classic Round', N'Đồng hồ nam round face, mặt tròn cổ điển. Máy quartz Nhật bền bỉ. Dây da genuine. Lịch lãm!', 1999000, 1699000, 'active', 680, 38, DATEADD(day, -40, SYSDATETIME())),
-(41, N'Đồng Hồ Nam Smart Watch Pro', N'Đồng hồ thông minh nam pro, màn AMOLED 1.4 inch. Đo nhịp tim, step, sleep. Phong cách sporty.', 2999000, 2499000, 'active', 920, 45, DATEADD(day, -35, SYSDATETIME())),
-(41, N'Đồng Hồ Nữ Rose Gold Minimal', N'Đồng hồ nữ rose gold, mặt tròn nhỏ minimal. Dây mesh inox. Sang trọng, thanh lịch. Quà tặng perfect!', 1499000, 1299000, 'active', 780, 52, DATEADD(day, -30, SYSDATETIME())),
-(41, N'Đồng Hồ Nữ Square Lady', N'Đồng hồ nữ mặt vuông, phong cách vintage. Có lịch ngày. Dây da xinh xắn. Cute!', 999000, NULL, 'active', 560, 34, DATEADD(day, -22, SYSDATETIME()));
-
--- Kính mát
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(42, N'Kính Mát Nam Aviator Classic', N'Kính mát nam aviator huyền thoại, gọng kim loại. Tròng gradient UV400. Mặc là ngầu!', 899000, 799000, 'active', 720, 42, DATEADD(day, -25, SYSDATETIME())),
-(42, N'Kính Mát Nam Square Bold', N'Kính mát nam vuông bold, gọng nhựa to. Phong cách Y2K. Hot trend!', 699000, NULL, 'active', 640, 38, DATEADD(day, -18, SYSDATETIME())),
-(42, N'Kính Mát Nữ Cat Eye', N'Kính mát nữ cat eye, kiểu mèo cute. Gọng vành nhỏ, nữ tính. Tặng kèm cho bạn thân cực phù hợp!', 549000, 479000, 'active', 1100, 76, DATEADD(day, -15, SYSDATETIME())),
-(42, N'Kính Mát Nữ Round Vintage', N'Kính mát nữ round vintage, kiểu John Lennon. Gọng tròn đầy đủ. Phong cách retro cực cool!', 649000, NULL, 'active', 880, 54, DATEADD(day, -20, SYSDATETIME()));
-
--- Mũ
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(43, N'Mũ Lưỡi Trai Nam Snapback', N'Mũ snapback nam, snapback cổ điển. Chất nỉ bông dày dặn. Phong cách streetwear. Cực ngầu!', 299000, 249000, 'active', 860, 58, DATEADD(day, -15, SYSDATETIME())),
-(43, N'Mũ Bucket Nữ Summer Hat', N'Mũ bucket nữ mùa hè, vành rộng chống nắng. Chất vải linen nhẹ. Đi biển must-have!', 349000, NULL, 'active', 720, 44, DATEADD(day, -10, SYSDATETIME())),
-(43, N'Mũ Len Nam Beanie Classic', N'Mũ len beanie nam cổ điển, ấm áp mùa đông. Chất len merino mềm, không ngứa. Simple nhưng cool!', 249000, 199000, 'active', 640, 42, DATEADD(day, -20, SYSDATETIME())),
-(43, N'Mũ Fedora Nữ Elegant', N'Mũ fedora nữ sang trọng, vành rộng. Chất nhung bông mềm. Đi dạo phố, chụp ảnh cực xinh!', 449000, NULL, 'active', 580, 31, DATEADD(day, -25, SYSDATETIME()));
-
--- Khăn
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(44, N'Khăn Lụa Nữ Silk Scarf', N'Khăn lụa nữ 90x90cm, lụa tơ tằm 100%. Hoa văn thiết kế độc quyền. Sang trọng, quý phái. Quà tặng cao cấp!', 599000, 499000, 'active', 480, 28, DATEADD(day, -30, SYSDATETIME())),
-(44, N'Khăn Choàng Len Oversize', N'Khăn choàng len oversize, siêu to 200x70cm. Ấm áp mùa đông. Phong cách Hàn Quốc. Wrap around là hot!', 449000, NULL, 'active', 620, 39, DATEADD(day, -22, SYSDATETIME())),
-(44, N'Khăn Bandana Nam Cowboy', N'Khăn bandana nam cowboy style, 55x55cm. Chất cotton thấm hút tốt. Đeo cổ, đeo đầu đều cool!', 149000, 129000, 'active', 540, 35, DATEADD(day, -12, SYSDATETIME())),
-(44, N'Khăn Turban Nữ Stylish', N'Khăn turban nữ stylish, kiểu xếp nếp sang trọng. Chất voan nhẹ. Đội đi chơi, đi tiệc cực xinh!', 349000, 299000, 'active', 380, 22, DATEADD(day, -18, SYSDATETIME()));
-
--- Áo hoodie nam
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(45, N'Áo Hoodie Nam Essentials Plain', N'Áo hoodie nam essentials plain, đơn giản mà chất. Chất nỉ bông fleece mềm mại, ấm áp. Có mũ trùm, túi kangaroo.', 649000, 549000, 'active', 1420, 89, DATEADD(day, -20, SYSDATETIME())),
-(45, N'Áo Hoodie Nam Graphic Print', N'Áo hoodie nam graphic in hoa văn nổi bật. Phong cách streetwear, hypebeast. Cực ngầu!', 799000, NULL, 'active', 980, 56, DATEADD(day, -15, SYSDATETIME())),
-(45, N'Áo Hoodie Nam Zipper Full', N'Áo hoodie nam zipper full (có zip), tiện lợi. Mặc mở như áo khoác, đóng như hoodie. 2-in-1!', 899000, 799000, 'active', 760, 44, DATEADD(day, -25, SYSDATETIME()));
-
--- Áo hoodie nữ
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(46, N'Áo Hoodie Nữ Cropped Essential', N'Áo hoodie cropped nữ, crop ngắn tôn dáng. Phong cách Y2K đang hot. Cute và trendy!', 499000, 399000, 'active', 1680, 112, DATEADD(day, -12, SYSDATETIME())),
-(46, N'Áo Hoodie Nữ Oversize Love', N'Áo hoodie oversize nữ hình trái tim, siêu cute. Chất nỉ bông mềm, ấm áp. Gift cho bạn gái perfect!', 549000, NULL, 'active', 1240, 78, DATEADD(day, -18, SYSDATETIME())),
-(46, N'Áo Hoodie Nữ Zipper Lightweight', N'Áo hoodie nữ zipper nhẹ, phù hợp mùa thu. Chất french terry thoáng mát. Đi học, đi chơi đều OK.', 599000, 499000, 'active', 890, 52, DATEADD(day, -22, SYSDATETIME()));
-
--- Áo polo nam
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(47, N'Áo Polo Nam Classic Pique', N'Áo polo nam classic pique, chất vải pique cotton thoáng mát. Phom dáng regular vừa vặn. Đi làm, chơi golf đều OK.', 499000, 399000, 'active', 860, 52, DATEADD(day, -25, SYSDATETIME())),
-(47, N'Áo Polo Nam Slim Fit Dry', N'Áo polo nam slim fit, vải dry thấm hút nhanh. Công nghệ moisture-wicking. Dành cho sporty men!', 599000, NULL, 'active', 640, 38, DATEADD(day, -20, SYSDATETIME())),
-(47, N'Áo Polo Nam Rugby Stripes', N'Áo polo rugby stripes nam, sọc vintage phong cách. Chất vải cotton twill bền đẹp. Retro cool!', 549000, 479000, 'active', 480, 27, DATEADD(day, -30, SYSDATETIME()));
-
--- Áo polo nữ
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(48, N'Áo Polo Nữ Relaxed Fit Classic', N'Áo polo nữ relaxed fit cổ điển, thoải mái. Chất pique cotton mềm mại. Phong cách sporty chic.', 449000, 379000, 'active', 720, 44, DATEADD(day, -18, SYSDATETIME())),
-(48, N'Áo Polo Nữ Slim Stretch', N'Áo polo nữ slim stretch, ôm nhẹ body. Co giãn 4 chiều. Màu pastel dịu dàng. Cực kỳ xinh!', 499000, NULL, 'active', 580, 33, DATEADD(day, -22, SYSDATETIME())),
-(48, N'Áo Polo Nữ Tennis Dress Style', N'Áo polo nữ tennis dress style, dáng đầm ngắn. Phong cách sporty nữ tính. Đi chơi, đi tennis đều xinh.', 599000, 499000, 'active', 420, 24, DATEADD(day, -15, SYSDATETIME()));
-
+SET IDENTITY_INSERT Categories ON;
+INSERT INTO Categories (CategoryId, Name, ParentId, Gender, Season) VALUES
+(1, N'Áo thun', NULL, 'unisex', NULL),
+(2, N'Áo sơ mi', NULL, 'unisex', NULL),
+(3, N'Áo khoác', NULL, 'unisex', NULL),
+(4, N'Quần jeans', NULL, 'unisex', NULL),
+(5, N'Quần short', NULL, 'unisex', NULL),
+(6, N'Váy', NULL, 'nu', NULL),
+(7, N'Đầm', NULL, 'nu', NULL),
+(8, N'Giày', NULL, 'unisex', NULL),
+(9, N'Túi xách', NULL, 'unisex', NULL),
+(10, N'Phụ kiện', NULL, 'unisex', NULL),
+(11, N'Áo hoodie', NULL, 'unisex', NULL),
+(12, N'Áo polo', NULL, 'unisex', NULL),
+(13, N'Áo thun nam', 1, 'nam', NULL),
+(14, N'Áo thun nữ', 1, 'nu', NULL),
+(15, N'Áo sơ mi nam', 2, 'nam', NULL),
+(16, N'Áo sơ mi nữ', 2, 'nu', NULL),
+(17, N'Áo khoác nam', 3, 'nam', NULL),
+(18, N'Áo khoác nữ', 3, 'nu', NULL),
+(19, N'Áo phao', 3, 'unisex', 'winter'),
+(20, N'Áo vest', 3, 'unisex', NULL),
+(21, N'Quần jeans nam', 4, 'nam', NULL),
+(22, N'Quần jeans nữ', 4, 'nu', NULL),
+(23, N'Quần short nam', 5, 'nam', NULL),
+(24, N'Quần short nữ', 5, 'nu', NULL),
+(25, N'Quần baggy', 5, 'nu', NULL),
+(26, N'Váy ngắn', 6, 'nu', NULL),
+(27, N'Váy dài', 6, 'nu', NULL),
+(28, N'Chân váy', 6, 'nu', NULL),
+(29, N'Đầm ngắn', 7, 'nu', NULL),
+(30, N'Đầm dài', 7, 'nu', NULL),
+(31, N'Đầm công sở', 7, 'nu', NULL),
+(32, N'Đầm dạ hội', 7, 'nu', NULL),
+(33, N'Giày thể thao', 8, 'unisex', NULL),
+(34, N'Giày da', 8, 'unisex', NULL),
+(35, N'Sandal', 8, 'unisex', 'summer'),
+(36, N'Giày cao gót', 8, 'nu', NULL),
+(37, N'Balo', 9, 'unisex', NULL),
+(38, N'Túi đeo chéo', 9, 'unisex', NULL),
+(39, N'Túi xách tay', 9, 'nu', NULL),
+(40, N'Ví nam', 9, 'nam', NULL),
+(41, N'Đồng hồ', 10, 'unisex', NULL),
+(42, N'Kính mát', 10, 'unisex', NULL),
+(43, N'Mũ', 10, 'unisex', NULL),
+(44, N'Khăn', 10, 'unisex', NULL),
+(45, N'Áo hoodie nam', 11, 'nam', NULL),
+(46, N'Áo hoodie nữ', 11, 'nu', NULL),
+(47, N'Áo polo nam', 12, 'nam', NULL),
+(48, N'Áo polo nữ', 12, 'nu', NULL);
+SET IDENTITY_INSERT Categories OFF;
+GO
 
 /* ============================================================
-   4B. BỔ SUNG 40 SẢN PHẨM MỚI (Phong phú danh mục còn thiếu)
-   Phạm vi: Áo phao, Vest, Quần short, Baggy, Váy, Đầm,
-            Giày, Túi xách, Phụ kiện.
-   Mỗi sản phẩm được thêm variants + images ngay bên dưới.
+   4. PRODUCTS (147 Sản phẩm chuẩn thời trang)
    ============================================================ */
-
-/* ===== Áo phao (CategoryId = 20) — 3 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(20, N'Áo Phao Unisex Down 800FP', N'Áo phao lông vũ 800 fill power, siêu nhẹ, siêu ấm. Vải chống nước nhẹ. Phù hợp trekking, leo núi mùa đông. Unisex.', 2490000, 1990000, 'active', 540, 31, DATEADD(day, -7, SYSDATETIME())),
-(20, N'Áo Phao Nữ Dáng Dài Elegant', N'Áo phao nữ dáng dài tới gối, thiết kế thanh lịch. Lớp lông vũ tổng hợp dày ấm. Mũ lông viền có thể tháo rời.', 1790000, NULL, 'active', 410, 22, DATEADD(day, -9, SYSDATETIME())),
-(20, N'Áo Phao Nam Hooded Puffer', N'Áo phao nam puffer có mũ, chất liệu polyester chống gió. 3 lớp cách nhiệt. Phong cách thể thao trẻ trung.', 1590000, 1390000, 'active', 320, 18, DATEADD(day, -11, SYSDATETIME()));
-
-/* ===== Áo vest (CategoryId = 21) — 2 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(21, N'Áo Vest Nam Công Sở Classic', N'Áo vest nam công sở phong cách cổ điển, chất wool blend cao cấp. Form slim fit hiện đại. Đi kèm quần âu đồng bộ.', 1890000, 1690000, 'active', 720, 48, DATEADD(day, -14, SYSDATETIME())),
-(21, N'Áo Vest Nữ Blazer Kẻ Caro', N'Áo vest nữ blazer họa tiết kẻ caro Hàn Quốc, dáng rộng. Có thể mặc đi làm hoặc đi chơi. Đường may tinh tế.', 1290000, NULL, 'active', 580, 36, DATEADD(day, -16, SYSDATETIME()));
-
-/* ===== Quần short nam (CategoryId = 24) — 3 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(24, N'Quần Short Nam Kaki Chino', N'Quần short nam kaki phong cách Chino, ống suông. Chất cotton twill dày dặn. Có túi sau có nắp.', 449000, 369000, 'active', 880, 64, DATEADD(day, -8, SYSDATETIME())),
-(24, N'Quần Short Nam Thể Thao Performance', N'Quần short nam thể thao công nghệ quick-dry, siêu co giãn. Lý tưởng cho gym, chạy bộ. Có dây rút.', 399000, NULL, 'active', 690, 42, DATEADD(day, -10, SYSDATETIME())),
-(24, N'Quần Short Nam Denim Vintage', N'Quần short nam denim wash vintage, xanh nhạt. Phong cách streetwear. Form regular vừa vặn.', 499000, 419000, 'active', 510, 27, DATEADD(day, -13, SYSDATETIME()));
-
-/* ===== Quần short nữ (CategoryId = 25) — 2 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(25, N'Quần Short Nữ Cạp Cao Denim', N'Quần short nữ cạp cao denim, ôm dáng. Chất vải jeans co giãn nhẹ. Ống ngắn trên gối.', 399000, 339000, 'active', 760, 51, DATEADD(day, -8, SYSDATETIME())),
-(25, N'Quần Short Nữ Vải Linen Mùa Hè', N'Quần short nữ vải linen thoáng mát, lý tưởng mùa hè. Tone pastel nhẹ nhàng. Phối áo thun, áo sơ mi đều đẹp.', 349000, NULL, 'active', 620, 38, DATEADD(day, -12, SYSDATETIME()));
-
-/* ===== Quần baggy nữ (CategoryId = 26) — 2 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(26, N'Quần Baggy Nữ Kaki Cargo', N'Quần baggy nữ kaki cargo phong cách Hàn Quốc, nhiều túi hộp. Form rộng, dài chạm mắt cá. Có dây rút eo.', 599000, 499000, 'active', 920, 73, DATEADD(day, -6, SYSDATETIME())),
-(26, N'Quần Baggy Nữ Jeans Oversize', N'Quần baggy nữ jeans oversize, wash xanh nhạt. Phong cách Y2K, phối với áo croptop hoặc áo thun oversized.', 549000, NULL, 'active', 830, 58, DATEADD(day, -9, SYSDATETIME()));
-
-/* ===== Váy ngắn (CategoryId = 27) — 3 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(27, N'Váy Ngắn Tennis Pleated', N'Chân váy tennis ngắn xếp ly, phong cách preppy. Chất vải polyester chống nhăn. Có quần bảo hộ bên trong.', 449000, 379000, 'active', 1080, 92, DATEADD(day, -5, SYSDATETIME())),
-(27, N'Váy Ngắn Denim Button Front', N'Váy ngắn denim hàng nút phía trước, wash xanh nhạt. Form A-line, dài trên gối. Phong cách trẻ trung.', 399000, NULL, 'active', 870, 67, DATEADD(day, -7, SYSDATETIME())),
-(27, N'Váy Ngắn Xếp Tầng Hoa Nhí', N'Váy ngắn xếp tầng họa tiết hoa nhí vintage. Chất vải chiffon nhẹ, bay. Tone be ấm áp.', 479000, 399000, 'active', 690, 48, DATEADD(day, -11, SYSDATETIME()));
-
-/* ===== Váy dài (CategoryId = 28) — 2 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(28, N'Váy Dài Midi Lụa Sang Trọng', N'Chân váy midi lụa cao cấp, dáng chữ A. Mềm mại, rủ nhẹ tự nhiên. Tone ngà và be. Đi tiệc hoặc công sở đều đẹp.', 699000, 599000, 'active', 540, 36, DATEADD(day, -10, SYSDATETIME())),
-(28, N'Váy Dài Xếp Ly Vintage', N'Chân váy dài xếp ly nhỏ phong cách vintage. Chất cotton pha. Tone nâu đất ấm cúng.', 599000, NULL, 'active', 470, 29, DATEADD(day, -14, SYSDATETIME()));
-
-/* ===== Chân váy (CategoryId = 29) — 3 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(29, N'Chân Váy Công Sở Bút Chì', N'Chân váy công sở dáng bút chì ôm dáng, dài qua gối. Chất vải dày dặn không nhăn. Có lớp lót bên trong.', 549000, 459000, 'active', 920, 71, DATEADD(day, -8, SYSDATETIME())),
-(29, N'Chân Váy Tennis Trắng Basic', N'Chân váy tennis ngắn trắng basic. Chất vải thể thao co giãn 4 chiều. Phù hợp đi chơi, picnic.', 399000, NULL, 'active', 810, 64, DATEADD(day, -10, SYSDATETIME())),
-(29, N'Chân Váy Jean Wash Light', N'Chân váy jean wash nhạt, dáng A. Có xẻ tà sau. Form regular fit, dài ngang gối.', 479000, 399000, 'active', 660, 41, DATEADD(day, -13, SYSDATETIME()));
-
-/* ===== Đầm dài (CategoryId = 31) — 2 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(31, N'Đầm Dài Maxi Hoa Bohemian', N'Đầm maxi dài chấm gót, họa tiết hoa bohemian. Chất vải viscose mềm mại. Tay lửng, eo chiết nhẹ.', 899000, 749000, 'active', 720, 53, DATEADD(day, -7, SYSDATETIME())),
-(31, N'Đầm Dài Lụa Đỏ Tiệc Tối', N'Đầm dài lụa đỏ dự tiệc, dáng ôm body. Tone đỏ rượu vang quyến rũ. Đường cut-out lưng tinh tế.', 1490000, NULL, 'active', 540, 32, DATEADD(day, -12, SYSDATETIME()));
-
-/* ===== Đầm công sở (CategoryId = 32) — 3 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(32, N'Đầm Công Sở Đen Basic', N'Đầm công sở đen basic, dáng suông. Chất vải dày dặn không nhăn. Cổ tròn, tay ngắn. Dài qua gối.', 699000, 599000, 'active', 980, 78, DATEADD(day, -6, SYSDATETIME())),
-(32, N'Đầm Công Sở Be Kẻ Sọc', N'Đầm công sở be kẻ sọc dọc. Chất vải wool blend. Thiết kế thanh lịch, phù hợp dự họp, thuyết trình.', 799000, NULL, 'active', 720, 49, DATEADD(day, -9, SYSDATETIME())),
-(32, N'Đầm Công Sở Xanh Navy Tay Dài', N'Đầm công sở xanh navy tay dài, cổ cao. Dáng ôm nhẹ, dài qua gối. Tone navy sang trọng, dễ phối phụ kiện.', 849000, 729000, 'active', 610, 42, DATEADD(day, -13, SYSDATETIME()));
-
-/* ===== Giày thể thao (CategoryId = 33) — 2 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(33, N'Giày Sneaker Trắng Minimalist', N'Giày sneaker trắng minimalist phong cách Hàn Quốc. Đế cao su êm, chất da tổng hợp dễ vệ sinh. Unisex.', 990000, 799000, 'active', 1240, 105, DATEADD(day, -5, SYSDATETIME())),
-(33, N'Giày Running Nam Công Nghệ Cao', N'Giày chạy bộ nam đế foam nhẹ, hỗ trợ vòm. Công nghệ đệm khí. Phù hợp marathon, gym.', 1490000, 1290000, 'active', 880, 64, DATEADD(day, -8, SYSDATETIME()));
-
-/* ===== Giày da (CategoryId = 34) — 2 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(34, N'Giày Tây Nam Da Bò Cao Cấp', N'Giày tây nam da bò thật 100%, đánh bóng tay. Đế da may đôi, bền chắc. Phù hợp vest, sơ mi công sở.', 1890000, 1590000, 'active', 540, 36, DATEADD(day, -10, SYSDATETIME())),
-(34, N'Giày Loafer Nữ Da Mềm', N'Giày loafer nữ da bò mềm, đế thấp. Tone nâu và be. Phối với váy công sở, quần jeans đều đẹp.', 1290000, NULL, 'active', 480, 31, DATEADD(day, -13, SYSDATETIME()));
-
-/* ===== Sandal (CategoryId = 35) — 1 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(35, N'Sandal Đế Bệt Quai Vải', N'Sandal đế bệt quai vải canvas bện. Tone nâu đất, basic. Phù hợp mùa hè, đi biển, picnic.', 299000, 239000, 'active', 720, 53, DATEADD(day, -7, SYSDATETIME()));
-
-/* ===== Giày cao gót (CategoryId = 36) — 2 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(36, N'Giày Cao Gót Mũi Nhọn 7cm', N'Giày cao gót nữ mũi nhọn 7cm. Da bò tổng hợp. Tone đen, be, nude. Đi tiệc, công sở.', 799000, 679000, 'active', 870, 68, DATEADD(day, -8, SYSDATETIME())),
-(36, N'Giày Cao Gót Quai Mảnh 5cm', N'Giày cao gót nữ quai mảnh 5cm. Form kitten heel. Tone pastel dịu dàng. Dễ đi, êm chân.', 699000, NULL, 'active', 690, 49, DATEADD(day, -11, SYSDATETIME()));
-
-/* ===== Balo (CategoryId = 37) — 2 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(37, N'Balo Laptop Chống Nước', N'Balo laptop 15 inch, chất liệu polyester chống nước. Ngăn laptop riêng, nhiều ngăn phụ. Cổng USB sạc.', 799000, 649000, 'active', 1180, 92, DATEADD(day, -5, SYSDATETIME())),
-(37, N'Balo Mini Da Pu Basic', N'Balo mini da PU basic. Form nhỏ gọn, dây đeo điều chỉnh được. Tone đen, be. Phù hợp đi học, đi chơi.', 549000, NULL, 'active', 920, 71, DATEADD(day, -9, SYSDATETIME()));
-
-/* ===== Túi đeo chéo (CategoryId = 38) — 1 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(38, N'Túi Đeo Chéo Canvas Vintage', N'Túi đeo chéo canvas vintage, khóa kéo YKK. Ngăn chính + ngăn phụ. Tone xanh rêu, nâu đất.', 449000, 379000, 'active', 640, 42, DATEADD(day, -10, SYSDATETIME()));
-
-/* ===== Ví nam (CategoryId = 41) — 1 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(41, N'Ví Nam Da Bò Ngang Gấp', N'Ví nam da bò thật, gấp ngang. Nhiều ngăn đựng thẻ, ngăn đựng tiền mặt. Tone đen, nâu. May viền tỉ mỉ.', 549000, NULL, 'active', 580, 38, DATEADD(day, -11, SYSDATETIME()));
-
-/* ===== Đồng hồ (CategoryId = 42) — 1 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(42, N'Đồng Hồ Unisex Mặt Tròn Minimalist', N'Đồng hồ unisex mặt tròn minimalist, dây da. Kính cứng chống xước. Chống nước 30m. Tone vàng, đen.', 899000, 749000, 'active', 920, 67, DATEADD(day, -7, SYSDATETIME()));
-
-/* ===== Kính mát (CategoryId = 43) — 1 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(43, N'Kính Mát Aviator UV400', N'Kính mát aviator UV400, gọng kim loại vàng. Tròng kính polarised chống chói. Unisex. Đi kèm hộp và khăn lau.', 699000, NULL, 'active', 720, 51, DATEADD(day, -10, SYSDATETIME()));
-
-/* ===== Mũ (CategoryId = 44) — 1 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(44, N'Mũ Lưỡi Trai Unisex Basic', N'Mũ lưỡi trai unisex basic, chất cotton canvas dày dặn. Có khóa điều chỉnh phía sau. Tone đen, be, xanh rêu.', 249000, 199000, 'active', 870, 64, DATEADD(day, -8, SYSDATETIME()));
-
-/* ===== Khăn (CategoryId = 45) — 1 sp ===== */
-INSERT INTO Products (CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
-(45, N'Khăn Len Cashmere Mùa Đông', N'Khăn quàng cổ len cashmere pha, mềm mại, giữ ấm tốt. Kích thước lớn 180x30cm. Tone be, xám, đỏ rượu vang.', 399000, NULL, 'active', 540, 38, DATEADD(day, -12, SYSDATETIME()));
-
+SET IDENTITY_INSERT Products ON;
+INSERT INTO Products (ProductId, CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
+(1, 13, N'Áo Thun Nam Cổ Tròn Basic', N'Áo thun nam cổ tròn basic, chất cotton 100%, co giãn thoải mái. Phù hợp mặc hàng ngày, đi chơi, đi làm đều OK. Thiết kế đơn giản, dễ phối đồ với quần jeans, quần short.', 299000, 249000, 'active', 1250, 89, DATEADD(day, -30, SYSDATETIME())),
+(2, 13, N'Áo Thun Nam Cổ Vuông Oversize', N'Áo thun nam cổ vuông phong cách oversize, chất vải cotton pha spandex mềm mại. Màu sắc trẻ trung, phù hợp giới trẻ năng động.', 399000, NULL, 'active', 890, 45, DATEADD(day, -25, SYSDATETIME())),
+(3, 13, N'Áo Thun Nam Tay Dài Graphic', N'Áo thun tay dài nam với họa tiết graphic trẻ trung. Chất cotton 95%, thoáng mát, thấm hút mồ hôi tốt.', 449000, 379000, 'active', 670, 32, DATEADD(day, -20, SYSDATETIME())),
+(4, 14, N'Áo Thun Nữ Cổ Tròn Minimalist', N'Áo thun nữ cổ tròn kiểu minimalist, chất cotton Modal mềm mịn như lụa. Ôm nhẹ form body, tôn dáng. Đủ màu sắc trung tính dễ phối.', 349000, 299000, 'active', 1580, 112, DATEADD(day, -28, SYSDATETIME())),
+(5, 14, N'Áo Thun Nữ Oversize Phong Cách', N'Áo thun oversize nữ 2024, rộng rãi thoải mái, có thể phối với quần jeans, chân váy. Chất vải cotton 100%', 379000, NULL, 'active', 1340, 78, DATEADD(day, -22, SYSDATETIME())),
+(6, 14, N'Áo Thun Nữ Crop Top', N'Áo thun crop top nữ, crop ngang eo, tôn dáng. Phong cách Y2K đang hot. Chất cotton co giãn.', 259000, 199000, 'active', 2100, 156, DATEADD(day, -15, SYSDATETIME())),
+(7, 15, N'Áo Sơ Mi Nam Dài Tay Oxford', N'Áo sơ mi nam dài tay chất Oxford cao cấp, cổ điển lịch lãm. Phù hợp đi làm, đi chơi, dự tiệc. May đo chuẩn form.', 599000, 499000, 'active', 980, 67, DATEADD(day, -35, SYSDATETIME())),
+(8, 15, N'Áo Sơ Mi Nam Ngắn Tay Havana', N'Áo sơ mi nam ngắn tay chất Havana, phong cách casual. Màu sắc tươi sáng, phù hợp mùa hè. Có thể mặc ngoài hoặc tuck vào.', 449000, NULL, 'active', 720, 41, DATEADD(day, -18, SYSDATETIME())),
+(9, 15, N'Áo Sơ Mi Nam Slim Fit Korean (Hàn Quốc)', N'Áo sơ mi nam slim fit, ôm sát cơ thể, lịch lãm. Chất vải cotton pha poly, ít nhăn, dễ giặt.', 699000, 599000, 'active', 540, 28, DATEADD(day, -12, SYSDATETIME())),
+(10, 16, N'Áo Sơ Mi Nữ Dài Tay Lụa', N'Áo sơ mi nữ dài tay chất lụa cao cấp, sang trọng. Thiết kế thanh lịch, phù hợp công sở hoặc dự tiệc.', 749000, 649000, 'active', 860, 52, DATEADD(day, -30, SYSDATETIME())),
+(11, 16, N'Áo Sơ Mi Nữ Ngắn Tay Caro', N'Áo sơ mi nữ ngắn tay họa tiết caro, phong cách trẻ trung. Chất vải cotton thoáng mát, phù hợp mùa hè.', 399000, NULL, 'active', 1100, 73, DATEADD(day, -20, SYSDATETIME())),
+(12, 16, N'Áo Sơ Mi Nữ Oversize phong cách Hàn Quốc', N'Áo sơ mi nữ oversize phong cách Hàn Quốc, mượt mà. Có thể mặc như áo khoác nhẹ bên ngoài.', 529000, 459000, 'active', 920, 48, DATEADD(day, -25, SYSDATETIME())),
+(13, 17, N'Áo Khoác Nam Jeans Wash Xanh', N'Áo khoác jeans nam wash xanh nhạt, phong cách streetwear. Chất denim dày dặn, bền đẹp theo thời gian.', 899000, 799000, 'active', 760, 44, DATEADD(day, -40, SYSDATETIME())),
+(14, 17, N'Áo Khoác Nam Nỉ Đen Classic', N'Áo khoác nỉ nam phong cách Bum, màu đen cổ điển. Ấm áp, phù hợp mùa thu đông. Có mũ trùm đầu.', 649000, NULL, 'active', 630, 35, DATEADD(day, -22, SYSDATETIME())),
+(15, 17, N'Áo Khoác Nam Gió 2 Lớp', N'Áo khoác gió nam 2 lớp chống nắng, chống gió. Nhẹ nhàng, dễ gấp gọn, tiện lợi mang theo.', 499000, 399000, 'active', 480, 22, DATEADD(day, -10, SYSDATETIME())),
+(16, 18, N'Áo Khoác Nữ Tweed Cao Cấp', N'Áo khoác tweed nữ cao cấp, thiết kế sang trọng. Phù hợp đi làm công sở, dự tiệc. Phom dáng A-line.', 1299000, 1099000, 'active', 580, 31, DATEADD(day, -35, SYSDATETIME())),
+(17, 18, N'Áo Khoác Nữ Cardigan Len', N'Áo khoác cardigan len nữ, mềm mại, ấm áp. Phong cách Hàn Quốc, dễ phối đồ.', 549000, 479000, 'active', 890, 56, DATEADD(day, -18, SYSDATETIME())),
+(18, 18, N'Áo Khoác Nữ Parka Phong Cách', N'Áo khoác parka nữ phong cách Military, nhiều túi, có đai eo. Chống nước, chống gió tốt.', 899000, NULL, 'active', 720, 42, DATEADD(day, -28, SYSDATETIME())),
+(19, 19, N'Áo Phao Nam Lông Vũ 700FP', N'Áo phao nam lông vũ 700FP cao cấp, siêu nhẹ nhưng cực ấm. Chống nước tốt, phù hợp leo núi, du lịch.', 2499000, 1999000, 'active', 450, 18, DATEADD(day, -50, SYSDATETIME())),
+(20, 19, N'Áo Phao Nữ Lông Vũ 650FP', N'Áo phao nữ lông vũ 650FP, thiết kế nữ tính với đường cong nhẹ. Màu pastel dịu dàng. Siêu ấm -20 độ C.', 2199000, 1799000, 'active', 620, 27, DATEADD(day, -45, SYSDATETIME())),
+(21, 19, N'Áo Phao Unisex Puffer Minimal', N'Áo phao unisex puffer style tối giản, form rộng thoải mái. Hot trend 2024. Có nhiều màu trung tính.', 1299000, NULL, 'active', 980, 53, DATEADD(day, -20, SYSDATETIME())),
+(22, 21, N'Quần Jeans Nam Slim Fit Rách Gối', N'Quần jeans nam slim fit wash xanh đậm, có đứt gối trendy. Phong cách streetwear, phù hợp giới trẻ.', 699000, 599000, 'active', 1100, 76, DATEADD(day, -25, SYSDATETIME())),
+(23, 21, N'Quần Jeans Nam Straight Leg Classic', N'Quần jeans nam straight leg classic, form thẳng truyền thống. Chất denim 100% cotton, bền đẹp.', 799000, NULL, 'active', 850, 52, DATEADD(day, -30, SYSDATETIME())),
+(24, 21, N'Quần Jeans Nam Wide Leg Wash Nhạt', N'Quần jeans nam wide leg (ống rộng), wash nhạt phong cách Y2K. Hot trend mới nhất.', 749000, 649000, 'active', 670, 38, DATEADD(day, -15, SYSDATETIME())),
+(25, 22, N'Quần Jeans Nữ Skinny Co Giãn', N'Quần jeans nữ skinny co giãn, ôm chân tôn dáng. Mềm mại, thoải mái vận động. Đủ size S-XXL.', 599000, 499000, 'active', 1650, 124, DATEADD(day, -20, SYSDATETIME()));
+INSERT INTO Products (ProductId, CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
+(26, 22, N'Quần Jeans Nữ Wide Leg Caro', N'Quần jeans nữ ống rộng họa tiết caro, phong cách Hàn Quốc. Form dáng thoải mái, trẻ trung.', 649000, NULL, 'active', 980, 61, DATEADD(day, -18, SYSDATETIME())),
+(27, 22, N'Quần Jeans Nữ Baggy Cao Cấp', N'Quần jeans nữ baggy cao cấp, ống cực rộng phong cách 90s. Raw edge thời trang. Must-have item!', 799000, 699000, 'active', 1420, 98, DATEADD(day, -12, SYSDATETIME())),
+(28, 23, N'Quần Short Nam Jean Phong Cách', N'Quần short jeans nam phong cách, dáng vừa. Wash xanh nhạt trendy. Phù hợp mùa hè, đi biển.', 449000, 379000, 'active', 780, 45, DATEADD(day, -22, SYSDATETIME())),
+(29, 23, N'Quần Short Nam Kaki Chino', N'Quần short nam kaki chino, chất vải kaki mềm mại. Cổ điển, dễ phối. Phù hợp đi làm casual Friday.', 399000, NULL, 'active', 560, 32, DATEADD(day, -28, SYSDATETIME())),
+(30, 23, N'Quần Short Nam Thể Thao 2 Chiều', N'Quần short nam thể thao 2 chiều, co giãn 4 chiều. Thấm hút mồ hôi, khô nhanh. Phù hợp gym, chạy bộ.', 349000, 299000, 'active', 890, 67, DATEADD(day, -10, SYSDATETIME())),
+(31, 24, N'Quần Short Nữ Jean Mini', N'Quần short jeans nữ mini, ngắn trên gối, phong cách sexy. Denim co giãn nhẹ.', 349000, 299000, 'active', 1340, 89, DATEADD(day, -15, SYSDATETIME())),
+(32, 24, N'Quần Short Nữ Kaki Caro', N'Quần short nữ kaki họa tiết caro, dáng regular. Cute, trẻ trung, dễ mix.', 329000, NULL, 'active', 920, 54, DATEADD(day, -20, SYSDATETIME())),
+(33, 24, N'Quần Short Nữ Cycling Bike', N'Quần short nữ cycling bike short, phong cách Hàn Quốc. Có lớp đệm, phù hợp đạp xe, gym.', 399000, 349000, 'active', 760, 43, DATEADD(day, -8, SYSDATETIME())),
+(34, 25, N'Quần Baggy Nữ Nỉ Caro', N'Quần baggy nữ chất nỉ bông họa tiết caro, siêu mềm. Ống cực rộng, thoải mái tuyệt đối. Trend 2024!', 449000, 379000, 'active', 1680, 112, DATEADD(day, -18, SYSDATETIME())),
+(35, 25, N'Quần Baggy Nữ Jeans Vintage', N'Quần baggy nữ jeans vintage wash đẹp. Phong cách retro, cực kỳ trendy. Phải có trong tủ đồ!', 649000, NULL, 'active', 1420, 88, DATEADD(day, -25, SYSDATETIME())),
+(36, 25, N'Quần Baggy Nữ Thun Phong Cách', N'Quần baggy nữ chất thun cotton, phong cách oversize. Siêu thoải mái, mặc ngủ cũng được.', 299000, 249000, 'active', 2100, 156, DATEADD(day, -12, SYSDATETIME())),
+(37, 26, N'Váy Ngắn Nữ Mini A-Line', N'Váy ngắn nữ mini A-line, kiểu dáng trẻ trung. Chất vải tweed cao cấp, sang trọng. Nhiều màu xinh xắn.', 549000, 479000, 'active', 890, 52, DATEADD(day, -22, SYSDATETIME())),
+(38, 26, N'Váy Ngắn Nữ Tennis Skater', N'Váy tennis nữ skater style, chất thun polo co giãn. Phong cách sporty chic, năng động.', 399000, NULL, 'active', 720, 41, DATEADD(day, -15, SYSDATETIME())),
+(39, 26, N'Váy Ngắn Nữ Wrap Ruffle', N'Váy ngắn nữ wrap ruffle, có đai buộc eo. Phong cách bohemian, lãng mạn. Đi biển, đi dạo perfect!', 449000, 379000, 'active', 1100, 68, DATEADD(day, -20, SYSDATETIME())),
+(40, 27, N'Váy Dài Nữ Midi Pleated', N'Váy dài midi nữ pleated (xếp nếp), sang trọng. Chất vải chiffon nhẹ nhàng, bay bổng. Dự tiệc, đi event cực đỉnh.', 799000, 699000, 'active', 640, 35, DATEADD(day, -28, SYSDATETIME())),
+(41, 27, N'Váy Dài Nữ Maxi Boho', N'Váy maxi nữ bohemian style, hoa văn ethnic. Chất vải voan nhẹ. Đi biển, festival là best choice!', 649000, NULL, 'active', 880, 47, DATEADD(day, -18, SYSDATETIME())),
+(42, 27, N'Váy Dài Nữ Linen Tối Giản', N'Váy dài nữ linen tối giản, form thẳng. Phong cách minimal, thanh lịch. Đi làm, đi dạo đều phù hợp.', 549000, 479000, 'active', 560, 29, DATEADD(day, -10, SYSDATETIME())),
+(43, 29, N'Đầm Ngắn Nữ Bodycon Co Giãn', N'Đầm ngắn bodycon nữ co giãn, ôm sát body. Phong cách sexy, quyến rũ. Đi party, đi bar cực chất!', 599000, 499000, 'active', 1250, 82, DATEADD(day, -15, SYSDATETIME())),
+(44, 29, N'Đầm Ngắn Nữ Shirt Dress', N'Đầm shirt dress nữ, phong cách Hàn Quốc. Mặc như áo khoác cũng được. Đa năng, tiện lợi.', 649000, NULL, 'active', 980, 56, DATEADD(day, -20, SYSDATETIME())),
+(45, 29, N'Đầm Ngắn Nữ Babydoll Xòe', N'Đầm babydoll nữ xòe nhẹ, dễ thương. Phong cách vintage, cute. Phù hợp đi chơi, cafe với bạn bè.', 529000, 449000, 'active', 1420, 94, DATEADD(day, -12, SYSDATETIME())),
+(46, 30, N'Đầm Dài Nữ Evening Gown', N'Đầm dài evening gown nữ, sang trọng bậc nhất. Chất sequin lấp lánh. Dự tiệc, gala, event quan trọng.', 1999000, 1699000, 'active', 380, 12, DATEADD(day, -45, SYSDATETIME())),
+(47, 30, N'Đầm Dài Nữ Maxi Casual', N'Đầm maxi nữ casual, thoải mái. Chất vải cotton lụa, mát mẻ. Đi biển, đi dạo phố đều OK.', 649000, NULL, 'active', 760, 44, DATEADD(day, -25, SYSDATETIME())),
+(48, 30, N'Đầm Dài Nữ Slip Quây Lụa', N'Đầm slip nữ chất lụa quây, phong cách minimal. Lịch lãm, sang trọng. Hot trend từ Jennie!', 899000, 799000, 'active', 1120, 67, DATEADD(day, -18, SYSDATETIME())),
+(49, 31, N'Đầm Công Sở Nữ Pencil Dress', N'Đầm pencil nữ công sở, chuyên nghiệp. Chất vải kre cao cấp, không nhăn. Phải có cho dân văn phòng!', 899000, 799000, 'active', 720, 41, DATEADD(day, -30, SYSDATETIME())),
+(50, 31, N'Đầm Công Sở Nữ Blazer Dress', N'Đầm blazer dress nữ, phong cách power dressing. Mạnh mẽ, lịch lãm. Gặp khách hàng, họp quan trọng.', 1299000, 1099000, 'active', 540, 28, DATEADD(day, -35, SYSDATETIME()));
+INSERT INTO Products (ProductId, CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
+(51, 31, N'Đầm Công Sở Nữ A-Line Office', N'Đầm A-line nữ công sở, dáng vừa phải. Thoải mái mà vẫn chuyên nghiệp. Nhiều màu trung tính.', 749000, 649000, 'active', 680, 39, DATEADD(day, -20, SYSDATETIME())),
+(52, 33, N'Giày Thể Thao Nam Classic White', N'Giày thể thao nam classic trắng, minimal style. Da tổng hợp cao cấp, êm chân. Phối đồ với mọi thứ!', 899000, 799000, 'active', 1560, 98, DATEADD(day, -25, SYSDATETIME())),
+(53, 33, N'Giày Thể Thao Nam Running Pro', N'Giày chạy bộ nam running pro, công nghệ đệm Air. Nhẹ, êm, hỗ trợ chạy bộ tốt. Dành cho runner!', 1499000, 1299000, 'active', 890, 45, DATEADD(day, -30, SYSDATETIME())),
+(54, 33, N'Giày Thể Thao Nam High Top Street', N'Giày high top nam phong cách streetwear, chunky design. Hot trend 2024. Cực ngầu!', 1199000, NULL, 'active', 1240, 72, DATEADD(day, -15, SYSDATETIME())),
+(55, 33, N'Giày Thể Thao Nữ Sneaker Platform', N'Giày sneaker nữ platform cao, tăng chiều cao. Phong cách Hàn Quốc, cực kỳ xinh. Must-have!', 999000, 899000, 'active', 2100, 145, DATEADD(day, -20, SYSDATETIME())),
+(56, 33, N'Giày Thể Thao Nữ Classic Pink', N'Giày thể thao nữ classic màu hồng, ngọt ngào. Da mềm, đế cao su bền. Đi chơi, đi làm đều xinh.', 799000, NULL, 'active', 1680, 112, DATEADD(day, -22, SYSDATETIME())),
+(57, 33, N'Giày Thể Thao Nữ Slip-On Canvas', N'Giày slip-on nữ canvas, không cần buộc dây. Tiện lợi, nhanh chóng. Phong cách casual.', 549000, 479000, 'active', 1320, 88, DATEADD(day, -12, SYSDATETIME())),
+(58, 34, N'Giày Da Nam Oxford Classic', N'Giày da oxford nam cao cấp, giày lịch lãm. Da thật 100%, đế leather. Phù hợp công sở, dự tiệc.', 1899000, 1599000, 'active', 420, 18, DATEADD(day, -40, SYSDATETIME())),
+(59, 34, N'Giày Da Nam Derby Casual', N'Giày derby nam da thật, phong cách casual. Thoải mái hơn oxford, vẫn lịch sự. Đi chơi cuối tuần perfect!', 1499000, NULL, 'active', 560, 29, DATEADD(day, -28, SYSDATETIME())),
+(60, 34, N'Giày Da Nữ Bít Toe Kitten Heel', N'Giày da nữ bít toe kitten heel, thanh lịch. Màu đen/nude cổ điển. Đi làm, đi tiệc đều OK.', 1199000, 999000, 'active', 780, 42, DATEADD(day, -25, SYSDATETIME())),
+(61, 34, N'Giày Da Nữ Loafer Penny', N'Giày loafer nữ penny style, không dây tiện lợi. Phong cách preppy, trẻ trung. Đi học, đi làm đều xinh.', 899000, NULL, 'active', 640, 35, DATEADD(day, -18, SYSDATETIME())),
+(62, 35, N'Sandal Nữ Đế Ruột Bánh Mì', N'Sandal nữ đế ruột bánh mì, siêu trend 2024. Chất da lộn mềm mại. Đi biển, đi phố đều cool!', 599000, 499000, 'active', 980, 62, DATEADD(day, -15, SYSDATETIME())),
+(63, 35, N'Sandal Nữ Cao Gót Strappy', N'Sandal cao gót nữ strappy, gợi cảm. Phong cách sexy, quyến rũ. Đi tiệc, đi bar cực chất!', 799000, NULL, 'active', 720, 38, DATEADD(day, -20, SYSDATETIME())),
+(64, 35, N'Sandal Nam Leather Slide', N'Sandal nam slide da, đơn giản nam tính. Đế EVA êm ái. Mặc với quần shorts, rất cool!', 449000, 399000, 'active', 540, 31, DATEADD(day, -10, SYSDATETIME())),
+(65, 36, N'Giày Cao Gót Nữ Stiletto Classic', N'Giày cao gót stiletto nữ cổ điển, mũi nhọn. Cao 8cm, thanh lịch. Màu đen/nude cơ bản. Đi tiệc must-have!', 799000, 699000, 'active', 1120, 67, DATEADD(day, -22, SYSDATETIME())),
+(66, 36, N'Giày Cao Gót Nữ Block Heel Comfort', N'Giày cao gót block nữ, đế vuông vững chắc. Êm chân, không đau. Phù hợp đứng lâu, đi nhiều.', 899000, NULL, 'active', 860, 48, DATEADD(day, -18, SYSDATETIME())),
+(67, 36, N'Giày Cao Gót Nữ Wedge Sandal', N'Giày cao gót wedge sandal nữ, đế hình nêm. Kết hợp tiện lợi của sandal và chiều cao của gót. Cực kỳ trendy!', 999000, 849000, 'active', 680, 36, DATEADD(day, -25, SYSDATETIME())),
+(68, 37, N'Balo Laptop Nam Minimal', N'Balo laptop nam minimal, thiết kế tối giản. Chứa laptop 15.6 inch, nhiều ngăn. Đi học, đi làm đều OK.', 699000, 599000, 'active', 920, 54, DATEADD(day, -28, SYSDATETIME())),
+(69, 37, N'Balo Laptop Nữ Canvas', N'Balo nữ canvas phong cách Hàn Quốc, xinh xắn. Có túi nước uống, túi laptop. Đi học cực yêu!', 549000, NULL, 'active', 1340, 88, DATEADD(day, -15, SYSDATETIME())),
+(70, 37, N'Balo Du Lịch Nam Travel Pro', N'Balo du lịch nam travel pro, 45L siêu to. Có ngăn đựng giày, quần áo riêng. Đi phượt perfect!', 1199000, 999000, 'active', 460, 22, DATEADD(day, -35, SYSDATETIME())),
+(71, 38, N'Túi Đeo Chéo Nam Crossbody', N'Túi đeo chéo nam crossbody, phong cách streetwear. Chất vải canvas bền bỉ. Đi chơi, đi phố cực ngầu!', 449000, 379000, 'active', 780, 45, DATEADD(day, -20, SYSDATETIME())),
+(72, 38, N'Túi Đeo Chéo Nữ Mini Bag', N'Túi mini nữ đeo chéo, xinh xắn. Chất da tổng hợp cao cấp. Đi cafe, đi mall perfect!', 349000, NULL, 'active', 1560, 102, DATEADD(day, -12, SYSDATETIME())),
+(73, 38, N'Túi Đeo Chéo Unisex Messenger', N'Túi messenger unisex, phong cách vintage. Có nhiều ngăn, đựng được tablet. Đi học, đi làm đều OK.', 649000, 549000, 'active', 620, 34, DATEADD(day, -25, SYSDATETIME())),
+(74, 39, N'Túi Xách Nữ Tote Bag Classic', N'Túi tote nữ cổ điển, đựng vừa laptop 14 inch. Da PU cao cấp, sang trọng. Đi làm, đi meeting chuyên nghiệp.', 899000, 799000, 'active', 1080, 65, DATEADD(day, -22, SYSDATETIME())),
+(75, 39, N'Túi Xách Nữ Satchel Elegant', N'Túi satchel nữ thanh lịch, có khóa kim loại. Đeo chéo hoặc cầm tay đều xinh. Đi tiệc, đi chơi đều OK.', 1199000, NULL, 'active', 840, 47, DATEADD(day, -30, SYSDATETIME()));
+INSERT INTO Products (ProductId, CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
+(76, 39, N'Túi Xách Nữ Bucket Hobo', N'Túi bucket/hobo nữ, form mềm. Chất vải nỉ cao cấp, nhẹ. Phong cách casual, thoải mái. Trend 2024!', 599000, 499000, 'active', 1260, 82, DATEADD(day, -18, SYSDATETIME())),
+(77, 40, N'Ví Nam Da Dài Bifold', N'Ví da nam dài bifold cao cấp, da bò thật. Nhiều ngăn đựng tiền, thẻ. Sang trọng, bền đẹp.', 599000, 499000, 'active', 540, 32, DATEADD(day, -30, SYSDATETIME())),
+(78, 40, N'Ví Nam Ngắn Trifold', N'Ví ngắn nam trifold, nhỏ gọn. Đựng vừa trong túi quần. Da tổng hợp cao cấp.', 349000, NULL, 'active', 420, 25, DATEADD(day, -20, SYSDATETIME())),
+(79, 40, N'Ví Nam RFID Chống Trộm', N'Ví nam chống trộm RFID, công nghệ bảo mật. Da thật, nhiều ngăn. An tâm khi đi du lịch.', 799000, 699000, 'active', 380, 19, DATEADD(day, -25, SYSDATETIME())),
+(80, 41, N'Đồng Hồ Nam Classic Round', N'Đồng hồ nam round face, mặt tròn cổ điển. Máy quartz Nhật bền bỉ. Dây da genuine. Lịch lãm!', 1999000, 1699000, 'active', 680, 38, DATEADD(day, -40, SYSDATETIME())),
+(81, 41, N'Đồng Hồ Nam Smart Watch Pro', N'Đồng hồ thông minh nam pro, màn AMOLED 1.4 inch. Đo nhịp tim, step, sleep. Phong cách sporty.', 2999000, 2499000, 'active', 920, 45, DATEADD(day, -35, SYSDATETIME())),
+(82, 41, N'Đồng Hồ Nữ Rose Gold Minimal', N'Đồng hồ nữ rose gold, mặt tròn nhỏ minimal. Dây mesh inox. Sang trọng, thanh lịch. Quà tặng perfect!', 1499000, 1299000, 'active', 780, 52, DATEADD(day, -30, SYSDATETIME())),
+(83, 41, N'Đồng Hồ Nữ Square Lady', N'Đồng hồ nữ mặt vuông, phong cách vintage. Có lịch ngày. Dây da xinh xắn. Cute!', 999000, NULL, 'active', 560, 34, DATEADD(day, -22, SYSDATETIME())),
+(84, 42, N'Kính Mát Nam Aviator Classic', N'Kính mát nam aviator huyền thoại, gọng kim loại. Tròng gradient UV400. Mặc là ngầu!', 899000, 799000, 'active', 720, 42, DATEADD(day, -25, SYSDATETIME())),
+(85, 42, N'Kính Mát Nam Square Bold', N'Kính mát nam vuông bold, gọng nhựa to. Phong cách Y2K. Hot trend!', 699000, NULL, 'active', 640, 38, DATEADD(day, -18, SYSDATETIME())),
+(86, 42, N'Kính Mát Nữ Cat Eye', N'Kính mát nữ cat eye, kiểu mèo cute. Gọng vành nhỏ, nữ tính. Tặng kèm cho bạn thân cực phù hợp!', 549000, 479000, 'active', 1100, 76, DATEADD(day, -15, SYSDATETIME())),
+(87, 42, N'Kính Mát Nữ Round Vintage', N'Kính mát nữ round vintage, kiểu John Lennon. Gọng tròn đầy đủ. Phong cách retro cực cool!', 649000, NULL, 'active', 880, 54, DATEADD(day, -20, SYSDATETIME())),
+(88, 43, N'Mũ Lưỡi Trai Nam Snapback', N'Mũ snapback nam, snapback cổ điển. Chất nỉ bông dày dặn. Phong cách streetwear. Cực ngầu!', 299000, 249000, 'active', 860, 58, DATEADD(day, -15, SYSDATETIME())),
+(89, 43, N'Mũ Bucket Nữ Summer Hat', N'Mũ bucket nữ mùa hè, vành rộng chống nắng. Chất vải linen nhẹ. Đi biển must-have!', 349000, NULL, 'active', 720, 44, DATEADD(day, -10, SYSDATETIME())),
+(90, 43, N'Mũ Len Nam Beanie Classic', N'Mũ len beanie nam cổ điển, ấm áp mùa đông. Chất len merino mềm, không ngứa. Simple nhưng cool!', 249000, 199000, 'active', 640, 42, DATEADD(day, -20, SYSDATETIME())),
+(91, 43, N'Mũ Fedora Nữ Elegant', N'Mũ fedora nữ sang trọng, vành rộng. Chất nhung bông mềm. Đi dạo phố, chụp ảnh cực xinh!', 449000, NULL, 'active', 580, 31, DATEADD(day, -25, SYSDATETIME())),
+(92, 44, N'Khăn Lụa Nữ Silk Scarf', N'Khăn lụa nữ 90x90cm, lụa tơ tằm 100%. Hoa văn thiết kế độc quyền. Sang trọng, quý phái. Quà tặng cao cấp!', 599000, 499000, 'active', 480, 28, DATEADD(day, -30, SYSDATETIME())),
+(93, 44, N'Khăn Choàng Len Oversize', N'Khăn choàng len oversize, siêu to 200x70cm. Ấm áp mùa đông. Phong cách Hàn Quốc. Wrap around là hot!', 449000, NULL, 'active', 620, 39, DATEADD(day, -22, SYSDATETIME())),
+(94, 44, N'Khăn Bandana Nam Cowboy', N'Khăn bandana nam cowboy style, 55x55cm. Chất cotton thấm hút tốt. Đeo cổ, đeo đầu đều cool!', 149000, 129000, 'active', 540, 35, DATEADD(day, -12, SYSDATETIME())),
+(95, 44, N'Khăn Turban Nữ Stylish', N'Khăn turban nữ stylish, kiểu xếp nếp sang trọng. Chất voan nhẹ. Đội đi chơi, đi tiệc cực xinh!', 349000, 299000, 'active', 380, 22, DATEADD(day, -18, SYSDATETIME())),
+(96, 45, N'Áo Hoodie Nam Essentials Plain', N'Áo hoodie nam essentials plain, đơn giản mà chất. Chất nỉ bông fleece mềm mại, ấm áp. Có mũ trùm, túi kangaroo.', 649000, 549000, 'active', 1420, 89, DATEADD(day, -20, SYSDATETIME())),
+(97, 45, N'Áo Hoodie Nam Graphic Print', N'Áo hoodie nam graphic in hoa văn nổi bật. Phong cách streetwear, hypebeast. Cực ngầu!', 799000, NULL, 'active', 980, 56, DATEADD(day, -15, SYSDATETIME())),
+(98, 45, N'Áo Hoodie Nam Zipper Full', N'Áo hoodie nam zipper full (có zip), tiện lợi. Mặc mở như áo khoác, đóng như hoodie. 2-in-1!', 899000, 799000, 'active', 760, 44, DATEADD(day, -25, SYSDATETIME())),
+(99, 46, N'Áo Hoodie Nữ Cropped Essential', N'Áo hoodie cropped nữ, crop ngắn tôn dáng. Phong cách Y2K đang hot. Cute và trendy!', 499000, 399000, 'active', 1680, 112, DATEADD(day, -12, SYSDATETIME())),
+(100, 46, N'Áo Hoodie Nữ Oversize Love', N'Áo hoodie oversize nữ hình trái tim, siêu cute. Chất nỉ bông mềm, ấm áp. Gift cho bạn gái perfect!', 549000, NULL, 'active', 1240, 78, DATEADD(day, -18, SYSDATETIME()));
+INSERT INTO Products (ProductId, CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
+(101, 46, N'Áo Hoodie Nữ Zipper Lightweight', N'Áo hoodie nữ zipper nhẹ, phù hợp mùa thu. Chất french terry thoáng mát. Đi học, đi chơi đều OK.', 599000, 499000, 'active', 890, 52, DATEADD(day, -22, SYSDATETIME())),
+(102, 47, N'Áo Polo Nam Classic Pique', N'Áo polo nam classic pique, chất vải pique cotton thoáng mát. Phom dáng regular vừa vặn. Đi làm, chơi golf đều OK.', 499000, 399000, 'active', 860, 52, DATEADD(day, -25, SYSDATETIME())),
+(103, 47, N'Áo Polo Nam Slim Fit Dry', N'Áo polo nam slim fit, vải dry thấm hút nhanh. Công nghệ moisture-wicking. Dành cho sporty men!', 599000, NULL, 'active', 640, 38, DATEADD(day, -20, SYSDATETIME())),
+(104, 47, N'Áo Polo Nam Rugby Stripes', N'Áo polo rugby stripes nam, sọc vintage phong cách. Chất vải cotton twill bền đẹp. Retro cool!', 549000, 479000, 'active', 480, 27, DATEADD(day, -30, SYSDATETIME())),
+(105, 48, N'Áo Polo Nữ Relaxed Fit Classic', N'Áo polo nữ relaxed fit cổ điển, thoải mái. Chất pique cotton mềm mại. Phong cách sporty chic.', 449000, 379000, 'active', 720, 44, DATEADD(day, -18, SYSDATETIME())),
+(106, 48, N'Áo Polo Nữ Slim Stretch', N'Áo polo nữ slim stretch, ôm nhẹ body. Co giãn 4 chiều. Màu pastel dịu dàng. Cực kỳ xinh!', 499000, NULL, 'active', 580, 33, DATEADD(day, -22, SYSDATETIME())),
+(107, 48, N'Áo Polo Nữ Tennis Dress Style', N'Áo polo nữ tennis dress style, dáng đầm ngắn. Phong cách sporty nữ tính. Đi chơi, đi tennis đều xinh.', 599000, 499000, 'active', 420, 24, DATEADD(day, -15, SYSDATETIME())),
+(108, 20, N'Áo Phao Unisex Down 800FP', N'Áo phao lông vũ 800 fill power, siêu nhẹ, siêu ấm. Vải chống nước nhẹ. Phù hợp trekking, leo núi mùa đông. Unisex.', 2490000, 1990000, 'active', 540, 31, DATEADD(day, -7, SYSDATETIME())),
+(109, 20, N'Áo Phao Nữ Dáng Dài Elegant', N'Áo phao nữ dáng dài tới gối, thiết kế thanh lịch. Lớp lông vũ tổng hợp dày ấm. Mũ lông viền có thể tháo rời.', 1790000, NULL, 'active', 410, 22, DATEADD(day, -9, SYSDATETIME())),
+(110, 20, N'Áo Phao Nam Hooded Puffer', N'Áo phao nam puffer có mũ, chất liệu polyester chống gió. 3 lớp cách nhiệt. Phong cách thể thao trẻ trung.', 1590000, 1390000, 'active', 320, 18, DATEADD(day, -11, SYSDATETIME())),
+(111, 21, N'Áo Vest Nam Công Sở Classic', N'Áo vest nam công sở phong cách cổ điển, chất wool blend cao cấp. Form slim fit hiện đại. Đi kèm quần âu đồng bộ.', 1890000, 1690000, 'active', 720, 48, DATEADD(day, -14, SYSDATETIME())),
+(112, 21, N'Áo Vest Nữ Blazer Kẻ Caro', N'Áo vest nữ blazer họa tiết kẻ caro Hàn Quốc, dáng rộng. Có thể mặc đi làm hoặc đi chơi. Đường may tinh tế.', 1290000, NULL, 'active', 580, 36, DATEADD(day, -16, SYSDATETIME())),
+(113, 24, N'Quần Short Nam Kaki Chino', N'Quần short nam kaki phong cách Chino, ống suông. Chất cotton twill dày dặn. Có túi sau có nắp.', 449000, 369000, 'active', 880, 64, DATEADD(day, -8, SYSDATETIME())),
+(114, 24, N'Quần Short Nam Thể Thao Performance', N'Quần short nam thể thao công nghệ quick-dry, siêu co giãn. Lý tưởng cho gym, chạy bộ. Có dây rút.', 399000, NULL, 'active', 690, 42, DATEADD(day, -10, SYSDATETIME())),
+(115, 24, N'Quần Short Nam Denim Vintage', N'Quần short nam denim wash vintage, xanh nhạt. Phong cách streetwear. Form regular vừa vặn.', 499000, 419000, 'active', 510, 27, DATEADD(day, -13, SYSDATETIME())),
+(116, 25, N'Quần Short Nữ Cạp Cao Denim', N'Quần short nữ cạp cao denim, ôm dáng. Chất vải jeans co giãn nhẹ. Ống ngắn trên gối.', 399000, 339000, 'active', 760, 51, DATEADD(day, -8, SYSDATETIME())),
+(117, 25, N'Quần Short Nữ Vải Linen Mùa Hè', N'Quần short nữ vải linen thoáng mát, lý tưởng mùa hè. Tone pastel nhẹ nhàng. Phối áo thun, áo sơ mi đều đẹp.', 349000, NULL, 'active', 620, 38, DATEADD(day, -12, SYSDATETIME())),
+(118, 26, N'Quần Baggy Nữ Kaki Cargo', N'Quần baggy nữ kaki cargo phong cách Hàn Quốc, nhiều túi hộp. Form rộng, dài chạm mắt cá. Có dây rút eo.', 599000, 499000, 'active', 920, 73, DATEADD(day, -6, SYSDATETIME())),
+(119, 26, N'Quần Baggy Nữ Jeans Oversize', N'Quần baggy nữ jeans oversize, wash xanh nhạt. Phong cách Y2K, phối với áo croptop hoặc áo thun oversized.', 549000, NULL, 'active', 830, 58, DATEADD(day, -9, SYSDATETIME())),
+(120, 27, N'Váy Ngắn Tennis Pleated', N'Chân váy tennis ngắn xếp ly, phong cách preppy. Chất vải polyester chống nhăn. Có quần bảo hộ bên trong.', 449000, 379000, 'active', 1080, 92, DATEADD(day, -5, SYSDATETIME())),
+(121, 27, N'Váy Ngắn Denim Button Front', N'Váy ngắn denim hàng nút phía trước, wash xanh nhạt. Form A-line, dài trên gối. Phong cách trẻ trung.', 399000, NULL, 'active', 870, 67, DATEADD(day, -7, SYSDATETIME())),
+(122, 27, N'Váy Ngắn Xếp Tầng Hoa Nhí', N'Váy ngắn xếp tầng họa tiết hoa nhí vintage. Chất vải chiffon nhẹ, bay. Tone be ấm áp.', 479000, 399000, 'active', 690, 48, DATEADD(day, -11, SYSDATETIME())),
+(123, 28, N'Váy Dài Midi Lụa Sang Trọng', N'Chân váy midi lụa cao cấp, dáng chữ A. Mềm mại, rủ nhẹ tự nhiên. Tone ngà và be. Đi tiệc hoặc công sở đều đẹp.', 699000, 599000, 'active', 540, 36, DATEADD(day, -10, SYSDATETIME())),
+(124, 28, N'Váy Dài Xếp Ly Vintage', N'Chân váy dài xếp ly nhỏ phong cách vintage. Chất cotton pha. Tone nâu đất ấm cúng.', 599000, NULL, 'active', 470, 29, DATEADD(day, -14, SYSDATETIME())),
+(125, 29, N'Chân Váy Công Sở Bút Chì', N'Chân váy công sở dáng bút chì ôm dáng, dài qua gối. Chất vải dày dặn không nhăn. Có lớp lót bên trong.', 549000, 459000, 'active', 920, 71, DATEADD(day, -8, SYSDATETIME()));
+INSERT INTO Products (ProductId, CategoryId, Name, Description, BasePrice, DiscountPrice, Status, ViewCount, SoldCount, CreatedAt) VALUES
+(126, 29, N'Chân Váy Tennis Trắng Basic', N'Chân váy tennis ngắn trắng basic. Chất vải thể thao co giãn 4 chiều. Phù hợp đi chơi, picnic.', 399000, NULL, 'active', 810, 64, DATEADD(day, -10, SYSDATETIME())),
+(127, 29, N'Chân Váy Jean Wash Light', N'Chân váy jean wash nhạt, dáng A. Có xẻ tà sau. Form regular fit, dài ngang gối.', 479000, 399000, 'active', 660, 41, DATEADD(day, -13, SYSDATETIME())),
+(128, 31, N'Đầm Dài Maxi Hoa Bohemian', N'Đầm maxi dài chấm gót, họa tiết hoa bohemian. Chất vải viscose mềm mại. Tay lửng, eo chiết nhẹ.', 899000, 749000, 'active', 720, 53, DATEADD(day, -7, SYSDATETIME())),
+(129, 31, N'Đầm Dài Lụa Đỏ Tiệc Tối', N'Đầm dài lụa đỏ dự tiệc, dáng ôm body. Tone đỏ rượu vang quyến rũ. Đường cut-out lưng tinh tế.', 1490000, NULL, 'active', 540, 32, DATEADD(day, -12, SYSDATETIME())),
+(130, 32, N'Đầm Công Sở Đen Basic', N'Đầm công sở đen basic, dáng suông. Chất vải dày dặn không nhăn. Cổ tròn, tay ngắn. Dài qua gối.', 699000, 599000, 'active', 980, 78, DATEADD(day, -6, SYSDATETIME())),
+(131, 32, N'Đầm Công Sở Be Kẻ Sọc', N'Đầm công sở be kẻ sọc dọc. Chất vải wool blend. Thiết kế thanh lịch, phù hợp dự họp, thuyết trình.', 799000, NULL, 'active', 720, 49, DATEADD(day, -9, SYSDATETIME())),
+(132, 32, N'Đầm Công Sở Xanh Navy Tay Dài', N'Đầm công sở xanh navy tay dài, cổ cao. Dáng ôm nhẹ, dài qua gối. Tone navy sang trọng, dễ phối phụ kiện.', 849000, 729000, 'active', 610, 42, DATEADD(day, -13, SYSDATETIME())),
+(133, 33, N'Giày Sneaker Trắng Minimalist', N'Giày sneaker trắng minimalist phong cách Hàn Quốc. Đế cao su êm, chất da tổng hợp dễ vệ sinh. Unisex.', 990000, 799000, 'active', 1240, 105, DATEADD(day, -5, SYSDATETIME())),
+(134, 33, N'Giày Running Nam Công Nghệ Cao', N'Giày chạy bộ nam đế foam nhẹ, hỗ trợ vòm. Công nghệ đệm khí. Phù hợp marathon, gym.', 1490000, 1290000, 'active', 880, 64, DATEADD(day, -8, SYSDATETIME())),
+(135, 34, N'Giày Tây Nam Da Bò Cao Cấp', N'Giày tây nam da bò thật 100%, đánh bóng tay. Đế da may đôi, bền chắc. Phù hợp vest, sơ mi công sở.', 1890000, 1590000, 'active', 540, 36, DATEADD(day, -10, SYSDATETIME())),
+(136, 34, N'Giày Loafer Nữ Da Mềm', N'Giày loafer nữ da bò mềm, đế thấp. Tone nâu và be. Phối với váy công sở, quần jeans đều đẹp.', 1290000, NULL, 'active', 480, 31, DATEADD(day, -13, SYSDATETIME())),
+(137, 35, N'Sandal Đế Bệt Quai Vải', N'Sandal đế bệt quai vải canvas bện. Tone nâu đất, basic. Phù hợp mùa hè, đi biển, picnic.', 299000, 239000, 'active', 720, 53, DATEADD(day, -7, SYSDATETIME())),
+(138, 36, N'Giày Cao Gót Mũi Nhọn 7cm', N'Giày cao gót nữ mũi nhọn 7cm. Da bò tổng hợp. Tone đen, be, nude. Đi tiệc, công sở.', 799000, 679000, 'active', 870, 68, DATEADD(day, -8, SYSDATETIME())),
+(139, 36, N'Giày Cao Gót Quai Mảnh 5cm', N'Giày cao gót nữ quai mảnh 5cm. Form kitten heel. Tone pastel dịu dàng. Dễ đi, êm chân.', 699000, NULL, 'active', 690, 49, DATEADD(day, -11, SYSDATETIME())),
+(140, 37, N'Balo Laptop Chống Nước', N'Balo laptop 15 inch, chất liệu polyester chống nước. Ngăn laptop riêng, nhiều ngăn phụ. Cổng USB sạc.', 799000, 649000, 'active', 1180, 92, DATEADD(day, -5, SYSDATETIME())),
+(141, 37, N'Balo Mini Da Pu Basic', N'Balo mini da PU basic. Form nhỏ gọn, dây đeo điều chỉnh được. Tone đen, be. Phù hợp đi học, đi chơi.', 549000, NULL, 'active', 920, 71, DATEADD(day, -9, SYSDATETIME())),
+(142, 38, N'Túi Đeo Chéo Canvas Vintage', N'Túi đeo chéo canvas vintage, khóa kéo YKK. Ngăn chính + ngăn phụ. Tone xanh rêu, nâu đất.', 449000, 379000, 'active', 640, 42, DATEADD(day, -10, SYSDATETIME())),
+(143, 41, N'Ví Nam Da Bò Ngang Gấp', N'Ví nam da bò thật, gấp ngang. Nhiều ngăn đựng thẻ, ngăn đựng tiền mặt. Tone đen, nâu. May viền tỉ mỉ.', 549000, NULL, 'active', 580, 38, DATEADD(day, -11, SYSDATETIME())),
+(144, 42, N'Đồng Hồ Unisex Mặt Tròn Minimalist', N'Đồng hồ unisex mặt tròn minimalist, dây da. Kính cứng chống xước. Chống nước 30m. Tone vàng, đen.', 899000, 749000, 'active', 920, 67, DATEADD(day, -7, SYSDATETIME())),
+(145, 43, N'Kính Mát Aviator UV400', N'Kính mát aviator UV400, gọng kim loại vàng. Tròng kính polarised chống chói. Unisex. Đi kèm hộp và khăn lau.', 699000, NULL, 'active', 720, 51, DATEADD(day, -10, SYSDATETIME())),
+(146, 44, N'Mũ Lưỡi Trai Unisex Basic', N'Mũ lưỡi trai unisex basic, chất cotton canvas dày dặn. Có khóa điều chỉnh phía sau. Tone đen, be, xanh rêu.', 249000, 199000, 'active', 870, 64, DATEADD(day, -8, SYSDATETIME())),
+(147, 45, N'Khăn Len Cashmere Mùa Đông', N'Khăn quàng cổ len cashmere pha, mềm mại, giữ ấm tốt. Kích thước lớn 180x30cm. Tone be, xám, đỏ rượu vang.', 399000, NULL, 'active', 540, 38, DATEADD(day, -12, SYSDATETIME()));
+SET IDENTITY_INSERT Products OFF;
+GO
 
 /* ============================================================
-   4C. VARIANTS + IMAGES CHO 40 SẢN PHẨM MỚI (ID 108 → 147)
-   Mỗi sản phẩm có 4–10 variants và 2–4 ảnh.
+   5. PRODUCT VARIANTS
    ============================================================ */
-
-/* --- 108-110: Áo phao --- */
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(108, 'M', 'Đen', 18, 'AP-DN-800-M-DEN'), (108, 'L', 'Đen', 22, 'AP-DN-800-L-DEN'), (108, 'XL', 'Đen', 15, 'AP-DN-800-XL-DEN'),
-(108, 'M', 'Xanh Navy', 16, 'AP-DN-800-M-NAV'), (108, 'L', 'Xanh Navy', 20, 'AP-DN-800-L-NAV'),
-(109, 'S', 'Be', 12, 'APNU-EL-S-BE'), (109, 'M', 'Be', 18, 'APNU-EL-M-BE'), (109, 'L', 'Be', 14, 'APNU-EL-L-BE'), (109, 'S', 'Đen', 10, 'APNU-EL-S-DEN'), (109, 'M', 'Đen', 16, 'APNU-EL-M-DEN'),
-(110, 'M', 'Đen', 20, 'APN-HD-M-DEN'), (110, 'L', 'Đen', 24, 'APN-HD-L-DEN'), (110, 'XL', 'Đen', 18, 'APN-HD-XL-DEN'), (110, 'M', 'Xám', 16, 'APN-HD-M-GRA'), (110, 'L', 'Xám', 20, 'APN-HD-L-GRA');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(108, 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&q=80&fit=crop', 1), (108, 'https://images.unsplash.com/photo-1548883354-94bcfe321cbb?w=600&q=80&fit=crop', 0), (108, 'https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?w=600&q=80&fit=crop', 0),
-(109, 'https://images.unsplash.com/photo-1544022613-e0ca75dff7d5?w=600&q=80&fit=crop', 1), (109, 'https://images.unsplash.com/photo-1578582928712-3b9b3b2c9b5e?w=600&q=80&fit=crop', 0),
-(110, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80&fit=crop', 1), (110, 'https://images.unsplash.com/photo-1605908502724-9093a79a1b39?w=600&q=80&fit=crop', 0);
-
-/* --- 111-112: Áo vest --- */
+(1, 'S', N'Đen', 25, 'ATN-CT-B-S-DEN'),
+(1, 'M', N'Đen', 40, 'ATN-CT-B-M-DEN'),
+(1, 'L', N'Đen', 35, 'ATN-CT-B-L-DEN'),
+(1, 'XL', N'Đen', 20, 'ATN-CT-B-XL-DEN'),
+(1, 'S', N'Trắng', 30, 'ATN-CT-B-S-TRA'),
+(1, 'M', N'Trắng', 45, 'ATN-CT-B-M-TRA'),
+(1, 'L', N'Trắng', 40, 'ATN-CT-B-L-TRA'),
+(1, 'XL', N'Trắng', 25, 'ATN-CT-B-XL-TRA'),
+(1, 'S', N'Xám', 20, 'ATN-CT-B-S-XAM'),
+(1, 'M', N'Xám', 30, 'ATN-CT-B-M-XAM'),
+(1, 'L', N'Xám', 25, 'ATN-CT-B-L-XAM'),
+(1, 'XL', N'Xám', 15, 'ATN-CT-B-XL-XAM'),
+(2, 'S', N'Đen', 20, 'ATN-CV-OS-S-DEN'),
+(2, 'M', N'Đen', 35, 'ATN-CV-OS-M-DEN'),
+(2, 'L', N'Đen', 30, 'ATN-CV-OS-L-DEN'),
+(2, 'XL', N'Đen', 25, 'ATN-CV-OS-XL-DEN'),
+(2, 'XXL', N'Đen', 15, 'ATN-CV-OS-XXL-DEN'),
+(2, 'M', N'Xanh Navy', 30, 'ATN-CV-OS-M-NVY'),
+(2, 'L', N'Xanh Navy', 25, 'ATN-CV-OS-L-NVY'),
+(2, 'XL', N'Xanh Navy', 20, 'ATN-CV-OS-XL-NVY'),
+(2, 'M', N'Be', 25, 'ATN-CV-OS-M-BE'),
+(2, 'L', N'Be', 20, 'ATN-CV-OS-L-BE'),
+(3, 'S', N'Đen', 15, 'ATN-TD-GR-S-DEN'),
+(3, 'M', N'Đen', 25, 'ATN-TD-GR-M-DEN'),
+(3, 'L', N'Đen', 20, 'ATN-TD-GR-L-DEN'),
+(3, 'XL', N'Đen', 10, 'ATN-TD-GR-XL-DEN'),
+(3, 'S', N'Trắng', 10, 'ATN-TD-GR-S-TRA'),
+(3, 'M', N'Trắng', 20, 'ATN-TD-GR-M-TRA'),
+(3, 'L', N'Trắng', 15, 'ATN-TD-GR-L-TRA'),
+(4, 'S', N'Trắng', 35, 'ATNU-CT-MI-S-TRA'),
+(4, 'M', N'Trắng', 50, 'ATNU-CT-MI-M-TRA'),
+(4, 'L', N'Trắng', 40, 'ATNU-CT-MI-L-TRA'),
+(4, 'XL', N'Trắng', 25, 'ATNU-CT-MI-XL-TRA'),
+(4, 'S', N'Đen', 30, 'ATNU-CT-MI-S-DEN'),
+(4, 'M', N'Đen', 45, 'ATNU-CT-MI-M-DEN'),
+(4, 'L', N'Đen', 35, 'ATNU-CT-MI-L-DEN'),
+(4, 'XL', N'Đen', 20, 'ATNU-CT-MI-XL-DEN'),
+(4, 'S', N'Hồng', 20, 'ATNU-CT-MI-S-HNG'),
+(4, 'M', N'Hồng', 30, 'ATNU-CT-MI-M-HNG'),
+(4, 'L', N'Hồng', 25, 'ATNU-CT-MI-L-HNG'),
+(4, 'S', N'Xanh Mint', 15, 'ATNU-CT-MI-S-MNT'),
+(4, 'M', N'Xanh Mint', 25, 'ATNU-CT-MI-M-MNT'),
+(4, 'L', N'Xanh Mint', 20, 'ATNU-CT-MI-L-MNT'),
+(5, 'S', N'Đen', 25, 'ATNU-OS-S-DEN'),
+(5, 'M', N'Đen', 40, 'ATNU-OS-M-DEN'),
+(5, 'L', N'Đen', 35, 'ATNU-OS-L-DEN'),
+(5, 'XL', N'Đen', 20, 'ATNU-OS-XL-DEN'),
+(5, 'S', N'Trắng', 30, 'ATNU-OS-S-TRA'),
+(5, 'M', N'Trắng', 45, 'ATNU-OS-M-TRA'),
+(5, 'L', N'Trắng', 40, 'ATNU-OS-L-TRA');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(111, 'M', 'Đen', 14, 'AVN-CL-M-DEN'), (111, 'L', 'Đen', 18, 'AVN-CL-L-DEN'), (111, 'XL', 'Đen', 12, 'AVN-CL-XL-DEN'),
-(111, 'M', 'Xanh Navy', 10, 'AVN-CL-M-NAV'), (111, 'L', 'Xanh Navy', 14, 'AVN-CL-L-NAV'),
-(112, 'S', 'Be Caro', 12, 'AVNU-BC-S-BC'), (112, 'M', 'Be Caro', 18, 'AVNU-BC-M-BC'), (112, 'L', 'Be Caro', 14, 'AVNU-BC-L-BC'), (112, 'S', 'Xám Caro', 10, 'AVNU-BC-S-GC');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(111, 'https://images.unsplash.com/photo-1507679799987-c53779524cc8?w=600&q=80&fit=crop', 1), (111, 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80&fit=crop', 0),
-(112, 'https://images.unsplash.com/photo-1551489186-cf8726f514f8?w=600&q=80&fit=crop', 1), (112, 'https://images.unsplash.com/photo-1572804013309-a59a8d4f7af4?w=600&q=80&fit=crop', 0);
-
-/* --- 113-115: Quần short nam --- */
+(5, 'XL', N'Trắng', 25, 'ATNU-OS-XL-TRA'),
+(5, 'M', N'Be', 30, 'ATNU-OS-M-BE'),
+(5, 'L', N'Be', 25, 'ATNU-OS-L-BE'),
+(5, 'XL', N'Be', 15, 'ATNU-OS-XL-BE'),
+(5, 'M', N'Xám', 20, 'ATNU-OS-M-XAM'),
+(5, 'L', N'Xám', 15, 'ATNU-OS-L-XAM'),
+(6, 'S', N'Đen', 40, 'ATNU-CT-S-DEN'),
+(6, 'M', N'Đen', 60, 'ATNU-CT-M-DEN'),
+(6, 'L', N'Đen', 50, 'ATNU-CT-L-DEN'),
+(6, 'S', N'Trắng', 35, 'ATNU-CT-S-TRA'),
+(6, 'M', N'Trắng', 55, 'ATNU-CT-M-TRA'),
+(6, 'L', N'Trắng', 45, 'ATNU-CT-L-TRA'),
+(6, 'S', N'Hồng', 25, 'ATNU-CT-S-HNG'),
+(6, 'M', N'Hồng', 40, 'ATNU-CT-M-HNG'),
+(6, 'L', N'Hồng', 30, 'ATNU-CT-L-HNG'),
+(6, 'M', N'Xanh', 30, 'ATNU-CT-M-XAN'),
+(6, 'L', N'Xanh', 25, 'ATNU-CT-L-XAN'),
+(7, 'S', N'Trắng', 20, 'ASM-DT-S-TRANG'),
+(7, 'M', N'Trắng', 30, 'ASM-DT-M-TRANG'),
+(7, 'L', N'Trắng', 25, 'ASM-DT-L-TRANG'),
+(7, 'XL', N'Trắng', 15, 'ASM-DT-XL-TRANG'),
+(7, 'S', N'Xanh Nhạt', 15, 'ASM-DT-S-XANHNH'),
+(7, 'M', N'Xanh Nhạt', 25, 'ASM-DT-M-XANHNH'),
+(7, 'L', N'Xanh Nhạt', 20, 'ASM-DT-L-XANHNH'),
+(7, 'XL', N'Xanh Nhạt', 10, 'ASM-DT-XL-XANHNH'),
+(7, 'M', N'Hồng', 20, 'ASM-DT-M-HONG'),
+(7, 'L', N'Hồng', 15, 'ASM-DT-L-HONG'),
+(8, 'S', N'Trắng', 25, 'ASM-NT-S-TRANG'),
+(8, 'M', N'Trắng', 35, 'ASM-NT-M-TRANG'),
+(8, 'L', N'Trắng', 30, 'ASM-NT-L-TRANG'),
+(8, 'XL', N'Trắng', 20, 'ASM-NT-XL-TRANG'),
+(8, 'S', N'Xanh', 20, 'ASM-NT-S-XANH'),
+(8, 'M', N'Xanh', 30, 'ASM-NT-M-XANH'),
+(8, 'L', N'Xanh', 25, 'ASM-NT-L-XANH'),
+(8, 'M', N'Đỏ', 20, 'ASM-NT-M-DO'),
+(8, 'L', N'Đỏ', 15, 'ASM-NT-L-DO'),
+(9, 'S', N'Trắng', 15, 'ASM-SF-S-TRANG'),
+(9, 'M', N'Trắng', 25, 'ASM-SF-M-TRANG'),
+(9, 'L', N'Trắng', 20, 'ASM-SF-L-TRANG'),
+(9, 'XL', N'Trắng', 12, 'ASM-SF-XL-TRANG'),
+(9, 'S', N'Đen', 10, 'ASM-SF-S-DEN'),
+(9, 'M', N'Đen', 20, 'ASM-SF-M-DEN'),
+(9, 'L', N'Đen', 15, 'ASM-SF-L-DEN'),
+(9, 'M', N'Xanh Navy', 18, 'ASM-SF-M-NVY'),
+(9, 'L', N'Xanh Navy', 12, 'ASM-SF-L-NVY'),
+(10, 'S', N'Trắng', 18, 'ASN-DT-S-TRANG'),
+(10, 'M', N'Trắng', 25, 'ASN-DT-M-TRANG'),
+(10, 'L', N'Trắng', 20, 'ASN-DT-L-TRANG'),
+(10, 'XL', N'Trắng', 12, 'ASN-DT-XL-TRANG'),
+(10, 'S', N'Kem', 15, 'ASN-DT-S-KEM');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(113, '30', 'Be', 25, 'QSN-CH-30-BE'), (113, '32', 'Be', 32, 'QSN-CH-32-BE'), (113, '34', 'Be', 28, 'QSN-CH-34-BE'), (113, '32', 'Xanh Navy', 22, 'QSN-CH-32-NAV'), (113, '34', 'Xanh Navy', 18, 'QSN-CH-34-NAV'),
-(114, 'M', 'Đen', 30, 'QSN-PF-M-DEN'), (114, 'L', 'Đen', 38, 'QSN-PF-L-DEN'), (114, 'XL', 'Đen', 26, 'QSN-PF-XL-DEN'), (114, 'M', 'Xám', 24, 'QSN-PF-M-GRA'),
-(115, '30', 'Xanh Nhạt', 20, 'QSN-DV-30-XN'), (115, '32', 'Xanh Nhạt', 28, 'QSN-DV-32-XN'), (115, '34', 'Xanh Nhạt', 22, 'QSN-DV-34-XN'), (115, '30', 'Xanh Đậm', 16, 'QSN-DV-30-XD');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(113, 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&q=80&fit=crop', 1), (113, 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=600&q=80&fit=crop', 0),
-(114, 'https://images.unsplash.com/photo-1565693413579-8a73ce8d8a4f?w=600&q=80&fit=crop', 1), (114, 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80&fit=crop', 0),
-(115, 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&q=80&fit=crop', 1), (115, 'https://images.unsplash.com/photo-1604176354204-9268737828e4?w=600&q=80&fit=crop', 0);
-
-/* --- 116-117: Quần short nữ --- */
+(10, 'M', N'Kem', 22, 'ASN-DT-M-KEM'),
+(10, 'L', N'Kem', 18, 'ASN-DT-L-KEM'),
+(10, 'M', N'Đen', 20, 'ASN-DT-M-DEN'),
+(10, 'L', N'Đen', 15, 'ASN-DT-L-DEN'),
+(11, 'S', N'Caro Đỏ', 22, 'ASN-NT-S-CAROD'),
+(11, 'M', N'Caro Đỏ', 35, 'ASN-NT-M-CAROD'),
+(11, 'L', N'Caro Đỏ', 28, 'ASN-NT-L-CAROD'),
+(11, 'S', N'Caro Xanh', 18, 'ASN-NT-S-CAROX'),
+(11, 'M', N'Caro Xanh', 30, 'ASN-NT-M-CAROX'),
+(11, 'L', N'Caro Xanh', 24, 'ASN-NT-L-CAROX'),
+(11, 'S', N'Caro Đen', 20, 'ASN-NT-S-CARODEN'),
+(11, 'M', N'Caro Đen', 32, 'ASN-NT-M-CARODEN'),
+(11, 'L', N'Caro Đen', 25, 'ASN-NT-L-CARODEN'),
+(12, 'S', N'Xanh Đậm', 15, 'AKN-JEANS-S-XD'),
+(12, 'M', N'Xanh Đậm', 25, 'AKN-JEANS-M-XD'),
+(12, 'L', N'Xanh Đậm', 20, 'AKN-JEANS-L-XD'),
+(12, 'XL', N'Xanh Đậm', 12, 'AKN-JEANS-XL-XD'),
+(12, 'S', N'Xanh Nhạt', 12, 'AKN-JEANS-S-XN'),
+(12, 'M', N'Xanh Nhạt', 20, 'AKN-JEANS-M-XN'),
+(12, 'L', N'Xanh Nhạt', 18, 'AKN-JEANS-L-XN'),
+(12, 'XL', N'Xanh Nhạt', 10, 'AKN-JEANS-XL-XN'),
+(13, '28', N'Xanh Đậm', 20, 'QJN-SF-28-XD'),
+(13, '29', N'Xanh Đậm', 28, 'QJN-SF-29-XD'),
+(13, '30', N'Xanh Đậm', 35, 'QJN-SF-30-XD'),
+(13, '31', N'Xanh Đậm', 32, 'QJN-SF-31-XD'),
+(13, '32', N'Xanh Đậm', 30, 'QJN-SF-32-XD'),
+(13, '33', N'Xanh Đậm', 22, 'QJN-SF-33-XD'),
+(13, '34', N'Xanh Đậm', 15, 'QJN-SF-34-XD'),
+(13, '28', N'Xanh Nhạt', 18, 'QJN-SF-28-XN'),
+(13, '29', N'Xanh Nhạt', 25, 'QJN-SF-29-XN'),
+(13, '30', N'Xanh Nhạt', 30, 'QJN-SF-30-XN'),
+(13, '31', N'Xanh Nhạt', 28, 'QJN-SF-31-XN'),
+(13, '32', N'Xanh Nhạt', 25, 'QJN-SF-32-XN'),
+(13, '33', N'Xanh Nhạt', 18, 'QJN-SF-33-XN'),
+(13, 'L', N'Hồng', 20, 'DNU-BC-L-HNG'),
+(14, '25', N'Xanh Đậm', 25, 'QJNU-SK-25-XD'),
+(14, '26', N'Xanh Đậm', 35, 'QJNU-SK-26-XD'),
+(14, '27', N'Xanh Đậm', 40, 'QJNU-SK-27-XD'),
+(14, '28', N'Xanh Đậm', 38, 'QJNU-SK-28-XD'),
+(14, '29', N'Xanh Đậm', 30, 'QJNU-SK-29-XD'),
+(14, '30', N'Xanh Đậm', 22, 'QJNU-SK-30-XD'),
+(14, '25', N'Đen', 22, 'QJNU-SK-25-DEN'),
+(14, '26', N'Đen', 30, 'QJNU-SK-26-DEN'),
+(14, '27', N'Đen', 35, 'QJNU-SK-27-DEN'),
+(14, '28', N'Đen', 32, 'QJNU-SK-28-DEN'),
+(14, '29', N'Đen', 25, 'QJNU-SK-29-DEN'),
+(14, '30', N'Đen', 18, 'QJNU-SK-30-DEN'),
+(14, '26', N'Xám', 20, 'QJNU-SK-26-XAM'),
+(14, '27', N'Xám', 28, 'QJNU-SK-27-XAM'),
+(14, '28', N'Xám', 25, 'QJNU-SK-28-XAM');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(116, 'S', 'Xanh Nhạt', 22, 'QSNU-CH-S-XN'), (116, 'M', 'Xanh Nhạt', 30, 'QSNU-CH-M-XN'), (116, 'L', 'Xanh Nhạt', 24, 'QSNU-CH-L-XN'), (116, 'M', 'Đen', 18, 'QSNU-CH-M-DEN'),
-(117, 'S', 'Trắng', 20, 'QSNU-LI-S-TRA'), (117, 'M', 'Trắng', 28, 'QSNU-LI-M-TRA'), (117, 'L', 'Trắng', 22, 'QSNU-LI-L-TRA'), (117, 'M', 'Be', 18, 'QSNU-LI-M-BE');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(116, 'https://images.unsplash.com/photo-1582142306909-195724d33ffc?w=600&q=80&fit=crop', 1), (116, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80&fit=crop', 0),
-(117, 'https://images.unsplash.com/photo-1583496661160-fb5886a13d28?w=600&q=80&fit=crop', 1), (117, 'https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=600&q=80&fit=crop', 0);
-
-/* --- 118-119: Quần baggy nữ --- */
+(15, 'S', N'Caro Đen', 30, 'QBNU-BG-S-CAROD'),
+(15, 'M', N'Caro Đen', 45, 'QBNU-BG-M-CAROD'),
+(15, 'L', N'Caro Đen', 40, 'QBNU-BG-L-CAROD'),
+(15, 'XL', N'Caro Đen', 25, 'QBNU-BG-XL-CAROD'),
+(15, 'S', N'Caro Xanh', 25, 'QBNU-BG-S-CAROX'),
+(15, 'M', N'Caro Xanh', 40, 'QBNU-BG-M-CAROX'),
+(15, 'L', N'Caro Xanh', 35, 'QBNU-BG-L-CAROX'),
+(15, 'XL', N'Caro Xanh', 20, 'QBNU-BG-XL-CAROX'),
+(15, 'S', N'Caro Hồng', 20, 'QBNU-BG-S-CAROH'),
+(15, 'M', N'Caro Hồng', 32, 'QBNU-BG-M-CAROH'),
+(15, 'L', N'Caro Hồng', 28, 'QBNU-BG-L-CAROH'),
+(16, 'S', N'Đen', 28, 'DNU-BC-S-DEN'),
+(16, 'M', N'Đen', 40, 'DNU-BC-M-DEN'),
+(16, 'L', N'Đen', 32, 'DNU-BC-L-DEN'),
+(16, 'XL', N'Đen', 18, 'DNU-BC-XL-DEN'),
+(16, 'S', N'Đỏ', 22, 'DNU-BC-S-DO'),
+(16, 'M', N'Đỏ', 35, 'DNU-BC-M-DO'),
+(16, 'L', N'Đỏ', 28, 'DNU-BC-L-DO'),
+(16, 'XL', N'Đỏ', 15, 'DNU-BC-XL-DO'),
+(16, 'S', N'Xanh Navy', 18, 'DNU-BC-S-NVY'),
+(16, 'M', N'Xanh Navy', 30, 'DNU-BC-M-NVY'),
+(16, 'L', N'Xanh Navy', 24, 'DNU-BC-L-NVY'),
+(16, 'S', N'Hồng', 15, 'DNU-BC-S-HNG'),
+(16, 'M', N'Hồng', 25, 'DNU-BC-M-HNG'),
+(17, '39', N'Trắng', 15, 'GTN-CW-39-TRA'),
+(17, '40', N'Trắng', 25, 'GTN-CW-40-TRA'),
+(17, '41', N'Trắng', 30, 'GTN-CW-41-TRA'),
+(17, '42', N'Trắng', 35, 'GTN-CW-42-TRA'),
+(17, '43', N'Trắng', 28, 'GTN-CW-43-TRA'),
+(17, '44', N'Trắng', 20, 'GTN-CW-44-TRA'),
+(17, '40', N'Đen', 20, 'GTN-CW-40-DEN'),
+(17, '41', N'Đen', 28, 'GTN-CW-41-DEN'),
+(17, '42', N'Đen', 32, 'GTN-CW-42-DEN'),
+(17, '43', N'Đen', 25, 'GTN-CW-43-DEN'),
+(17, '44', N'Đen', 18, 'GTN-CW-44-DEN'),
+(18, '35', N'Trắng', 18, 'GTNU-PL-35-TRA'),
+(18, '36', N'Trắng', 30, 'GTNU-PL-36-TRA'),
+(18, '37', N'Trắng', 40, 'GTNU-PL-37-TRA'),
+(18, '38', N'Trắng', 38, 'GTNU-PL-38-TRA'),
+(18, '39', N'Trắng', 28, 'GTNU-PL-39-TRA'),
+(18, '35', N'Đen', 15, 'GTNU-PL-35-DEN'),
+(18, '36', N'Đen', 25, 'GTNU-PL-36-DEN'),
+(18, '37', N'Đen', 35, 'GTNU-PL-37-DEN'),
+(18, '38', N'Đen', 32, 'GTNU-PL-38-DEN'),
+(18, '39', N'Đen', 22, 'GTNU-PL-39-DEN'),
+(18, '36', N'Hồng', 20, 'GTNU-PL-36-HNG'),
+(18, '37', N'Hồng', 30, 'GTNU-PL-37-HNG'),
+(18, '38', N'Hồng', 28, 'GTNU-PL-38-HNG'),
+(19, 'S', N'Đen', 25, 'AHN-ES-S-DEN'),
+(19, 'M', N'Đen', 40, 'AHN-ES-M-DEN');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(118, 'S', 'Be', 22, 'QBNU-CG-S-BE'), (118, 'M', 'Be', 30, 'QBNU-CG-M-BE'), (118, 'L', 'Be', 24, 'QBNU-CG-L-BE'), (118, 'M', 'Xanh Olive', 18, 'QBNU-CG-M-OLV'),
-(119, 'S', 'Xanh Nhạt', 20, 'QBNU-OS-S-XN'), (119, 'M', 'Xanh Nhạt', 28, 'QBNU-OS-M-XN'), (119, 'L', 'Xanh Nhạt', 22, 'QBNU-OS-L-XN'), (119, 'M', 'Xanh Đậm', 16, 'QBNU-OS-M-XD');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(118, 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&q=80&fit=crop', 1), (118, 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&q=80&fit=crop', 0),
-(119, 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&q=80&fit=crop', 1), (119, 'https://images.unsplash.com/photo-1604176354204-9268737828e4?w=600&q=80&fit=crop', 0);
-
-/* --- 120-122: Váy ngắn --- */
+(19, 'L', N'Đen', 35, 'AHN-ES-L-DEN'),
+(19, 'XL', N'Đen', 22, 'AHN-ES-XL-DEN'),
+(19, 'XXL', N'Đen', 12, 'AHN-ES-XXL-DEN'),
+(19, 'S', N'Xám', 20, 'AHN-ES-S-XAM'),
+(19, 'M', N'Xám', 35, 'AHN-ES-M-XAM'),
+(19, 'L', N'Xám', 30, 'AHN-ES-L-XAM'),
+(19, 'XL', N'Xám', 18, 'AHN-ES-XL-XAM'),
+(19, 'S', N'Navy', 18, 'AHN-ES-S-NVY'),
+(19, 'M', N'Navy', 30, 'AHN-ES-M-NVY'),
+(19, 'L', N'Navy', 25, 'AHN-ES-L-NVY'),
+(19, 'XL', N'Navy', 15, 'AHN-ES-XL-NVY'),
+(19, 'S', N'Trắng', 15, 'AHN-ES-S-TRA'),
+(19, 'M', N'Trắng', 28, 'AHN-ES-M-TRA'),
+(19, 'L', N'Trắng', 22, 'AHN-ES-L-TRA'),
+(20, 'S', N'Đen', 30, 'AHNU-CR-S-DEN'),
+(20, 'M', N'Đen', 45, 'AHNU-CR-M-DEN'),
+(20, 'L', N'Đen', 38, 'AHNU-CR-L-DEN'),
+(20, 'XL', N'Đen', 22, 'AHNU-CR-XL-DEN'),
+(20, 'S', N'Trắng', 25, 'AHNU-CR-S-TRA'),
+(20, 'M', N'Trắng', 40, 'AHNU-CR-M-TRA'),
+(20, 'L', N'Trắng', 32, 'AHNU-CR-L-TRA'),
+(20, 'XL', N'Trắng', 18, 'AHNU-CR-XL-TRA'),
+(20, 'S', N'Hồng', 20, 'AHNU-CR-S-HNG'),
+(20, 'M', N'Hồng', 35, 'AHNU-CR-M-HNG'),
+(20, 'L', N'Hồng', 28, 'AHNU-CR-L-HNG'),
+(20, 'S', N'Xanh Mint', 18, 'AHNU-CR-S-MNT'),
+(20, 'M', N'Xanh Mint', 30, 'AHNU-CR-M-MNT'),
+(20, 'L', N'Xanh Mint', 25, 'AHNU-CR-L-MNT'),
+(20, 'S', N'Be', 15, 'AHNU-CR-S-BE'),
+(20, 'M', N'Be', 28, 'AHNU-CR-M-BE'),
+(20, 'L', N'Be', 22, 'AHNU-CR-L-BE'),
+(21, 'S', N'Đen', 25, 'FS-P21-DEN-S'),
+(21, 'M', N'Đen', 47, 'FS-P21-DEN-M'),
+(21, 'L', N'Đen', 34, 'FS-P21-DEN-L'),
+(21, 'XL', N'Đen', 21, 'FS-P21-DEN-XL'),
+(21, 'S', N'Trắng', 43, 'FS-P21-TRA-S'),
+(21, 'M', N'Trắng', 30, 'FS-P21-TRA-M'),
+(21, 'L', N'Trắng', 17, 'FS-P21-TRA-L'),
+(21, 'XL', N'Trắng', 39, 'FS-P21-TRA-XL'),
+(21, 'S', N'Xám', 26, 'FS-P21-XAM-S'),
+(21, 'M', N'Xám', 48, 'FS-P21-XAM-M'),
+(21, 'L', N'Xám', 35, 'FS-P21-XAM-L'),
+(21, 'XL', N'Xám', 22, 'FS-P21-XAM-XL'),
+(21, 'S', N'Xanh Navy', 44, 'FS-P21-NAV-S'),
+(21, 'M', N'Xanh Navy', 31, 'FS-P21-NAV-M'),
+(21, 'L', N'Xanh Navy', 18, 'FS-P21-NAV-L'),
+(21, 'XL', N'Xanh Navy', 40, 'FS-P21-NAV-XL'),
+(22, '29', N'Xanh Nhạt', 25, 'FS-P22-XN-29'),
+(22, '30', N'Xanh Nhạt', 47, 'FS-P22-XN-30'),
+(22, '31', N'Xanh Nhạt', 34, 'FS-P22-XN-31');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(120, 'S', 'Trắng', 22, 'VYN-TP-S-TRA'), (120, 'M', 'Trắng', 32, 'VYN-TP-M-TRA'), (120, 'L', 'Trắng', 26, 'VYN-TP-L-TRA'), (120, 'S', 'Xanh Navy', 16, 'VYN-TP-S-NAV'),
-(121, 'S', 'Xanh Nhạt', 18, 'VYN-DN-S-XN'), (121, 'M', 'Xanh Nhạt', 24, 'VYN-DN-M-XN'), (121, 'L', 'Xanh Nhạt', 20, 'VYN-DN-L-XN'), (121, 'M', 'Trắng', 14, 'VYN-DN-M-TRA'),
-(122, 'S', 'Be Hoa', 16, 'VYN-HN-S-BH'), (122, 'M', 'Be Hoa', 22, 'VYN-HN-M-BH'), (122, 'L', 'Be Hoa', 18, 'VYN-HN-L-BH'), (122, 'M', 'Hồng Hoa', 12, 'VYN-HN-M-HH');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(120, 'https://images.unsplash.com/photo-1582142306909-195724d33ffc?w=600&q=80&fit=crop', 1), (120, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80&fit=crop', 0),
-(121, 'https://images.unsplash.com/photo-1583496661160-fb5886a13d28?w=600&q=80&fit=crop', 1), (121, 'https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=600&q=80&fit=crop', 0),
-(122, 'https://images.unsplash.com/photo-1551803091-e20673f15770?w=600&q=80&fit=crop', 1), (122, 'https://images.unsplash.com/photo-1564257577-2d3ee0f6f8b6?w=600&q=80&fit=crop', 0);
-
-/* --- 123-124: Váy dài --- */
+(22, '32', N'Xanh Nhạt', 21, 'FS-P22-XN-32'),
+(22, '29', N'Xanh Đậm', 43, 'FS-P22-XD-29'),
+(22, '30', N'Xanh Đậm', 30, 'FS-P22-XD-30'),
+(22, '31', N'Xanh Đậm', 17, 'FS-P22-XD-31'),
+(22, '32', N'Xanh Đậm', 39, 'FS-P22-XD-32'),
+(22, '29', N'Đen', 26, 'FS-P22-DEN-29'),
+(22, '30', N'Đen', 48, 'FS-P22-DEN-30'),
+(22, '31', N'Đen', 35, 'FS-P22-DEN-31'),
+(22, '32', N'Đen', 22, 'FS-P22-DEN-32'),
+(23, '29', N'Xanh Nhạt', 25, 'FS-P23-XN-29'),
+(23, '30', N'Xanh Nhạt', 47, 'FS-P23-XN-30'),
+(23, '31', N'Xanh Nhạt', 34, 'FS-P23-XN-31'),
+(23, '32', N'Xanh Nhạt', 21, 'FS-P23-XN-32'),
+(23, '29', N'Xanh Đậm', 43, 'FS-P23-XD-29'),
+(23, '30', N'Xanh Đậm', 30, 'FS-P23-XD-30'),
+(23, '31', N'Xanh Đậm', 17, 'FS-P23-XD-31'),
+(23, '32', N'Xanh Đậm', 39, 'FS-P23-XD-32'),
+(23, '29', N'Đen', 26, 'FS-P23-DEN-29'),
+(23, '30', N'Đen', 48, 'FS-P23-DEN-30'),
+(23, '31', N'Đen', 35, 'FS-P23-DEN-31'),
+(23, '32', N'Đen', 22, 'FS-P23-DEN-32'),
+(24, '29', N'Xanh Nhạt', 25, 'FS-P24-XN-29'),
+(24, '30', N'Xanh Nhạt', 47, 'FS-P24-XN-30'),
+(24, '31', N'Xanh Nhạt', 34, 'FS-P24-XN-31'),
+(24, '32', N'Xanh Nhạt', 21, 'FS-P24-XN-32'),
+(24, '29', N'Xanh Đậm', 43, 'FS-P24-XD-29'),
+(24, '30', N'Xanh Đậm', 30, 'FS-P24-XD-30'),
+(24, '31', N'Xanh Đậm', 17, 'FS-P24-XD-31'),
+(24, '32', N'Xanh Đậm', 39, 'FS-P24-XD-32'),
+(24, '29', N'Đen', 26, 'FS-P24-DEN-29'),
+(24, '30', N'Đen', 48, 'FS-P24-DEN-30'),
+(24, '31', N'Đen', 35, 'FS-P24-DEN-31'),
+(24, '32', N'Đen', 22, 'FS-P24-DEN-32'),
+(25, '26', N'Xanh Nhạt', 25, 'FS-P25-XN-26'),
+(25, '27', N'Xanh Nhạt', 47, 'FS-P25-XN-27'),
+(25, '28', N'Xanh Nhạt', 34, 'FS-P25-XN-28'),
+(25, '29', N'Xanh Nhạt', 21, 'FS-P25-XN-29'),
+(25, '26', N'Đen', 43, 'FS-P25-DEN-26'),
+(25, '27', N'Đen', 30, 'FS-P25-DEN-27'),
+(25, '28', N'Đen', 17, 'FS-P25-DEN-28'),
+(25, '29', N'Đen', 39, 'FS-P25-DEN-29'),
+(25, '26', N'Trắng', 26, 'FS-P25-TRA-26'),
+(25, '27', N'Trắng', 48, 'FS-P25-TRA-27'),
+(25, '28', N'Trắng', 35, 'FS-P25-TRA-28'),
+(25, '29', N'Trắng', 22, 'FS-P25-TRA-29'),
+(26, '26', N'Xanh Nhạt', 25, 'FS-P26-XN-26'),
+(26, '27', N'Xanh Nhạt', 47, 'FS-P26-XN-27'),
+(26, '28', N'Xanh Nhạt', 34, 'FS-P26-XN-28'),
+(26, '29', N'Xanh Nhạt', 21, 'FS-P26-XN-29'),
+(26, '26', N'Đen', 43, 'FS-P26-DEN-26');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(123, 'S', 'Be', 16, 'VYD-MI-S-BE'), (123, 'M', 'Be', 22, 'VYD-MI-M-BE'), (123, 'L', 'Be', 18, 'VYD-MI-L-BE'), (123, 'M', 'Trắng Ngà', 14, 'VYD-MI-M-NA'),
-(124, 'S', 'Nâu Đất', 14, 'VYD-VT-S-ND'), (124, 'M', 'Nâu Đất', 20, 'VYD-VT-M-ND'), (124, 'L', 'Nâu Đất', 16, 'VYD-VT-L-ND');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(123, 'https://images.unsplash.com/photo-1577900232427-18219b9166a0?w=600&q=80&fit=crop', 1), (123, 'https://images.unsplash.com/photo-1612722432474-b971cdcea546?w=600&q=80&fit=crop', 0),
-(124, 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&q=80&fit=crop', 1), (124, 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80&fit=crop', 0);
-
-/* --- 125-127: Chân váy --- */
+(26, '27', N'Đen', 30, 'FS-P26-DEN-27'),
+(26, '28', N'Đen', 17, 'FS-P26-DEN-28'),
+(26, '29', N'Đen', 39, 'FS-P26-DEN-29'),
+(26, '26', N'Trắng', 26, 'FS-P26-TRA-26'),
+(26, '27', N'Trắng', 48, 'FS-P26-TRA-27'),
+(26, '28', N'Trắng', 35, 'FS-P26-TRA-28'),
+(26, '29', N'Trắng', 22, 'FS-P26-TRA-29'),
+(27, '26', N'Xanh Nhạt', 25, 'FS-P27-XN-26'),
+(27, '27', N'Xanh Nhạt', 47, 'FS-P27-XN-27'),
+(27, '28', N'Xanh Nhạt', 34, 'FS-P27-XN-28'),
+(27, '29', N'Xanh Nhạt', 21, 'FS-P27-XN-29'),
+(27, '26', N'Đen', 43, 'FS-P27-DEN-26'),
+(27, '27', N'Đen', 30, 'FS-P27-DEN-27'),
+(27, '28', N'Đen', 17, 'FS-P27-DEN-28'),
+(27, '29', N'Đen', 39, 'FS-P27-DEN-29'),
+(27, '26', N'Trắng', 26, 'FS-P27-TRA-26'),
+(27, '27', N'Trắng', 48, 'FS-P27-TRA-27'),
+(27, '28', N'Trắng', 35, 'FS-P27-TRA-28'),
+(27, '29', N'Trắng', 22, 'FS-P27-TRA-29'),
+(28, '29', N'Xanh Nhạt', 25, 'FS-P28-XN-29'),
+(28, '30', N'Xanh Nhạt', 47, 'FS-P28-XN-30'),
+(28, '31', N'Xanh Nhạt', 34, 'FS-P28-XN-31'),
+(28, '32', N'Xanh Nhạt', 21, 'FS-P28-XN-32'),
+(28, '29', N'Xanh Đậm', 43, 'FS-P28-XD-29'),
+(28, '30', N'Xanh Đậm', 30, 'FS-P28-XD-30'),
+(28, '31', N'Xanh Đậm', 17, 'FS-P28-XD-31'),
+(28, '32', N'Xanh Đậm', 39, 'FS-P28-XD-32'),
+(28, '29', N'Đen', 26, 'FS-P28-DEN-29'),
+(28, '30', N'Đen', 48, 'FS-P28-DEN-30'),
+(28, '31', N'Đen', 35, 'FS-P28-DEN-31'),
+(28, '32', N'Đen', 22, 'FS-P28-DEN-32'),
+(29, '29', N'Xanh Nhạt', 25, 'FS-P29-XN-29'),
+(29, '30', N'Xanh Nhạt', 47, 'FS-P29-XN-30'),
+(29, '31', N'Xanh Nhạt', 34, 'FS-P29-XN-31'),
+(29, '32', N'Xanh Nhạt', 21, 'FS-P29-XN-32'),
+(29, '29', N'Xanh Đậm', 43, 'FS-P29-XD-29'),
+(29, '30', N'Xanh Đậm', 30, 'FS-P29-XD-30'),
+(29, '31', N'Xanh Đậm', 17, 'FS-P29-XD-31'),
+(29, '32', N'Xanh Đậm', 39, 'FS-P29-XD-32'),
+(29, '29', N'Đen', 26, 'FS-P29-DEN-29'),
+(29, '30', N'Đen', 48, 'FS-P29-DEN-30'),
+(29, '31', N'Đen', 35, 'FS-P29-DEN-31'),
+(29, '32', N'Đen', 22, 'FS-P29-DEN-32'),
+(30, '29', N'Xanh Nhạt', 25, 'FS-P30-XN-29'),
+(30, '30', N'Xanh Nhạt', 47, 'FS-P30-XN-30'),
+(30, '31', N'Xanh Nhạt', 34, 'FS-P30-XN-31'),
+(30, '32', N'Xanh Nhạt', 21, 'FS-P30-XN-32'),
+(30, '29', N'Xanh Đậm', 43, 'FS-P30-XD-29'),
+(30, '30', N'Xanh Đậm', 30, 'FS-P30-XD-30'),
+(30, '31', N'Xanh Đậm', 17, 'FS-P30-XD-31');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(125, 'S', 'Đen', 20, 'CVNU-BC-S-DEN'), (125, 'M', 'Đen', 28, 'CVNU-BC-M-DEN'), (125, 'L', 'Đen', 24, 'CVNU-BC-L-DEN'), (125, 'M', 'Xám', 16, 'CVNU-BC-M-GRA'),
-(126, 'S', 'Trắng', 18, 'CVNU-TN-S-TRA'), (126, 'M', 'Trắng', 26, 'CVNU-TN-M-TRA'), (126, 'L', 'Trắng', 22, 'CVNU-TN-L-TRA'),
-(127, 'S', 'Xanh Nhạt', 14, 'CVNU-DN-S-XN'), (127, 'M', 'Xanh Nhạt', 22, 'CVNU-DN-M-XN'), (127, 'L', 'Xanh Nhạt', 18, 'CVNU-DN-L-XN');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(125, 'https://images.unsplash.com/photo-1583846783214-7229a91b20ed?w=600&q=80&fit=crop', 1), (125, 'https://images.unsplash.com/photo-1572804013309-a59a8d4f7af4?w=600&q=80&fit=crop', 0),
-(126, 'https://images.unsplash.com/photo-1583496661160-fb5886a13d28?w=600&q=80&fit=crop', 1), (126, 'https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=600&q=80&fit=crop', 0),
-(127, 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&q=80&fit=crop', 1), (127, 'https://images.unsplash.com/photo-1604176354204-9268737828e4?w=600&q=80&fit=crop', 0);
-
-/* --- 128-129: Đầm dài --- */
+(30, '32', N'Xanh Đậm', 39, 'FS-P30-XD-32'),
+(30, '29', N'Đen', 26, 'FS-P30-DEN-29'),
+(30, '30', N'Đen', 48, 'FS-P30-DEN-30'),
+(30, '31', N'Đen', 35, 'FS-P30-DEN-31'),
+(30, '32', N'Đen', 22, 'FS-P30-DEN-32'),
+(31, '26', N'Xanh Nhạt', 25, 'FS-P31-XN-26'),
+(31, '27', N'Xanh Nhạt', 47, 'FS-P31-XN-27'),
+(31, '28', N'Xanh Nhạt', 34, 'FS-P31-XN-28'),
+(31, '29', N'Xanh Nhạt', 21, 'FS-P31-XN-29'),
+(31, '26', N'Đen', 43, 'FS-P31-DEN-26'),
+(31, '27', N'Đen', 30, 'FS-P31-DEN-27'),
+(31, '28', N'Đen', 17, 'FS-P31-DEN-28'),
+(31, '29', N'Đen', 39, 'FS-P31-DEN-29'),
+(31, '26', N'Trắng', 26, 'FS-P31-TRA-26'),
+(31, '27', N'Trắng', 48, 'FS-P31-TRA-27'),
+(31, '28', N'Trắng', 35, 'FS-P31-TRA-28'),
+(31, '29', N'Trắng', 22, 'FS-P31-TRA-29'),
+(32, '26', N'Xanh Nhạt', 25, 'FS-P32-XN-26'),
+(32, '27', N'Xanh Nhạt', 47, 'FS-P32-XN-27'),
+(32, '28', N'Xanh Nhạt', 34, 'FS-P32-XN-28'),
+(32, '29', N'Xanh Nhạt', 21, 'FS-P32-XN-29'),
+(32, '26', N'Đen', 43, 'FS-P32-DEN-26'),
+(32, '27', N'Đen', 30, 'FS-P32-DEN-27'),
+(32, '28', N'Đen', 17, 'FS-P32-DEN-28'),
+(32, '29', N'Đen', 39, 'FS-P32-DEN-29'),
+(32, '26', N'Trắng', 26, 'FS-P32-TRA-26'),
+(32, '27', N'Trắng', 48, 'FS-P32-TRA-27'),
+(32, '28', N'Trắng', 35, 'FS-P32-TRA-28'),
+(32, '29', N'Trắng', 22, 'FS-P32-TRA-29'),
+(33, '26', N'Xanh Nhạt', 25, 'FS-P33-XN-26'),
+(33, '27', N'Xanh Nhạt', 47, 'FS-P33-XN-27'),
+(33, '28', N'Xanh Nhạt', 34, 'FS-P33-XN-28'),
+(33, '29', N'Xanh Nhạt', 21, 'FS-P33-XN-29'),
+(33, '26', N'Đen', 43, 'FS-P33-DEN-26'),
+(33, '27', N'Đen', 30, 'FS-P33-DEN-27'),
+(33, '28', N'Đen', 17, 'FS-P33-DEN-28'),
+(33, '29', N'Đen', 39, 'FS-P33-DEN-29'),
+(33, '26', N'Trắng', 26, 'FS-P33-TRA-26'),
+(33, '27', N'Trắng', 48, 'FS-P33-TRA-27'),
+(33, '28', N'Trắng', 35, 'FS-P33-TRA-28'),
+(33, '29', N'Trắng', 22, 'FS-P33-TRA-29'),
+(34, '26', N'Xanh Nhạt', 25, 'FS-P34-XN-26'),
+(34, '27', N'Xanh Nhạt', 47, 'FS-P34-XN-27'),
+(34, '28', N'Xanh Nhạt', 34, 'FS-P34-XN-28'),
+(34, '29', N'Xanh Nhạt', 21, 'FS-P34-XN-29'),
+(34, '26', N'Đen', 43, 'FS-P34-DEN-26'),
+(34, '27', N'Đen', 30, 'FS-P34-DEN-27'),
+(34, '28', N'Đen', 17, 'FS-P34-DEN-28'),
+(34, '29', N'Đen', 39, 'FS-P34-DEN-29'),
+(34, '26', N'Trắng', 26, 'FS-P34-TRA-26');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(128, 'S', 'Đen Hoa', 16, 'DDNU-MX-S-DH'), (128, 'M', 'Đen Hoa', 22, 'DDNU-MX-M-DH'), (128, 'L', 'Đen Hoa', 18, 'DDNU-MX-L-DH'), (128, 'M', 'Xanh Hoa', 14, 'DDNU-MX-M-XH'),
-(129, 'S', 'Đỏ', 12, 'DDNU-LS-S-DO'), (129, 'M', 'Đỏ', 18, 'DDNU-LS-M-DO'), (129, 'L', 'Đỏ', 14, 'DDNU-LS-L-DO');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(128, 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=600&q=80&fit=crop', 1), (128, 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80&fit=crop', 0),
-(129, 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600&q=80&fit=crop', 1), (129, 'https://images.unsplash.com/photo-1612722432474-b971cdcea546?w=600&q=80&fit=crop', 0);
-
-/* --- 130-132: Đầm công sở --- */
+(34, '27', N'Trắng', 48, 'FS-P34-TRA-27'),
+(34, '28', N'Trắng', 35, 'FS-P34-TRA-28'),
+(34, '29', N'Trắng', 22, 'FS-P34-TRA-29'),
+(35, '26', N'Xanh Nhạt', 25, 'FS-P35-XN-26'),
+(35, '27', N'Xanh Nhạt', 47, 'FS-P35-XN-27'),
+(35, '28', N'Xanh Nhạt', 34, 'FS-P35-XN-28'),
+(35, '29', N'Xanh Nhạt', 21, 'FS-P35-XN-29'),
+(35, '26', N'Đen', 43, 'FS-P35-DEN-26'),
+(35, '27', N'Đen', 30, 'FS-P35-DEN-27'),
+(35, '28', N'Đen', 17, 'FS-P35-DEN-28'),
+(35, '29', N'Đen', 39, 'FS-P35-DEN-29'),
+(35, '26', N'Trắng', 26, 'FS-P35-TRA-26'),
+(35, '27', N'Trắng', 48, 'FS-P35-TRA-27'),
+(35, '28', N'Trắng', 35, 'FS-P35-TRA-28'),
+(35, '29', N'Trắng', 22, 'FS-P35-TRA-29'),
+(36, '26', N'Xanh Nhạt', 25, 'FS-P36-XN-26'),
+(36, '27', N'Xanh Nhạt', 47, 'FS-P36-XN-27'),
+(36, '28', N'Xanh Nhạt', 34, 'FS-P36-XN-28'),
+(36, '29', N'Xanh Nhạt', 21, 'FS-P36-XN-29'),
+(36, '26', N'Đen', 43, 'FS-P36-DEN-26'),
+(36, '27', N'Đen', 30, 'FS-P36-DEN-27'),
+(36, '28', N'Đen', 17, 'FS-P36-DEN-28'),
+(36, '29', N'Đen', 39, 'FS-P36-DEN-29'),
+(36, '26', N'Trắng', 26, 'FS-P36-TRA-26'),
+(36, '27', N'Trắng', 48, 'FS-P36-TRA-27'),
+(36, '28', N'Trắng', 35, 'FS-P36-TRA-28'),
+(36, '29', N'Trắng', 22, 'FS-P36-TRA-29'),
+(37, 'S', N'Đen', 25, 'FS-P37-DEN-S'),
+(37, 'M', N'Đen', 47, 'FS-P37-DEN-M'),
+(37, 'L', N'Đen', 34, 'FS-P37-DEN-L'),
+(37, 'S', N'Trắng', 21, 'FS-P37-TRA-S'),
+(37, 'M', N'Trắng', 43, 'FS-P37-TRA-M'),
+(37, 'L', N'Trắng', 30, 'FS-P37-TRA-L'),
+(37, 'S', N'Be', 17, 'FS-P37-BE-S'),
+(37, 'M', N'Be', 39, 'FS-P37-BE-M'),
+(37, 'L', N'Be', 26, 'FS-P37-BE-L'),
+(37, 'S', N'Hồng', 48, 'FS-P37-HNG-S'),
+(37, 'M', N'Hồng', 35, 'FS-P37-HNG-M'),
+(37, 'L', N'Hồng', 22, 'FS-P37-HNG-L'),
+(38, 'S', N'Đen', 25, 'FS-P38-DEN-S'),
+(38, 'M', N'Đen', 47, 'FS-P38-DEN-M'),
+(38, 'L', N'Đen', 34, 'FS-P38-DEN-L'),
+(38, 'S', N'Trắng', 21, 'FS-P38-TRA-S'),
+(38, 'M', N'Trắng', 43, 'FS-P38-TRA-M'),
+(38, 'L', N'Trắng', 30, 'FS-P38-TRA-L'),
+(38, 'S', N'Be', 17, 'FS-P38-BE-S'),
+(38, 'M', N'Be', 39, 'FS-P38-BE-M'),
+(38, 'L', N'Be', 26, 'FS-P38-BE-L'),
+(38, 'S', N'Hồng', 48, 'FS-P38-HNG-S'),
+(38, 'M', N'Hồng', 35, 'FS-P38-HNG-M');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(130, 'S', 'Đen', 22, 'DCNU-BS-S-DEN'), (130, 'M', 'Đen', 30, 'DCNU-BS-M-DEN'), (130, 'L', 'Đen', 26, 'DCNU-BS-L-DEN'), (130, 'M', 'Xanh Navy', 18, 'DCNU-BS-M-NAV'),
-(131, 'S', 'Be Sọc', 18, 'DCNU-KS-S-BS'), (131, 'M', 'Be Sọc', 24, 'DCNU-KS-M-BS'), (131, 'L', 'Be Sọc', 20, 'DCNU-KS-L-BS'),
-(132, 'S', 'Xanh Navy', 14, 'DCNU-TD-S-NAV'), (132, 'M', 'Xanh Navy', 22, 'DCNU-TD-M-NAV'), (132, 'L', 'Xanh Navy', 18, 'DCNU-TD-L-NAV'), (132, 'M', 'Đen', 14, 'DCNU-TD-M-DEN');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(130, 'https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?w=600&q=80&fit=crop', 1), (130, 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80&fit=crop', 0),
-(131, 'https://images.unsplash.com/photo-1551803091-e20673f15770?w=600&q=80&fit=crop', 1), (131, 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&q=80&fit=crop', 0),
-(132, 'https://images.unsplash.com/photo-1495121605193-b116b5b9c5fe?w=600&q=80&fit=crop', 1), (132, 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80&fit=crop', 0);
-
-/* --- 133-134: Giày thể thao --- */
+(38, 'L', N'Hồng', 22, 'FS-P38-HNG-L'),
+(39, 'S', N'Đen', 25, 'FS-P39-DEN-S'),
+(39, 'M', N'Đen', 47, 'FS-P39-DEN-M'),
+(39, 'L', N'Đen', 34, 'FS-P39-DEN-L'),
+(39, 'S', N'Trắng', 21, 'FS-P39-TRA-S'),
+(39, 'M', N'Trắng', 43, 'FS-P39-TRA-M'),
+(39, 'L', N'Trắng', 30, 'FS-P39-TRA-L'),
+(39, 'S', N'Be', 17, 'FS-P39-BE-S'),
+(39, 'M', N'Be', 39, 'FS-P39-BE-M'),
+(39, 'L', N'Be', 26, 'FS-P39-BE-L'),
+(39, 'S', N'Hồng', 48, 'FS-P39-HNG-S'),
+(39, 'M', N'Hồng', 35, 'FS-P39-HNG-M'),
+(39, 'L', N'Hồng', 22, 'FS-P39-HNG-L'),
+(40, 'S', N'Đen', 25, 'FS-P40-DEN-S'),
+(40, 'M', N'Đen', 47, 'FS-P40-DEN-M'),
+(40, 'L', N'Đen', 34, 'FS-P40-DEN-L'),
+(40, 'S', N'Trắng', 21, 'FS-P40-TRA-S'),
+(40, 'M', N'Trắng', 43, 'FS-P40-TRA-M'),
+(40, 'L', N'Trắng', 30, 'FS-P40-TRA-L'),
+(40, 'S', N'Be', 17, 'FS-P40-BE-S'),
+(40, 'M', N'Be', 39, 'FS-P40-BE-M'),
+(40, 'L', N'Be', 26, 'FS-P40-BE-L'),
+(40, 'S', N'Hồng', 48, 'FS-P40-HNG-S'),
+(40, 'M', N'Hồng', 35, 'FS-P40-HNG-M'),
+(40, 'L', N'Hồng', 22, 'FS-P40-HNG-L'),
+(41, 'S', N'Đen', 25, 'FS-P41-DEN-S'),
+(41, 'M', N'Đen', 47, 'FS-P41-DEN-M'),
+(41, 'L', N'Đen', 34, 'FS-P41-DEN-L'),
+(41, 'S', N'Trắng', 21, 'FS-P41-TRA-S'),
+(41, 'M', N'Trắng', 43, 'FS-P41-TRA-M'),
+(41, 'L', N'Trắng', 30, 'FS-P41-TRA-L'),
+(41, 'S', N'Be', 17, 'FS-P41-BE-S'),
+(41, 'M', N'Be', 39, 'FS-P41-BE-M'),
+(41, 'L', N'Be', 26, 'FS-P41-BE-L'),
+(41, 'S', N'Hồng', 48, 'FS-P41-HNG-S'),
+(41, 'M', N'Hồng', 35, 'FS-P41-HNG-M'),
+(41, 'L', N'Hồng', 22, 'FS-P41-HNG-L'),
+(42, 'S', N'Đen', 25, 'FS-P42-DEN-S'),
+(42, 'M', N'Đen', 47, 'FS-P42-DEN-M'),
+(42, 'L', N'Đen', 34, 'FS-P42-DEN-L'),
+(42, 'S', N'Trắng', 21, 'FS-P42-TRA-S'),
+(42, 'M', N'Trắng', 43, 'FS-P42-TRA-M'),
+(42, 'L', N'Trắng', 30, 'FS-P42-TRA-L'),
+(42, 'S', N'Be', 17, 'FS-P42-BE-S'),
+(42, 'M', N'Be', 39, 'FS-P42-BE-M'),
+(42, 'L', N'Be', 26, 'FS-P42-BE-L'),
+(42, 'S', N'Hồng', 48, 'FS-P42-HNG-S'),
+(42, 'M', N'Hồng', 35, 'FS-P42-HNG-M'),
+(42, 'L', N'Hồng', 22, 'FS-P42-HNG-L'),
+(43, 'S', N'Đen', 25, 'FS-P43-DEN-S');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(133, '39', 'Trắng', 24, 'GTNU-SN-39-TRA'), (133, '40', 'Trắng', 32, 'GTNU-SN-40-TRA'), (133, '41', 'Trắng', 36, 'GTNU-SN-41-TRA'), (133, '42', 'Trắng', 28, 'GTNU-SN-42-TRA'), (133, '40', 'Đen', 22, 'GTNU-SN-40-DEN'), (133, '41', 'Đen', 26, 'GTNU-SN-41-DEN'),
-(134, '40', 'Đen', 18, 'GTN-RU-40-DEN'), (134, '41', 'Đen', 24, 'GTN-RU-41-DEN'), (134, '42', 'Đen', 20, 'GTN-RU-42-DEN'), (134, '43', 'Đen', 16, 'GTN-RU-43-DEN'), (134, '41', 'Xám', 14, 'GTN-RU-41-GRA');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(133, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80&fit=crop', 1), (133, 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=600&q=80&fit=crop', 0), (133, 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=600&q=80&fit=crop', 0),
-(134, 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=600&q=80&fit=crop', 1), (134, 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&q=80&fit=crop', 0);
-
-/* --- 135-136: Giày da --- */
+(43, 'M', N'Đen', 47, 'FS-P43-DEN-M'),
+(43, 'L', N'Đen', 34, 'FS-P43-DEN-L'),
+(43, 'S', N'Trắng', 21, 'FS-P43-TRA-S'),
+(43, 'M', N'Trắng', 43, 'FS-P43-TRA-M'),
+(43, 'L', N'Trắng', 30, 'FS-P43-TRA-L'),
+(43, 'S', N'Be', 17, 'FS-P43-BE-S'),
+(43, 'M', N'Be', 39, 'FS-P43-BE-M'),
+(43, 'L', N'Be', 26, 'FS-P43-BE-L'),
+(43, 'S', N'Hồng', 48, 'FS-P43-HNG-S'),
+(43, 'M', N'Hồng', 35, 'FS-P43-HNG-M'),
+(43, 'L', N'Hồng', 22, 'FS-P43-HNG-L'),
+(44, 'S', N'Đen', 25, 'FS-P44-DEN-S'),
+(44, 'M', N'Đen', 47, 'FS-P44-DEN-M'),
+(44, 'L', N'Đen', 34, 'FS-P44-DEN-L'),
+(44, 'S', N'Trắng', 21, 'FS-P44-TRA-S'),
+(44, 'M', N'Trắng', 43, 'FS-P44-TRA-M'),
+(44, 'L', N'Trắng', 30, 'FS-P44-TRA-L'),
+(44, 'S', N'Be', 17, 'FS-P44-BE-S'),
+(44, 'M', N'Be', 39, 'FS-P44-BE-M'),
+(44, 'L', N'Be', 26, 'FS-P44-BE-L'),
+(44, 'S', N'Hồng', 48, 'FS-P44-HNG-S'),
+(44, 'M', N'Hồng', 35, 'FS-P44-HNG-M'),
+(44, 'L', N'Hồng', 22, 'FS-P44-HNG-L'),
+(45, 'S', N'Đen', 25, 'FS-P45-DEN-S'),
+(45, 'M', N'Đen', 47, 'FS-P45-DEN-M'),
+(45, 'L', N'Đen', 34, 'FS-P45-DEN-L'),
+(45, 'S', N'Trắng', 21, 'FS-P45-TRA-S'),
+(45, 'M', N'Trắng', 43, 'FS-P45-TRA-M'),
+(45, 'L', N'Trắng', 30, 'FS-P45-TRA-L'),
+(45, 'S', N'Be', 17, 'FS-P45-BE-S'),
+(45, 'M', N'Be', 39, 'FS-P45-BE-M'),
+(45, 'L', N'Be', 26, 'FS-P45-BE-L'),
+(45, 'S', N'Hồng', 48, 'FS-P45-HNG-S'),
+(45, 'M', N'Hồng', 35, 'FS-P45-HNG-M'),
+(45, 'L', N'Hồng', 22, 'FS-P45-HNG-L'),
+(46, 'S', N'Đen', 25, 'FS-P46-DEN-S'),
+(46, 'M', N'Đen', 47, 'FS-P46-DEN-M'),
+(46, 'L', N'Đen', 34, 'FS-P46-DEN-L'),
+(46, 'S', N'Trắng', 21, 'FS-P46-TRA-S'),
+(46, 'M', N'Trắng', 43, 'FS-P46-TRA-M'),
+(46, 'L', N'Trắng', 30, 'FS-P46-TRA-L'),
+(46, 'S', N'Be', 17, 'FS-P46-BE-S'),
+(46, 'M', N'Be', 39, 'FS-P46-BE-M'),
+(46, 'L', N'Be', 26, 'FS-P46-BE-L'),
+(46, 'S', N'Hồng', 48, 'FS-P46-HNG-S'),
+(46, 'M', N'Hồng', 35, 'FS-P46-HNG-M'),
+(46, 'L', N'Hồng', 22, 'FS-P46-HNG-L'),
+(47, 'S', N'Đen', 25, 'FS-P47-DEN-S'),
+(47, 'M', N'Đen', 47, 'FS-P47-DEN-M'),
+(47, 'L', N'Đen', 34, 'FS-P47-DEN-L');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(135, '40', 'Đen', 14, 'GDN-TN-40-DEN'), (135, '41', 'Đen', 20, 'GDN-TN-41-DEN'), (135, '42', 'Đen', 16, 'GDN-TN-42-DEN'), (135, '41', 'Nâu', 12, 'GDN-TN-41-NAU'),
-(136, '37', 'Be', 14, 'GDNU-LF-37-BE'), (136, '38', 'Be', 18, 'GDNU-LF-38-BE'), (136, '39', 'Be', 16, 'GDNU-LF-39-BE'), (136, '38', 'Nâu', 12, 'GDNU-LF-38-NAU');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(135, 'https://images.unsplash.com/photo-1614252369475-531eba835eb1?w=600&q=80&fit=crop', 1), (135, 'https://images.unsplash.com/photo-1531310197839-ccf54634509e?w=600&q=80&fit=crop', 0),
-(136, 'https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=600&q=80&fit=crop', 1), (136, 'https://images.unsplash.com/photo-1564609060031-6e5c3c8a5b8e?w=600&q=80&fit=crop', 0);
-
-/* --- 137: Sandal --- */
+(47, 'S', N'Trắng', 21, 'FS-P47-TRA-S'),
+(47, 'M', N'Trắng', 43, 'FS-P47-TRA-M'),
+(47, 'L', N'Trắng', 30, 'FS-P47-TRA-L'),
+(47, 'S', N'Be', 17, 'FS-P47-BE-S'),
+(47, 'M', N'Be', 39, 'FS-P47-BE-M'),
+(47, 'L', N'Be', 26, 'FS-P47-BE-L'),
+(47, 'S', N'Hồng', 48, 'FS-P47-HNG-S'),
+(47, 'M', N'Hồng', 35, 'FS-P47-HNG-M'),
+(47, 'L', N'Hồng', 22, 'FS-P47-HNG-L'),
+(48, 'S', N'Đen', 25, 'FS-P48-DEN-S'),
+(48, 'M', N'Đen', 47, 'FS-P48-DEN-M'),
+(48, 'L', N'Đen', 34, 'FS-P48-DEN-L'),
+(48, 'S', N'Trắng', 21, 'FS-P48-TRA-S'),
+(48, 'M', N'Trắng', 43, 'FS-P48-TRA-M'),
+(48, 'L', N'Trắng', 30, 'FS-P48-TRA-L'),
+(48, 'S', N'Be', 17, 'FS-P48-BE-S'),
+(48, 'M', N'Be', 39, 'FS-P48-BE-M'),
+(48, 'L', N'Be', 26, 'FS-P48-BE-L'),
+(48, 'S', N'Hồng', 48, 'FS-P48-HNG-S'),
+(48, 'M', N'Hồng', 35, 'FS-P48-HNG-M'),
+(48, 'L', N'Hồng', 22, 'FS-P48-HNG-L'),
+(49, 'S', N'Đen', 25, 'FS-P49-DEN-S'),
+(49, 'M', N'Đen', 47, 'FS-P49-DEN-M'),
+(49, 'L', N'Đen', 34, 'FS-P49-DEN-L'),
+(49, 'S', N'Trắng', 21, 'FS-P49-TRA-S'),
+(49, 'M', N'Trắng', 43, 'FS-P49-TRA-M'),
+(49, 'L', N'Trắng', 30, 'FS-P49-TRA-L'),
+(49, 'S', N'Be', 17, 'FS-P49-BE-S'),
+(49, 'M', N'Be', 39, 'FS-P49-BE-M'),
+(49, 'L', N'Be', 26, 'FS-P49-BE-L'),
+(49, 'S', N'Hồng', 48, 'FS-P49-HNG-S'),
+(49, 'M', N'Hồng', 35, 'FS-P49-HNG-M'),
+(49, 'L', N'Hồng', 22, 'FS-P49-HNG-L'),
+(50, 'S', N'Đen', 25, 'FS-P50-DEN-S'),
+(50, 'M', N'Đen', 47, 'FS-P50-DEN-M'),
+(50, 'L', N'Đen', 34, 'FS-P50-DEN-L'),
+(50, 'S', N'Trắng', 21, 'FS-P50-TRA-S'),
+(50, 'M', N'Trắng', 43, 'FS-P50-TRA-M'),
+(50, 'L', N'Trắng', 30, 'FS-P50-TRA-L'),
+(50, 'S', N'Be', 17, 'FS-P50-BE-S'),
+(50, 'M', N'Be', 39, 'FS-P50-BE-M'),
+(50, 'L', N'Be', 26, 'FS-P50-BE-L'),
+(50, 'S', N'Hồng', 48, 'FS-P50-HNG-S'),
+(50, 'M', N'Hồng', 35, 'FS-P50-HNG-M'),
+(50, 'L', N'Hồng', 22, 'FS-P50-HNG-L'),
+(51, 'S', N'Đen', 25, 'FS-P51-DEN-S'),
+(51, 'M', N'Đen', 47, 'FS-P51-DEN-M'),
+(51, 'L', N'Đen', 34, 'FS-P51-DEN-L'),
+(51, 'S', N'Trắng', 21, 'FS-P51-TRA-S'),
+(51, 'M', N'Trắng', 43, 'FS-P51-TRA-M');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(137, '37', 'Nâu', 18, 'SDN-DB-37-NAU'), (137, '38', 'Nâu', 24, 'SDN-DB-38-NAU'), (137, '39', 'Nâu', 22, 'SDN-DB-39-NAU'), (137, '38', 'Be', 16, 'SDN-DB-38-BE');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(137, 'https://images.unsplash.com/photo-1603487742131-4160ec999306?w=600&q=80&fit=crop', 1), (137, 'https://images.unsplash.com/photo-1531310197839-ccf54634509e?w=600&q=80&fit=crop', 0);
-
-/* --- 138-139: Giày cao gót --- */
+(51, 'L', N'Trắng', 30, 'FS-P51-TRA-L'),
+(51, 'S', N'Be', 17, 'FS-P51-BE-S'),
+(51, 'M', N'Be', 39, 'FS-P51-BE-M'),
+(51, 'L', N'Be', 26, 'FS-P51-BE-L'),
+(51, 'S', N'Hồng', 48, 'FS-P51-HNG-S'),
+(51, 'M', N'Hồng', 35, 'FS-P51-HNG-M'),
+(51, 'L', N'Hồng', 22, 'FS-P51-HNG-L'),
+(52, '39', N'Trắng', 25, 'FS-P52-TRA-39'),
+(52, '40', N'Trắng', 47, 'FS-P52-TRA-40'),
+(52, '41', N'Trắng', 34, 'FS-P52-TRA-41'),
+(52, '42', N'Trắng', 21, 'FS-P52-TRA-42'),
+(52, '39', N'Đen', 43, 'FS-P52-DEN-39'),
+(52, '40', N'Đen', 30, 'FS-P52-DEN-40'),
+(52, '41', N'Đen', 17, 'FS-P52-DEN-41'),
+(52, '42', N'Đen', 39, 'FS-P52-DEN-42'),
+(52, '39', N'Xám', 26, 'FS-P52-XAM-39'),
+(52, '40', N'Xám', 48, 'FS-P52-XAM-40'),
+(52, '41', N'Xám', 35, 'FS-P52-XAM-41'),
+(52, '42', N'Xám', 22, 'FS-P52-XAM-42'),
+(53, '39', N'Trắng', 25, 'FS-P53-TRA-39'),
+(53, '40', N'Trắng', 47, 'FS-P53-TRA-40'),
+(53, '41', N'Trắng', 34, 'FS-P53-TRA-41'),
+(53, '42', N'Trắng', 21, 'FS-P53-TRA-42'),
+(53, '39', N'Đen', 43, 'FS-P53-DEN-39'),
+(53, '40', N'Đen', 30, 'FS-P53-DEN-40'),
+(53, '41', N'Đen', 17, 'FS-P53-DEN-41'),
+(53, '42', N'Đen', 39, 'FS-P53-DEN-42'),
+(53, '39', N'Xám', 26, 'FS-P53-XAM-39'),
+(53, '40', N'Xám', 48, 'FS-P53-XAM-40'),
+(53, '41', N'Xám', 35, 'FS-P53-XAM-41'),
+(53, '42', N'Xám', 22, 'FS-P53-XAM-42'),
+(54, '39', N'Trắng', 25, 'FS-P54-TRA-39'),
+(54, '40', N'Trắng', 47, 'FS-P54-TRA-40'),
+(54, '41', N'Trắng', 34, 'FS-P54-TRA-41'),
+(54, '42', N'Trắng', 21, 'FS-P54-TRA-42'),
+(54, '39', N'Đen', 43, 'FS-P54-DEN-39'),
+(54, '40', N'Đen', 30, 'FS-P54-DEN-40'),
+(54, '41', N'Đen', 17, 'FS-P54-DEN-41'),
+(54, '42', N'Đen', 39, 'FS-P54-DEN-42'),
+(54, '39', N'Xám', 26, 'FS-P54-XAM-39'),
+(54, '40', N'Xám', 48, 'FS-P54-XAM-40'),
+(54, '41', N'Xám', 35, 'FS-P54-XAM-41'),
+(54, '42', N'Xám', 22, 'FS-P54-XAM-42'),
+(55, '39', N'Trắng', 25, 'FS-P55-TRA-39'),
+(55, '40', N'Trắng', 47, 'FS-P55-TRA-40'),
+(55, '41', N'Trắng', 34, 'FS-P55-TRA-41'),
+(55, '42', N'Trắng', 21, 'FS-P55-TRA-42'),
+(55, '39', N'Đen', 43, 'FS-P55-DEN-39'),
+(55, '40', N'Đen', 30, 'FS-P55-DEN-40'),
+(55, '41', N'Đen', 17, 'FS-P55-DEN-41');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(138, '37', 'Đen', 18, 'GGNU-MN-37-DEN'), (138, '38', 'Đen', 24, 'GGNU-MN-38-DEN'), (138, '39', 'Đen', 20, 'GGNU-MN-39-DEN'), (138, '38', 'Be', 14, 'GGNU-MN-38-BE'), (138, '38', 'Nude', 14, 'GGNU-MN-38-NUD'),
-(139, '37', 'Hồng Pastel', 14, 'GGNU-QM-37-HP'), (139, '38', 'Hồng Pastel', 20, 'GGNU-QM-38-HP'), (139, '39', 'Hồng Pastel', 16, 'GGNU-QM-39-HP'), (139, '38', 'Trắng', 12, 'GGNU-QM-38-TRA');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(138, 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=80&fit=crop', 1), (138, 'https://images.unsplash.com/photo-1581101767113-d1f1f8d2f8c7?w=600&q=80&fit=crop', 0),
-(139, 'https://images.unsplash.com/photo-1535043934128-cf0b28ec52f3?w=600&q=80&fit=crop', 1), (139, 'https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=600&q=80&fit=crop', 0);
-
-/* --- 140-141: Balo --- */
+(55, '42', N'Đen', 39, 'FS-P55-DEN-42'),
+(55, '39', N'Xám', 26, 'FS-P55-XAM-39'),
+(55, '40', N'Xám', 48, 'FS-P55-XAM-40'),
+(55, '41', N'Xám', 35, 'FS-P55-XAM-41'),
+(55, '42', N'Xám', 22, 'FS-P55-XAM-42'),
+(56, '39', N'Trắng', 25, 'FS-P56-TRA-39'),
+(56, '40', N'Trắng', 47, 'FS-P56-TRA-40'),
+(56, '41', N'Trắng', 34, 'FS-P56-TRA-41'),
+(56, '42', N'Trắng', 21, 'FS-P56-TRA-42'),
+(56, '39', N'Đen', 43, 'FS-P56-DEN-39'),
+(56, '40', N'Đen', 30, 'FS-P56-DEN-40'),
+(56, '41', N'Đen', 17, 'FS-P56-DEN-41'),
+(56, '42', N'Đen', 39, 'FS-P56-DEN-42'),
+(56, '39', N'Xám', 26, 'FS-P56-XAM-39'),
+(56, '40', N'Xám', 48, 'FS-P56-XAM-40'),
+(56, '41', N'Xám', 35, 'FS-P56-XAM-41'),
+(56, '42', N'Xám', 22, 'FS-P56-XAM-42'),
+(57, '39', N'Trắng', 25, 'FS-P57-TRA-39'),
+(57, '40', N'Trắng', 47, 'FS-P57-TRA-40'),
+(57, '41', N'Trắng', 34, 'FS-P57-TRA-41'),
+(57, '42', N'Trắng', 21, 'FS-P57-TRA-42'),
+(57, '39', N'Đen', 43, 'FS-P57-DEN-39'),
+(57, '40', N'Đen', 30, 'FS-P57-DEN-40'),
+(57, '41', N'Đen', 17, 'FS-P57-DEN-41'),
+(57, '42', N'Đen', 39, 'FS-P57-DEN-42'),
+(57, '39', N'Xám', 26, 'FS-P57-XAM-39'),
+(57, '40', N'Xám', 48, 'FS-P57-XAM-40'),
+(57, '41', N'Xám', 35, 'FS-P57-XAM-41'),
+(57, '42', N'Xám', 22, 'FS-P57-XAM-42'),
+(58, '39', N'Trắng', 25, 'FS-P58-TRA-39'),
+(58, '40', N'Trắng', 47, 'FS-P58-TRA-40'),
+(58, '41', N'Trắng', 34, 'FS-P58-TRA-41'),
+(58, '42', N'Trắng', 21, 'FS-P58-TRA-42'),
+(58, '39', N'Đen', 43, 'FS-P58-DEN-39'),
+(58, '40', N'Đen', 30, 'FS-P58-DEN-40'),
+(58, '41', N'Đen', 17, 'FS-P58-DEN-41'),
+(58, '42', N'Đen', 39, 'FS-P58-DEN-42'),
+(58, '39', N'Xám', 26, 'FS-P58-XAM-39'),
+(58, '40', N'Xám', 48, 'FS-P58-XAM-40'),
+(58, '41', N'Xám', 35, 'FS-P58-XAM-41'),
+(58, '42', N'Xám', 22, 'FS-P58-XAM-42'),
+(59, '39', N'Trắng', 25, 'FS-P59-TRA-39'),
+(59, '40', N'Trắng', 47, 'FS-P59-TRA-40'),
+(59, '41', N'Trắng', 34, 'FS-P59-TRA-41'),
+(59, '42', N'Trắng', 21, 'FS-P59-TRA-42'),
+(59, '39', N'Đen', 43, 'FS-P59-DEN-39'),
+(59, '40', N'Đen', 30, 'FS-P59-DEN-40'),
+(59, '41', N'Đen', 17, 'FS-P59-DEN-41'),
+(59, '42', N'Đen', 39, 'FS-P59-DEN-42'),
+(59, '39', N'Xám', 26, 'FS-P59-XAM-39');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(140, '15"', 'Đen', 24, 'BLN-LT-15-DEN'), (140, '15"', 'Xám', 22, 'BLN-LT-15-GRA'),
-(141, 'Mini', 'Đen', 18, 'BLNU-MN-MNI-DEN'), (141, 'Mini', 'Be', 16, 'BLNU-MN-MNI-BE');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(140, 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80&fit=crop', 1), (140, 'https://images.unsplash.com/photo-1547949003-9792a18a2601?w=600&q=80&fit=crop', 0),
-(141, 'https://images.unsplash.com/photo-1581605405669-fcdf81165afa?w=600&q=80&fit=crop', 1), (141, 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80&fit=crop', 0);
-
-/* --- 142: Túi đeo chéo --- */
+(59, '40', N'Xám', 48, 'FS-P59-XAM-40'),
+(59, '41', N'Xám', 35, 'FS-P59-XAM-41'),
+(59, '42', N'Xám', 22, 'FS-P59-XAM-42'),
+(60, '39', N'Trắng', 25, 'FS-P60-TRA-39'),
+(60, '40', N'Trắng', 47, 'FS-P60-TRA-40'),
+(60, '41', N'Trắng', 34, 'FS-P60-TRA-41'),
+(60, '42', N'Trắng', 21, 'FS-P60-TRA-42'),
+(60, '39', N'Đen', 43, 'FS-P60-DEN-39'),
+(60, '40', N'Đen', 30, 'FS-P60-DEN-40'),
+(60, '41', N'Đen', 17, 'FS-P60-DEN-41'),
+(60, '42', N'Đen', 39, 'FS-P60-DEN-42'),
+(60, '39', N'Xám', 26, 'FS-P60-XAM-39'),
+(60, '40', N'Xám', 48, 'FS-P60-XAM-40'),
+(60, '41', N'Xám', 35, 'FS-P60-XAM-41'),
+(60, '42', N'Xám', 22, 'FS-P60-XAM-42'),
+(61, '39', N'Trắng', 25, 'FS-P61-TRA-39'),
+(61, '40', N'Trắng', 47, 'FS-P61-TRA-40'),
+(61, '41', N'Trắng', 34, 'FS-P61-TRA-41'),
+(61, '42', N'Trắng', 21, 'FS-P61-TRA-42'),
+(61, '39', N'Đen', 43, 'FS-P61-DEN-39'),
+(61, '40', N'Đen', 30, 'FS-P61-DEN-40'),
+(61, '41', N'Đen', 17, 'FS-P61-DEN-41'),
+(61, '42', N'Đen', 39, 'FS-P61-DEN-42'),
+(61, '39', N'Xám', 26, 'FS-P61-XAM-39'),
+(61, '40', N'Xám', 48, 'FS-P61-XAM-40'),
+(61, '41', N'Xám', 35, 'FS-P61-XAM-41'),
+(61, '42', N'Xám', 22, 'FS-P61-XAM-42'),
+(62, '36', N'Đen', 25, 'FS-P62-DEN-36'),
+(62, '37', N'Đen', 47, 'FS-P62-DEN-37'),
+(62, '38', N'Đen', 34, 'FS-P62-DEN-38'),
+(62, '36', N'Be', 21, 'FS-P62-BE-36'),
+(62, '37', N'Be', 43, 'FS-P62-BE-37'),
+(62, '38', N'Be', 30, 'FS-P62-BE-38'),
+(62, '36', N'Kem', 17, 'FS-P62-KEM-36'),
+(62, '37', N'Kem', 39, 'FS-P62-KEM-37'),
+(62, '38', N'Kem', 26, 'FS-P62-KEM-38'),
+(63, '36', N'Đen', 25, 'FS-P63-DEN-36'),
+(63, '37', N'Đen', 47, 'FS-P63-DEN-37'),
+(63, '38', N'Đen', 34, 'FS-P63-DEN-38'),
+(63, '36', N'Be', 21, 'FS-P63-BE-36'),
+(63, '37', N'Be', 43, 'FS-P63-BE-37'),
+(63, '38', N'Be', 30, 'FS-P63-BE-38'),
+(63, '36', N'Kem', 17, 'FS-P63-KEM-36'),
+(63, '37', N'Kem', 39, 'FS-P63-KEM-37'),
+(63, '38', N'Kem', 26, 'FS-P63-KEM-38'),
+(64, '36', N'Đen', 25, 'FS-P64-DEN-36'),
+(64, '37', N'Đen', 47, 'FS-P64-DEN-37'),
+(64, '38', N'Đen', 34, 'FS-P64-DEN-38'),
+(64, '36', N'Be', 21, 'FS-P64-BE-36'),
+(64, '37', N'Be', 43, 'FS-P64-BE-37');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(142, 'One Size', 'Xanh Rêu', 16, 'TDN-CV-OS-RX'), (142, 'One Size', 'Nâu', 18, 'TDN-CV-OS-NAU');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(142, 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80&fit=crop', 1), (142, 'https://images.unsplash.com/photo-1559563458-527698bf5295?w=600&q=80&fit=crop', 0);
-
-/* --- 143: Ví nam --- */
+(64, '38', N'Be', 30, 'FS-P64-BE-38'),
+(64, '36', N'Kem', 17, 'FS-P64-KEM-36'),
+(64, '37', N'Kem', 39, 'FS-P64-KEM-37'),
+(64, '38', N'Kem', 26, 'FS-P64-KEM-38'),
+(65, '36', N'Đen', 25, 'FS-P65-DEN-36'),
+(65, '37', N'Đen', 47, 'FS-P65-DEN-37'),
+(65, '38', N'Đen', 34, 'FS-P65-DEN-38'),
+(65, '36', N'Be', 21, 'FS-P65-BE-36'),
+(65, '37', N'Be', 43, 'FS-P65-BE-37'),
+(65, '38', N'Be', 30, 'FS-P65-BE-38'),
+(65, '36', N'Kem', 17, 'FS-P65-KEM-36'),
+(65, '37', N'Kem', 39, 'FS-P65-KEM-37'),
+(65, '38', N'Kem', 26, 'FS-P65-KEM-38'),
+(66, '36', N'Đen', 25, 'FS-P66-DEN-36'),
+(66, '37', N'Đen', 47, 'FS-P66-DEN-37'),
+(66, '38', N'Đen', 34, 'FS-P66-DEN-38'),
+(66, '36', N'Be', 21, 'FS-P66-BE-36'),
+(66, '37', N'Be', 43, 'FS-P66-BE-37'),
+(66, '38', N'Be', 30, 'FS-P66-BE-38'),
+(66, '36', N'Kem', 17, 'FS-P66-KEM-36'),
+(66, '37', N'Kem', 39, 'FS-P66-KEM-37'),
+(66, '38', N'Kem', 26, 'FS-P66-KEM-38'),
+(67, '36', N'Đen', 25, 'FS-P67-DEN-36'),
+(67, '37', N'Đen', 47, 'FS-P67-DEN-37'),
+(67, '38', N'Đen', 34, 'FS-P67-DEN-38'),
+(67, '36', N'Be', 21, 'FS-P67-BE-36'),
+(67, '37', N'Be', 43, 'FS-P67-BE-37'),
+(67, '38', N'Be', 30, 'FS-P67-BE-38'),
+(67, '36', N'Kem', 17, 'FS-P67-KEM-36'),
+(67, '37', N'Kem', 39, 'FS-P67-KEM-37'),
+(67, '38', N'Kem', 26, 'FS-P67-KEM-38'),
+(68, 'One Size', N'Đen', 25, 'FS-P68-DEN-ONESIZE'),
+(68, 'One Size', N'Nâu', 47, 'FS-P68-NAU-ONESIZE'),
+(68, 'One Size', N'Be', 34, 'FS-P68-BE-ONESIZE'),
+(69, 'One Size', N'Đen', 25, 'FS-P69-DEN-ONESIZE'),
+(69, 'One Size', N'Nâu', 47, 'FS-P69-NAU-ONESIZE'),
+(69, 'One Size', N'Be', 34, 'FS-P69-BE-ONESIZE'),
+(70, 'One Size', N'Đen', 25, 'FS-P70-DEN-ONESIZE'),
+(70, 'One Size', N'Nâu', 47, 'FS-P70-NAU-ONESIZE'),
+(70, 'One Size', N'Be', 34, 'FS-P70-BE-ONESIZE'),
+(71, 'One Size', N'Đen', 25, 'FS-P71-DEN-ONESIZE'),
+(71, 'One Size', N'Nâu', 47, 'FS-P71-NAU-ONESIZE'),
+(71, 'One Size', N'Be', 34, 'FS-P71-BE-ONESIZE'),
+(72, 'One Size', N'Đen', 25, 'FS-P72-DEN-ONESIZE'),
+(72, 'One Size', N'Nâu', 47, 'FS-P72-NAU-ONESIZE'),
+(72, 'One Size', N'Be', 34, 'FS-P72-BE-ONESIZE'),
+(73, 'One Size', N'Đen', 25, 'FS-P73-DEN-ONESIZE'),
+(73, 'One Size', N'Nâu', 47, 'FS-P73-NAU-ONESIZE'),
+(73, 'One Size', N'Be', 34, 'FS-P73-BE-ONESIZE'),
+(74, 'One Size', N'Đen', 25, 'FS-P74-DEN-ONESIZE');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(143, 'Ngang', 'Đen', 18, 'VN-DB-NG-DEN'), (143, 'Ngang', 'Nâu', 16, 'VN-DB-NG-NAU');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(143, 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&q=80&fit=crop', 1), (143, 'https://images.unsplash.com/photo-1606503825008-909a67e63c3d?w=600&q=80&fit=crop', 0);
-
-/* --- 144: Đồng hồ --- */
+(74, 'One Size', N'Nâu', 47, 'FS-P74-NAU-ONESIZE'),
+(74, 'One Size', N'Be', 34, 'FS-P74-BE-ONESIZE'),
+(75, 'One Size', N'Đen', 25, 'FS-P75-DEN-ONESIZE'),
+(75, 'One Size', N'Nâu', 47, 'FS-P75-NAU-ONESIZE'),
+(75, 'One Size', N'Be', 34, 'FS-P75-BE-ONESIZE'),
+(76, 'One Size', N'Đen', 25, 'FS-P76-DEN-ONESIZE'),
+(76, 'One Size', N'Nâu', 47, 'FS-P76-NAU-ONESIZE'),
+(76, 'One Size', N'Be', 34, 'FS-P76-BE-ONESIZE'),
+(77, 'One Size', N'Đen', 25, 'FS-P77-DEN-ONESIZE'),
+(77, 'One Size', N'Nâu', 47, 'FS-P77-NAU-ONESIZE'),
+(77, 'One Size', N'Be', 34, 'FS-P77-BE-ONESIZE'),
+(78, 'One Size', N'Đen', 25, 'FS-P78-DEN-ONESIZE'),
+(78, 'One Size', N'Nâu', 47, 'FS-P78-NAU-ONESIZE'),
+(78, 'One Size', N'Be', 34, 'FS-P78-BE-ONESIZE'),
+(79, 'One Size', N'Đen', 25, 'FS-P79-DEN-ONESIZE'),
+(79, 'One Size', N'Nâu', 47, 'FS-P79-NAU-ONESIZE'),
+(79, 'One Size', N'Be', 34, 'FS-P79-BE-ONESIZE'),
+(80, 'Free', N'Đen', 25, 'FS-P80-DEN-FREE'),
+(80, 'Free', N'Bạc', 47, 'FS-P80-BAC-FREE'),
+(80, 'Free', N'Vàng', 34, 'FS-P80-VA-FREE'),
+(81, 'Free', N'Đen', 25, 'FS-P81-DEN-FREE'),
+(81, 'Free', N'Bạc', 47, 'FS-P81-BAC-FREE'),
+(81, 'Free', N'Vàng', 34, 'FS-P81-VA-FREE'),
+(82, 'Free', N'Đen', 25, 'FS-P82-DEN-FREE'),
+(82, 'Free', N'Bạc', 47, 'FS-P82-BAC-FREE'),
+(82, 'Free', N'Vàng', 34, 'FS-P82-VA-FREE'),
+(83, 'Free', N'Đen', 25, 'FS-P83-DEN-FREE'),
+(83, 'Free', N'Bạc', 47, 'FS-P83-BAC-FREE'),
+(83, 'Free', N'Vàng', 34, 'FS-P83-VA-FREE'),
+(84, 'Free', N'Đen', 25, 'FS-P84-DEN-FREE'),
+(84, 'Free', N'Bạc', 47, 'FS-P84-BAC-FREE'),
+(84, 'Free', N'Vàng', 34, 'FS-P84-VA-FREE'),
+(85, 'Free', N'Đen', 25, 'FS-P85-DEN-FREE'),
+(85, 'Free', N'Bạc', 47, 'FS-P85-BAC-FREE'),
+(85, 'Free', N'Vàng', 34, 'FS-P85-VA-FREE'),
+(86, 'Free', N'Đen', 25, 'FS-P86-DEN-FREE'),
+(86, 'Free', N'Bạc', 47, 'FS-P86-BAC-FREE'),
+(86, 'Free', N'Vàng', 34, 'FS-P86-VA-FREE'),
+(87, 'Free', N'Đen', 25, 'FS-P87-DEN-FREE'),
+(87, 'Free', N'Bạc', 47, 'FS-P87-BAC-FREE'),
+(87, 'Free', N'Vàng', 34, 'FS-P87-VA-FREE'),
+(88, 'Free', N'Đen', 25, 'FS-P88-DEN-FREE'),
+(88, 'Free', N'Bạc', 47, 'FS-P88-BAC-FREE'),
+(88, 'Free', N'Vàng', 34, 'FS-P88-VA-FREE'),
+(89, 'Free', N'Đen', 25, 'FS-P89-DEN-FREE'),
+(89, 'Free', N'Bạc', 47, 'FS-P89-BAC-FREE'),
+(89, 'Free', N'Vàng', 34, 'FS-P89-VA-FREE'),
+(90, 'Free', N'Đen', 25, 'FS-P90-DEN-FREE'),
+(90, 'Free', N'Bạc', 47, 'FS-P90-BAC-FREE'),
+(90, 'Free', N'Vàng', 34, 'FS-P90-VA-FREE');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(144, 'One Size', 'Dây Đen', 16, 'DHNU-MN-OS-DD'), (144, 'One Size', 'Dây Nâu', 18, 'DHNU-MN-OS-DN'), (144, 'One Size', 'Mặt Vàng', 12, 'DHNU-MN-OS-MV');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(144, 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80&fit=crop', 1), (144, 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=600&q=80&fit=crop', 0);
-
-/* --- 145: Kính mát --- */
+(91, 'Free', N'Đen', 25, 'FS-P91-DEN-FREE'),
+(91, 'Free', N'Bạc', 47, 'FS-P91-BAC-FREE'),
+(91, 'Free', N'Vàng', 34, 'FS-P91-VA-FREE'),
+(92, 'Free', N'Đen', 25, 'FS-P92-DEN-FREE'),
+(92, 'Free', N'Bạc', 47, 'FS-P92-BAC-FREE'),
+(92, 'Free', N'Vàng', 34, 'FS-P92-VA-FREE'),
+(93, 'Free', N'Đen', 25, 'FS-P93-DEN-FREE'),
+(93, 'Free', N'Bạc', 47, 'FS-P93-BAC-FREE'),
+(93, 'Free', N'Vàng', 34, 'FS-P93-VA-FREE'),
+(94, 'Free', N'Đen', 25, 'FS-P94-DEN-FREE'),
+(94, 'Free', N'Bạc', 47, 'FS-P94-BAC-FREE'),
+(94, 'Free', N'Vàng', 34, 'FS-P94-VA-FREE'),
+(95, 'Free', N'Đen', 25, 'FS-P95-DEN-FREE'),
+(95, 'Free', N'Bạc', 47, 'FS-P95-BAC-FREE'),
+(95, 'Free', N'Vàng', 34, 'FS-P95-VA-FREE'),
+(96, 'S', N'Đen', 25, 'FS-P96-DEN-S'),
+(96, 'M', N'Đen', 47, 'FS-P96-DEN-M'),
+(96, 'L', N'Đen', 34, 'FS-P96-DEN-L'),
+(96, 'XL', N'Đen', 21, 'FS-P96-DEN-XL'),
+(96, 'S', N'Trắng', 43, 'FS-P96-TRA-S'),
+(96, 'M', N'Trắng', 30, 'FS-P96-TRA-M'),
+(96, 'L', N'Trắng', 17, 'FS-P96-TRA-L'),
+(96, 'XL', N'Trắng', 39, 'FS-P96-TRA-XL'),
+(96, 'S', N'Xám', 26, 'FS-P96-XAM-S'),
+(96, 'M', N'Xám', 48, 'FS-P96-XAM-M'),
+(96, 'L', N'Xám', 35, 'FS-P96-XAM-L'),
+(96, 'XL', N'Xám', 22, 'FS-P96-XAM-XL'),
+(96, 'S', N'Xanh Navy', 44, 'FS-P96-NAV-S'),
+(96, 'M', N'Xanh Navy', 31, 'FS-P96-NAV-M'),
+(96, 'L', N'Xanh Navy', 18, 'FS-P96-NAV-L'),
+(96, 'XL', N'Xanh Navy', 40, 'FS-P96-NAV-XL'),
+(97, 'S', N'Đen', 25, 'FS-P97-DEN-S'),
+(97, 'M', N'Đen', 47, 'FS-P97-DEN-M'),
+(97, 'L', N'Đen', 34, 'FS-P97-DEN-L'),
+(97, 'XL', N'Đen', 21, 'FS-P97-DEN-XL'),
+(97, 'S', N'Trắng', 43, 'FS-P97-TRA-S'),
+(97, 'M', N'Trắng', 30, 'FS-P97-TRA-M'),
+(97, 'L', N'Trắng', 17, 'FS-P97-TRA-L'),
+(97, 'XL', N'Trắng', 39, 'FS-P97-TRA-XL'),
+(97, 'S', N'Xám', 26, 'FS-P97-XAM-S'),
+(97, 'M', N'Xám', 48, 'FS-P97-XAM-M'),
+(97, 'L', N'Xám', 35, 'FS-P97-XAM-L'),
+(97, 'XL', N'Xám', 22, 'FS-P97-XAM-XL'),
+(97, 'S', N'Xanh Navy', 44, 'FS-P97-NAV-S'),
+(97, 'M', N'Xanh Navy', 31, 'FS-P97-NAV-M'),
+(97, 'L', N'Xanh Navy', 18, 'FS-P97-NAV-L'),
+(97, 'XL', N'Xanh Navy', 40, 'FS-P97-NAV-XL'),
+(98, 'S', N'Đen', 25, 'FS-P98-DEN-S'),
+(98, 'M', N'Đen', 47, 'FS-P98-DEN-M'),
+(98, 'L', N'Đen', 34, 'FS-P98-DEN-L');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(145, 'One Size', 'Vàng', 16, 'KM-AV-OS-VA'), (145, 'One Size', 'Bạc', 14, 'KM-AV-OS-BAC');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(145, 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600&q=80&fit=crop', 1), (145, 'https://images.unsplash.com/photo-1577803645773-f96470509666?w=600&q=80&fit=crop', 0);
-
-/* --- 146: Mũ lưỡi trai --- */
+(98, 'XL', N'Đen', 21, 'FS-P98-DEN-XL'),
+(98, 'S', N'Trắng', 43, 'FS-P98-TRA-S'),
+(98, 'M', N'Trắng', 30, 'FS-P98-TRA-M'),
+(98, 'L', N'Trắng', 17, 'FS-P98-TRA-L'),
+(98, 'XL', N'Trắng', 39, 'FS-P98-TRA-XL'),
+(98, 'S', N'Xám', 26, 'FS-P98-XAM-S'),
+(98, 'M', N'Xám', 48, 'FS-P98-XAM-M'),
+(98, 'L', N'Xám', 35, 'FS-P98-XAM-L'),
+(98, 'XL', N'Xám', 22, 'FS-P98-XAM-XL'),
+(98, 'S', N'Xanh Navy', 44, 'FS-P98-NAV-S'),
+(98, 'M', N'Xanh Navy', 31, 'FS-P98-NAV-M'),
+(98, 'L', N'Xanh Navy', 18, 'FS-P98-NAV-L'),
+(98, 'XL', N'Xanh Navy', 40, 'FS-P98-NAV-XL'),
+(99, 'S', N'Đen', 25, 'FS-P99-DEN-S'),
+(99, 'M', N'Đen', 47, 'FS-P99-DEN-M'),
+(99, 'L', N'Đen', 34, 'FS-P99-DEN-L'),
+(99, 'XL', N'Đen', 21, 'FS-P99-DEN-XL'),
+(99, 'S', N'Trắng', 43, 'FS-P99-TRA-S'),
+(99, 'M', N'Trắng', 30, 'FS-P99-TRA-M'),
+(99, 'L', N'Trắng', 17, 'FS-P99-TRA-L'),
+(99, 'XL', N'Trắng', 39, 'FS-P99-TRA-XL'),
+(99, 'S', N'Xám', 26, 'FS-P99-XAM-S'),
+(99, 'M', N'Xám', 48, 'FS-P99-XAM-M'),
+(99, 'L', N'Xám', 35, 'FS-P99-XAM-L'),
+(99, 'XL', N'Xám', 22, 'FS-P99-XAM-XL'),
+(99, 'S', N'Xanh Navy', 44, 'FS-P99-NAV-S'),
+(99, 'M', N'Xanh Navy', 31, 'FS-P99-NAV-M'),
+(99, 'L', N'Xanh Navy', 18, 'FS-P99-NAV-L'),
+(99, 'XL', N'Xanh Navy', 40, 'FS-P99-NAV-XL'),
+(100, 'S', N'Đen', 25, 'FS-P100-DEN-S'),
+(100, 'M', N'Đen', 47, 'FS-P100-DEN-M'),
+(100, 'L', N'Đen', 34, 'FS-P100-DEN-L'),
+(100, 'XL', N'Đen', 21, 'FS-P100-DEN-XL'),
+(100, 'S', N'Trắng', 43, 'FS-P100-TRA-S'),
+(100, 'M', N'Trắng', 30, 'FS-P100-TRA-M'),
+(100, 'L', N'Trắng', 17, 'FS-P100-TRA-L'),
+(100, 'XL', N'Trắng', 39, 'FS-P100-TRA-XL'),
+(100, 'S', N'Xám', 26, 'FS-P100-XAM-S'),
+(100, 'M', N'Xám', 48, 'FS-P100-XAM-M'),
+(100, 'L', N'Xám', 35, 'FS-P100-XAM-L'),
+(100, 'XL', N'Xám', 22, 'FS-P100-XAM-XL'),
+(100, 'S', N'Xanh Navy', 44, 'FS-P100-NAV-S'),
+(100, 'M', N'Xanh Navy', 31, 'FS-P100-NAV-M'),
+(100, 'L', N'Xanh Navy', 18, 'FS-P100-NAV-L'),
+(100, 'XL', N'Xanh Navy', 40, 'FS-P100-NAV-XL'),
+(101, 'S', N'Đen', 25, 'FS-P101-DEN-S'),
+(101, 'M', N'Đen', 47, 'FS-P101-DEN-M'),
+(101, 'L', N'Đen', 34, 'FS-P101-DEN-L'),
+(101, 'XL', N'Đen', 21, 'FS-P101-DEN-XL'),
+(101, 'S', N'Trắng', 43, 'FS-P101-TRA-S');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(146, 'Free', 'Đen', 24, 'MLT-BC-FR-DEN'), (146, 'Free', 'Be', 22, 'MLT-BC-FR-BE'), (146, 'Free', 'Xanh Rêu', 18, 'MLT-BC-FR-RX');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(146, 'https://images.unsplash.com/photo-1521369909029-2afed882baee?w=600&q=80&fit=crop', 1), (146, 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600&q=80&fit=crop', 0);
-
-/* --- 147: Khăn len cashmere --- */
+(101, 'M', N'Trắng', 30, 'FS-P101-TRA-M'),
+(101, 'L', N'Trắng', 17, 'FS-P101-TRA-L'),
+(101, 'XL', N'Trắng', 39, 'FS-P101-TRA-XL'),
+(101, 'S', N'Xám', 26, 'FS-P101-XAM-S'),
+(101, 'M', N'Xám', 48, 'FS-P101-XAM-M'),
+(101, 'L', N'Xám', 35, 'FS-P101-XAM-L'),
+(101, 'XL', N'Xám', 22, 'FS-P101-XAM-XL'),
+(101, 'S', N'Xanh Navy', 44, 'FS-P101-NAV-S'),
+(101, 'M', N'Xanh Navy', 31, 'FS-P101-NAV-M'),
+(101, 'L', N'Xanh Navy', 18, 'FS-P101-NAV-L'),
+(101, 'XL', N'Xanh Navy', 40, 'FS-P101-NAV-XL'),
+(102, 'S', N'Đen', 25, 'FS-P102-DEN-S'),
+(102, 'M', N'Đen', 47, 'FS-P102-DEN-M'),
+(102, 'L', N'Đen', 34, 'FS-P102-DEN-L'),
+(102, 'XL', N'Đen', 21, 'FS-P102-DEN-XL'),
+(102, 'S', N'Trắng', 43, 'FS-P102-TRA-S'),
+(102, 'M', N'Trắng', 30, 'FS-P102-TRA-M'),
+(102, 'L', N'Trắng', 17, 'FS-P102-TRA-L'),
+(102, 'XL', N'Trắng', 39, 'FS-P102-TRA-XL'),
+(102, 'S', N'Xám', 26, 'FS-P102-XAM-S'),
+(102, 'M', N'Xám', 48, 'FS-P102-XAM-M'),
+(102, 'L', N'Xám', 35, 'FS-P102-XAM-L'),
+(102, 'XL', N'Xám', 22, 'FS-P102-XAM-XL'),
+(102, 'S', N'Xanh Navy', 44, 'FS-P102-NAV-S'),
+(102, 'M', N'Xanh Navy', 31, 'FS-P102-NAV-M'),
+(102, 'L', N'Xanh Navy', 18, 'FS-P102-NAV-L'),
+(102, 'XL', N'Xanh Navy', 40, 'FS-P102-NAV-XL'),
+(103, 'S', N'Đen', 25, 'FS-P103-DEN-S'),
+(103, 'M', N'Đen', 47, 'FS-P103-DEN-M'),
+(103, 'L', N'Đen', 34, 'FS-P103-DEN-L'),
+(103, 'XL', N'Đen', 21, 'FS-P103-DEN-XL'),
+(103, 'S', N'Trắng', 43, 'FS-P103-TRA-S'),
+(103, 'M', N'Trắng', 30, 'FS-P103-TRA-M'),
+(103, 'L', N'Trắng', 17, 'FS-P103-TRA-L'),
+(103, 'XL', N'Trắng', 39, 'FS-P103-TRA-XL'),
+(103, 'S', N'Xám', 26, 'FS-P103-XAM-S'),
+(103, 'M', N'Xám', 48, 'FS-P103-XAM-M'),
+(103, 'L', N'Xám', 35, 'FS-P103-XAM-L'),
+(103, 'XL', N'Xám', 22, 'FS-P103-XAM-XL'),
+(103, 'S', N'Xanh Navy', 44, 'FS-P103-NAV-S'),
+(103, 'M', N'Xanh Navy', 31, 'FS-P103-NAV-M'),
+(103, 'L', N'Xanh Navy', 18, 'FS-P103-NAV-L'),
+(103, 'XL', N'Xanh Navy', 40, 'FS-P103-NAV-XL'),
+(104, 'S', N'Đen', 25, 'FS-P104-DEN-S'),
+(104, 'M', N'Đen', 47, 'FS-P104-DEN-M'),
+(104, 'L', N'Đen', 34, 'FS-P104-DEN-L'),
+(104, 'XL', N'Đen', 21, 'FS-P104-DEN-XL'),
+(104, 'S', N'Trắng', 43, 'FS-P104-TRA-S'),
+(104, 'M', N'Trắng', 30, 'FS-P104-TRA-M'),
+(104, 'L', N'Trắng', 17, 'FS-P104-TRA-L');
 INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(147, '180x30', 'Be', 18, 'KHLEN-CS-180-BE'), (147, '180x30', 'Xám', 16, 'KHLEN-CS-180-GRA'), (147, '180x30', 'Đỏ', 14, 'KHLEN-CS-180-DO');
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(147, 'https://images.unsplash.com/photo-1601924994987-69e26d4dc8c0?w=600&q=80&fit=crop', 1), (147, 'https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?w=600&q=80&fit=crop', 0);
+(104, 'XL', N'Trắng', 39, 'FS-P104-TRA-XL'),
+(104, 'S', N'Xám', 26, 'FS-P104-XAM-S'),
+(104, 'M', N'Xám', 48, 'FS-P104-XAM-M'),
+(104, 'L', N'Xám', 35, 'FS-P104-XAM-L'),
+(104, 'XL', N'Xám', 22, 'FS-P104-XAM-XL'),
+(104, 'S', N'Xanh Navy', 44, 'FS-P104-NAV-S'),
+(104, 'M', N'Xanh Navy', 31, 'FS-P104-NAV-M'),
+(104, 'L', N'Xanh Navy', 18, 'FS-P104-NAV-L'),
+(104, 'XL', N'Xanh Navy', 40, 'FS-P104-NAV-XL'),
+(105, 'S', N'Đen', 25, 'FS-P105-DEN-S'),
+(105, 'M', N'Đen', 47, 'FS-P105-DEN-M'),
+(105, 'L', N'Đen', 34, 'FS-P105-DEN-L'),
+(105, 'XL', N'Đen', 21, 'FS-P105-DEN-XL'),
+(105, 'S', N'Trắng', 43, 'FS-P105-TRA-S'),
+(105, 'M', N'Trắng', 30, 'FS-P105-TRA-M'),
+(105, 'L', N'Trắng', 17, 'FS-P105-TRA-L'),
+(105, 'XL', N'Trắng', 39, 'FS-P105-TRA-XL'),
+(105, 'S', N'Xám', 26, 'FS-P105-XAM-S'),
+(105, 'M', N'Xám', 48, 'FS-P105-XAM-M'),
+(105, 'L', N'Xám', 35, 'FS-P105-XAM-L'),
+(105, 'XL', N'Xám', 22, 'FS-P105-XAM-XL'),
+(105, 'S', N'Xanh Navy', 44, 'FS-P105-NAV-S'),
+(105, 'M', N'Xanh Navy', 31, 'FS-P105-NAV-M'),
+(105, 'L', N'Xanh Navy', 18, 'FS-P105-NAV-L'),
+(105, 'XL', N'Xanh Navy', 40, 'FS-P105-NAV-XL'),
+(106, 'S', N'Đen', 25, 'FS-P106-DEN-S'),
+(106, 'M', N'Đen', 47, 'FS-P106-DEN-M'),
+(106, 'L', N'Đen', 34, 'FS-P106-DEN-L'),
+(106, 'XL', N'Đen', 21, 'FS-P106-DEN-XL'),
+(106, 'S', N'Trắng', 43, 'FS-P106-TRA-S'),
+(106, 'M', N'Trắng', 30, 'FS-P106-TRA-M'),
+(106, 'L', N'Trắng', 17, 'FS-P106-TRA-L'),
+(106, 'XL', N'Trắng', 39, 'FS-P106-TRA-XL'),
+(106, 'S', N'Xám', 26, 'FS-P106-XAM-S'),
+(106, 'M', N'Xám', 48, 'FS-P106-XAM-M'),
+(106, 'L', N'Xám', 35, 'FS-P106-XAM-L'),
+(106, 'XL', N'Xám', 22, 'FS-P106-XAM-XL'),
+(106, 'S', N'Xanh Navy', 44, 'FS-P106-NAV-S'),
+(106, 'M', N'Xanh Navy', 31, 'FS-P106-NAV-M'),
+(106, 'L', N'Xanh Navy', 18, 'FS-P106-NAV-L'),
+(106, 'XL', N'Xanh Navy', 40, 'FS-P106-NAV-XL'),
+(107, 'S', N'Đen', 25, 'FS-P107-DEN-S'),
+(107, 'M', N'Đen', 47, 'FS-P107-DEN-M'),
+(107, 'L', N'Đen', 34, 'FS-P107-DEN-L'),
+(107, 'XL', N'Đen', 21, 'FS-P107-DEN-XL'),
+(107, 'S', N'Trắng', 43, 'FS-P107-TRA-S'),
+(107, 'M', N'Trắng', 30, 'FS-P107-TRA-M'),
+(107, 'L', N'Trắng', 17, 'FS-P107-TRA-L'),
+(107, 'XL', N'Trắng', 39, 'FS-P107-TRA-XL'),
+(107, 'S', N'Xám', 26, 'FS-P107-XAM-S');
+INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
+(107, 'M', N'Xám', 48, 'FS-P107-XAM-M'),
+(107, 'L', N'Xám', 35, 'FS-P107-XAM-L'),
+(107, 'XL', N'Xám', 22, 'FS-P107-XAM-XL'),
+(107, 'S', N'Xanh Navy', 44, 'FS-P107-NAV-S'),
+(107, 'M', N'Xanh Navy', 31, 'FS-P107-NAV-M'),
+(107, 'L', N'Xanh Navy', 18, 'FS-P107-NAV-L'),
+(107, 'XL', N'Xanh Navy', 40, 'FS-P107-NAV-XL'),
+(108, 'M', N'Đen', 18, 'AP-DN-800-M-DEN'),
+(108, 'L', N'Đen', 22, 'AP-DN-800-L-DEN'),
+(108, 'XL', N'Đen', 15, 'AP-DN-800-XL-DEN'),
+(108, 'M', N'Xanh Navy', 16, 'AP-DN-800-M-NAV'),
+(108, 'L', N'Xanh Navy', 20, 'AP-DN-800-L-NAV'),
+(109, 'S', N'Be', 12, 'APNU-EL-S-BE'),
+(109, 'M', N'Be', 18, 'APNU-EL-M-BE'),
+(109, 'L', N'Be', 14, 'APNU-EL-L-BE'),
+(109, 'S', N'Đen', 10, 'APNU-EL-S-DEN'),
+(109, 'M', N'Đen', 16, 'APNU-EL-M-DEN'),
+(110, 'M', N'Đen', 20, 'APN-HD-M-DEN'),
+(110, 'L', N'Đen', 24, 'APN-HD-L-DEN'),
+(110, 'XL', N'Đen', 18, 'APN-HD-XL-DEN'),
+(110, 'M', N'Xám', 16, 'APN-HD-M-GRA'),
+(110, 'L', N'Xám', 20, 'APN-HD-L-GRA'),
+(111, 'M', N'Đen', 14, 'AVN-CL-M-DEN'),
+(111, 'L', N'Đen', 18, 'AVN-CL-L-DEN'),
+(111, 'XL', N'Đen', 12, 'AVN-CL-XL-DEN'),
+(111, 'M', N'Xanh Navy', 10, 'AVN-CL-M-NAV'),
+(111, 'L', N'Xanh Navy', 14, 'AVN-CL-L-NAV'),
+(112, 'S', N'Be Caro', 12, 'AVNU-BC-S-BC'),
+(112, 'M', N'Be Caro', 18, 'AVNU-BC-M-BC'),
+(112, 'L', N'Be Caro', 14, 'AVNU-BC-L-BC'),
+(112, 'S', N'Xám Caro', 10, 'AVNU-BC-S-GC'),
+(113, '30', N'Be', 25, 'QSN-CH-30-BE'),
+(113, '32', N'Be', 32, 'QSN-CH-32-BE'),
+(113, '34', N'Be', 28, 'QSN-CH-34-BE'),
+(113, '32', N'Xanh Navy', 22, 'QSN-CH-32-NAV'),
+(113, '34', N'Xanh Navy', 18, 'QSN-CH-34-NAV'),
+(114, 'M', N'Đen', 30, 'QSN-PF-M-DEN'),
+(114, 'L', N'Đen', 38, 'QSN-PF-L-DEN'),
+(114, 'XL', N'Đen', 26, 'QSN-PF-XL-DEN'),
+(114, 'M', N'Xám', 24, 'QSN-PF-M-GRA'),
+(115, '30', N'Xanh Nhạt', 20, 'QSN-DV-30-XN'),
+(115, '32', N'Xanh Nhạt', 28, 'QSN-DV-32-XN'),
+(115, '34', N'Xanh Nhạt', 22, 'QSN-DV-34-XN'),
+(115, '30', N'Xanh Đậm', 16, 'QSN-DV-30-XD'),
+(116, 'S', N'Xanh Nhạt', 22, 'QSNU-CH-S-XN'),
+(116, 'M', N'Xanh Nhạt', 30, 'QSNU-CH-M-XN'),
+(116, 'L', N'Xanh Nhạt', 24, 'QSNU-CH-L-XN'),
+(116, 'M', N'Đen', 18, 'QSNU-CH-M-DEN'),
+(117, 'S', N'Trắng', 20, 'QSNU-LI-S-TRA'),
+(117, 'M', N'Trắng', 28, 'QSNU-LI-M-TRA');
+INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
+(117, 'L', N'Trắng', 22, 'QSNU-LI-L-TRA'),
+(117, 'M', N'Be', 18, 'QSNU-LI-M-BE'),
+(118, 'S', N'Be', 22, 'QBNU-CG-S-BE'),
+(118, 'M', N'Be', 30, 'QBNU-CG-M-BE'),
+(118, 'L', N'Be', 24, 'QBNU-CG-L-BE'),
+(118, 'M', N'Xanh Olive', 18, 'QBNU-CG-M-OLV'),
+(119, 'S', N'Xanh Nhạt', 20, 'QBNU-OS-S-XN'),
+(119, 'M', N'Xanh Nhạt', 28, 'QBNU-OS-M-XN'),
+(119, 'L', N'Xanh Nhạt', 22, 'QBNU-OS-L-XN'),
+(119, 'M', N'Xanh Đậm', 16, 'QBNU-OS-M-XD'),
+(120, 'S', N'Trắng', 22, 'VYN-TP-S-TRA'),
+(120, 'M', N'Trắng', 32, 'VYN-TP-M-TRA'),
+(120, 'L', N'Trắng', 26, 'VYN-TP-L-TRA'),
+(120, 'S', N'Xanh Navy', 16, 'VYN-TP-S-NAV'),
+(121, 'S', N'Xanh Nhạt', 18, 'VYN-DN-S-XN'),
+(121, 'M', N'Xanh Nhạt', 24, 'VYN-DN-M-XN'),
+(121, 'L', N'Xanh Nhạt', 20, 'VYN-DN-L-XN'),
+(121, 'M', N'Trắng', 14, 'VYN-DN-M-TRA'),
+(122, 'S', N'Be Hoa', 16, 'VYN-HN-S-BH'),
+(122, 'M', N'Be Hoa', 22, 'VYN-HN-M-BH'),
+(122, 'L', N'Be Hoa', 18, 'VYN-HN-L-BH'),
+(122, 'M', N'Hồng Hoa', 12, 'VYN-HN-M-HH'),
+(123, 'S', N'Be', 16, 'VYD-MI-S-BE'),
+(123, 'M', N'Be', 22, 'VYD-MI-M-BE'),
+(123, 'L', N'Be', 18, 'VYD-MI-L-BE'),
+(123, 'M', N'Trắng Ngà', 14, 'VYD-MI-M-NA'),
+(124, 'S', N'Nâu Đất', 14, 'VYD-VT-S-ND'),
+(124, 'M', N'Nâu Đất', 20, 'VYD-VT-M-ND'),
+(124, 'L', N'Nâu Đất', 16, 'VYD-VT-L-ND'),
+(125, 'S', N'Đen', 20, 'CVNU-BC-S-DEN'),
+(125, 'M', N'Đen', 28, 'CVNU-BC-M-DEN'),
+(125, 'L', N'Đen', 24, 'CVNU-BC-L-DEN'),
+(125, 'M', N'Xám', 16, 'CVNU-BC-M-GRA'),
+(126, 'S', N'Trắng', 18, 'CVNU-TN-S-TRA'),
+(126, 'M', N'Trắng', 26, 'CVNU-TN-M-TRA'),
+(126, 'L', N'Trắng', 22, 'CVNU-TN-L-TRA'),
+(127, 'S', N'Xanh Nhạt', 14, 'CVNU-DN-S-XN'),
+(127, 'M', N'Xanh Nhạt', 22, 'CVNU-DN-M-XN'),
+(127, 'L', N'Xanh Nhạt', 18, 'CVNU-DN-L-XN'),
+(128, 'S', N'Đen Hoa', 16, 'DDNU-MX-S-DH'),
+(128, 'M', N'Đen Hoa', 22, 'DDNU-MX-M-DH'),
+(128, 'L', N'Đen Hoa', 18, 'DDNU-MX-L-DH'),
+(128, 'M', N'Xanh Hoa', 14, 'DDNU-MX-M-XH'),
+(129, 'S', N'Đỏ', 12, 'DDNU-LS-S-DO'),
+(129, 'M', N'Đỏ', 18, 'DDNU-LS-M-DO'),
+(129, 'L', N'Đỏ', 14, 'DDNU-LS-L-DO'),
+(130, 'S', N'Đen', 22, 'DCNU-BS-S-DEN'),
+(130, 'M', N'Đen', 30, 'DCNU-BS-M-DEN'),
+(130, 'L', N'Đen', 26, 'DCNU-BS-L-DEN'),
+(130, 'M', N'Xanh Navy', 18, 'DCNU-BS-M-NAV');
+INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
+(131, 'S', N'Be Sọc', 18, 'DCNU-KS-S-BS'),
+(131, 'M', N'Be Sọc', 24, 'DCNU-KS-M-BS'),
+(131, 'L', N'Be Sọc', 20, 'DCNU-KS-L-BS'),
+(132, 'S', N'Xanh Navy', 14, 'DCNU-TD-S-NAV'),
+(132, 'M', N'Xanh Navy', 22, 'DCNU-TD-M-NAV'),
+(132, 'L', N'Xanh Navy', 18, 'DCNU-TD-L-NAV'),
+(132, 'M', N'Đen', 14, 'DCNU-TD-M-DEN'),
+(133, '39', N'Trắng', 24, 'GTNU-SN-39-TRA'),
+(133, '40', N'Trắng', 32, 'GTNU-SN-40-TRA'),
+(133, '41', N'Trắng', 36, 'GTNU-SN-41-TRA'),
+(133, '42', N'Trắng', 28, 'GTNU-SN-42-TRA'),
+(133, '40', N'Đen', 22, 'GTNU-SN-40-DEN'),
+(133, '41', N'Đen', 26, 'GTNU-SN-41-DEN'),
+(134, '40', N'Đen', 18, 'GTN-RU-40-DEN'),
+(134, '41', N'Đen', 24, 'GTN-RU-41-DEN'),
+(134, '42', N'Đen', 20, 'GTN-RU-42-DEN'),
+(134, '43', N'Đen', 16, 'GTN-RU-43-DEN'),
+(134, '41', N'Xám', 14, 'GTN-RU-41-GRA'),
+(135, '40', N'Đen', 14, 'GDN-TN-40-DEN'),
+(135, '41', N'Đen', 20, 'GDN-TN-41-DEN'),
+(135, '42', N'Đen', 16, 'GDN-TN-42-DEN'),
+(135, '41', N'Nâu', 12, 'GDN-TN-41-NAU'),
+(136, '37', N'Be', 14, 'GDNU-LF-37-BE'),
+(136, '38', N'Be', 18, 'GDNU-LF-38-BE'),
+(136, '39', N'Be', 16, 'GDNU-LF-39-BE'),
+(136, '38', N'Nâu', 12, 'GDNU-LF-38-NAU'),
+(137, '37', N'Nâu', 18, 'SDN-DB-37-NAU'),
+(137, '38', N'Nâu', 24, 'SDN-DB-38-NAU'),
+(137, '39', N'Nâu', 22, 'SDN-DB-39-NAU'),
+(137, '38', N'Be', 16, 'SDN-DB-38-BE'),
+(138, '37', N'Đen', 18, 'GGNU-MN-37-DEN'),
+(138, '38', N'Đen', 24, 'GGNU-MN-38-DEN'),
+(138, '39', N'Đen', 20, 'GGNU-MN-39-DEN'),
+(138, '38', N'Be', 14, 'GGNU-MN-38-BE'),
+(138, '38', N'Nude', 14, 'GGNU-MN-38-NUD'),
+(139, '37', N'Hồng Pastel', 14, 'GGNU-QM-37-HP'),
+(139, '38', N'Hồng Pastel', 20, 'GGNU-QM-38-HP'),
+(139, '39', N'Hồng Pastel', 16, 'GGNU-QM-39-HP'),
+(139, '38', N'Trắng', 12, 'GGNU-QM-38-TRA'),
+(140, '15"', N'Đen', 24, 'BLN-LT-15-DEN'),
+(140, '15"', N'Xám', 22, 'BLN-LT-15-GRA'),
+(141, 'Mini', N'Đen', 18, 'BLNU-MN-MNI-DEN'),
+(141, 'Mini', N'Be', 16, 'BLNU-MN-MNI-BE'),
+(142, 'One Size', N'Xanh Rêu', 16, 'TDN-CV-OS-RX'),
+(142, 'One Size', N'Nâu', 18, 'TDN-CV-OS-NAU'),
+(143, 'Ngang', N'Đen', 18, 'VN-DB-NG-DEN'),
+(143, 'Ngang', N'Nâu', 16, 'VN-DB-NG-NAU'),
+(144, 'One Size', N'Dây Đen', 16, 'DHNU-MN-OS-DD'),
+(144, 'One Size', N'Dây Nâu', 18, 'DHNU-MN-OS-DN'),
+(144, 'One Size', N'Mặt Vàng', 12, 'DHNU-MN-OS-MV');
+INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
+(145, 'One Size', N'Vàng', 16, 'KM-AV-OS-VA'),
+(145, 'One Size', N'Bạc', 14, 'KM-AV-OS-BAC'),
+(146, 'Free', N'Đen', 24, 'MLT-BC-FR-DEN'),
+(146, 'Free', N'Be', 22, 'MLT-BC-FR-BE'),
+(146, 'Free', N'Xanh Rêu', 18, 'MLT-BC-FR-RX'),
+(147, '180x30', N'Be', 18, 'KHLEN-CS-180-BE'),
+(147, '180x30', N'Xám', 16, 'KHLEN-CS-180-GRA'),
+(147, '180x30', N'Đỏ', 14, 'KHLEN-CS-180-DO');
+GO
 
 /* ============================================================
-   5. PRODUCT VARIANTS (Biến thể - Size, Color, Stock)
+   6. PRODUCT IMAGES
    ============================================================ */
-
-/* Hàm tạo Variant */
--- Áo Thun Nam Cổ Tròn Basic (ProductId = 1)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(1, 'S', 'Đen', 25, 'ATN-CT-B-S-DEN'),
-(1, 'M', 'Đen', 40, 'ATN-CT-B-M-DEN'),
-(1, 'L', 'Đen', 35, 'ATN-CT-B-L-DEN'),
-(1, 'XL', 'Đen', 20, 'ATN-CT-B-XL-DEN'),
-(1, 'S', 'Trắng', 30, 'ATN-CT-B-S-TRA'),
-(1, 'M', 'Trắng', 45, 'ATN-CT-B-M-TRA'),
-(1, 'L', 'Trắng', 40, 'ATN-CT-B-L-TRA'),
-(1, 'XL', 'Trắng', 25, 'ATN-CT-B-XL-TRA'),
-(1, 'S', 'Xám', 20, 'ATN-CT-B-S-XAM'),
-(1, 'M', 'Xám', 30, 'ATN-CT-B-M-XAM'),
-(1, 'L', 'Xám', 25, 'ATN-CT-B-L-XAM'),
-(1, 'XL', 'Xám', 15, 'ATN-CT-B-XL-XAM');
-
--- Áo Thun Nam Cổ Vuông Oversize (ProductId = 2)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(2, 'S', 'Đen', 20, 'ATN-CV-OS-S-DEN'),
-(2, 'M', 'Đen', 35, 'ATN-CV-OS-M-DEN'),
-(2, 'L', 'Đen', 30, 'ATN-CV-OS-L-DEN'),
-(2, 'XL', 'Đen', 25, 'ATN-CV-OS-XL-DEN'),
-(2, 'XXL', 'Đen', 15, 'ATN-CV-OS-XXL-DEN'),
-(2, 'M', 'Xanh Navy', 30, 'ATN-CV-OS-M-NVY'),
-(2, 'L', 'Xanh Navy', 25, 'ATN-CV-OS-L-NVY'),
-(2, 'XL', 'Xanh Navy', 20, 'ATN-CV-OS-XL-NVY'),
-(2, 'M', 'Be', 25, 'ATN-CV-OS-M-BE'),
-(2, 'L', 'Be', 20, 'ATN-CV-OS-L-BE');
-
--- Áo Thun Nam Tay Dài Graphic (ProductId = 3)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(3, 'S', 'Đen', 15, 'ATN-TD-GR-S-DEN'),
-(3, 'M', 'Đen', 25, 'ATN-TD-GR-M-DEN'),
-(3, 'L', 'Đen', 20, 'ATN-TD-GR-L-DEN'),
-(3, 'XL', 'Đen', 10, 'ATN-TD-GR-XL-DEN'),
-(3, 'S', 'Trắng', 10, 'ATN-TD-GR-S-TRA'),
-(3, 'M', 'Trắng', 20, 'ATN-TD-GR-M-TRA'),
-(3, 'L', 'Trắng', 15, 'ATN-TD-GR-L-TRA');
-
--- Áo Thun Nữ Cổ Tròn Minimalist (ProductId = 4)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(4, 'S', 'Trắng', 35, 'ATNU-CT-MI-S-TRA'),
-(4, 'M', 'Trắng', 50, 'ATNU-CT-MI-M-TRA'),
-(4, 'L', 'Trắng', 40, 'ATNU-CT-MI-L-TRA'),
-(4, 'XL', 'Trắng', 25, 'ATNU-CT-MI-XL-TRA'),
-(4, 'S', 'Đen', 30, 'ATNU-CT-MI-S-DEN'),
-(4, 'M', 'Đen', 45, 'ATNU-CT-MI-M-DEN'),
-(4, 'L', 'Đen', 35, 'ATNU-CT-MI-L-DEN'),
-(4, 'XL', 'Đen', 20, 'ATNU-CT-MI-XL-DEN'),
-(4, 'S', 'Hồng', 20, 'ATNU-CT-MI-S-HNG'),
-(4, 'M', 'Hồng', 30, 'ATNU-CT-MI-M-HNG'),
-(4, 'L', 'Hồng', 25, 'ATNU-CT-MI-L-HNG'),
-(4, 'S', 'Xanh Mint', 15, 'ATNU-CT-MI-S-MNT'),
-(4, 'M', 'Xanh Mint', 25, 'ATNU-CT-MI-M-MNT'),
-(4, 'L', 'Xanh Mint', 20, 'ATNU-CT-MI-L-MNT');
-
--- Áo Thun Nữ Oversize (ProductId = 5)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(5, 'S', 'Đen', 25, 'ATNU-OS-S-DEN'),
-(5, 'M', 'Đen', 40, 'ATNU-OS-M-DEN'),
-(5, 'L', 'Đen', 35, 'ATNU-OS-L-DEN'),
-(5, 'XL', 'Đen', 20, 'ATNU-OS-XL-DEN'),
-(5, 'S', 'Trắng', 30, 'ATNU-OS-S-TRA'),
-(5, 'M', 'Trắng', 45, 'ATNU-OS-M-TRA'),
-(5, 'L', 'Trắng', 40, 'ATNU-OS-L-TRA'),
-(5, 'XL', 'Trắng', 25, 'ATNU-OS-XL-TRA'),
-(5, 'M', 'Be', 30, 'ATNU-OS-M-BE'),
-(5, 'L', 'Be', 25, 'ATNU-OS-L-BE'),
-(5, 'XL', 'Be', 15, 'ATNU-OS-XL-BE'),
-(5, 'M', 'Xám', 20, 'ATNU-OS-M-XAM'),
-(5, 'L', 'Xám', 15, 'ATNU-OS-L-XAM');
-
--- Áo Thun Nữ Crop Top (ProductId = 6)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(6, 'S', 'Đen', 40, 'ATNU-CT-S-DEN'),
-(6, 'M', 'Đen', 60, 'ATNU-CT-M-DEN'),
-(6, 'L', 'Đen', 50, 'ATNU-CT-L-DEN'),
-(6, 'S', 'Trắng', 35, 'ATNU-CT-S-TRA'),
-(6, 'M', 'Trắng', 55, 'ATNU-CT-M-TRA'),
-(6, 'L', 'Trắng', 45, 'ATNU-CT-L-TRA'),
-(6, 'S', 'Hồng', 25, 'ATNU-CT-S-HNG'),
-(6, 'M', 'Hồng', 40, 'ATNU-CT-M-HNG'),
-(6, 'L', 'Hồng', 30, 'ATNU-CT-L-HNG'),
-(6, 'M', 'Xanh', 30, 'ATNU-CT-M-XAN'),
-(6, 'L', 'Xanh', 25, 'ATNU-CT-L-XAN');
-
--- Áo Sơ Mi Nam Dài Tay Oxford (ProductId = 7)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(7, 'S', 'Trắng', 20, 'ASM-DT-S-TRANG'),
-(7, 'M', 'Trắng', 30, 'ASM-DT-M-TRANG'),
-(7, 'L', 'Trắng', 25, 'ASM-DT-L-TRANG'),
-(7, 'XL', 'Trắng', 15, 'ASM-DT-XL-TRANG'),
-(7, 'S', 'Xanh Nhạt', 15, 'ASM-DT-S-XANHNH'),
-(7, 'M', 'Xanh Nhạt', 25, 'ASM-DT-M-XANHNH'),
-(7, 'L', 'Xanh Nhạt', 20, 'ASM-DT-L-XANHNH'),
-(7, 'XL', 'Xanh Nhạt', 10, 'ASM-DT-XL-XANHNH'),
-(7, 'M', 'Hồng', 20, 'ASM-DT-M-HONG'),
-(7, 'L', 'Hồng', 15, 'ASM-DT-L-HONG');
-
--- Áo Sơ Mi Nam Ngắn Tay Havana (ProductId = 8)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(8, 'S', 'Trắng', 25, 'ASM-NT-S-TRANG'),
-(8, 'M', 'Trắng', 35, 'ASM-NT-M-TRANG'),
-(8, 'L', 'Trắng', 30, 'ASM-NT-L-TRANG'),
-(8, 'XL', 'Trắng', 20, 'ASM-NT-XL-TRANG'),
-(8, 'S', 'Xanh', 20, 'ASM-NT-S-XANH'),
-(8, 'M', 'Xanh', 30, 'ASM-NT-M-XANH'),
-(8, 'L', 'Xanh', 25, 'ASM-NT-L-XANH'),
-(8, 'M', 'Đỏ', 20, 'ASM-NT-M-DO'),
-(8, 'L', 'Đỏ', 15, 'ASM-NT-L-DO');
-
--- Áo Sơ Mi Nam Slim Fit Korean (Hàn Quốc) (ProductId = 9)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(9, 'S', 'Trắng', 15, 'ASM-SF-S-TRANG'),
-(9, 'M', 'Trắng', 25, 'ASM-SF-M-TRANG'),
-(9, 'L', 'Trắng', 20, 'ASM-SF-L-TRANG'),
-(9, 'XL', 'Trắng', 12, 'ASM-SF-XL-TRANG'),
-(9, 'S', 'Đen', 10, 'ASM-SF-S-DEN'),
-(9, 'M', 'Đen', 20, 'ASM-SF-M-DEN'),
-(9, 'L', 'Đen', 15, 'ASM-SF-L-DEN'),
-(9, 'M', 'Xanh Navy', 18, 'ASM-SF-M-NVY'),
-(9, 'L', 'Xanh Navy', 12, 'ASM-SF-L-NVY');
-
--- Áo Sơ Mi Nữ Dài Tay Lụa (ProductId = 10)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(10, 'S', 'Trắng', 18, 'ASN-DT-S-TRANG'),
-(10, 'M', 'Trắng', 25, 'ASN-DT-M-TRANG'),
-(10, 'L', 'Trắng', 20, 'ASN-DT-L-TRANG'),
-(10, 'XL', 'Trắng', 12, 'ASN-DT-XL-TRANG'),
-(10, 'S', 'Kem', 15, 'ASN-DT-S-KEM'),
-(10, 'M', 'Kem', 22, 'ASN-DT-M-KEM'),
-(10, 'L', 'Kem', 18, 'ASN-DT-L-KEM'),
-(10, 'M', 'Đen', 20, 'ASN-DT-M-DEN'),
-(10, 'L', 'Đen', 15, 'ASN-DT-L-DEN');
-
--- Áo Sơ Mi Nữ Ngắn Tay Caro (ProductId = 11)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(11, 'S', 'Caro Đỏ', 22, 'ASN-NT-S-CAROD'),
-(11, 'M', 'Caro Đỏ', 35, 'ASN-NT-M-CAROD'),
-(11, 'L', 'Caro Đỏ', 28, 'ASN-NT-L-CAROD'),
-(11, 'S', 'Caro Xanh', 18, 'ASN-NT-S-CAROX'),
-(11, 'M', 'Caro Xanh', 30, 'ASN-NT-M-CAROX'),
-(11, 'L', 'Caro Xanh', 24, 'ASN-NT-L-CAROX'),
-(11, 'S', 'Caro Đen', 20, 'ASN-NT-S-CARODEN'),
-(11, 'M', 'Caro Đen', 32, 'ASN-NT-M-CARODEN'),
-(11, 'L', 'Caro Đen', 25, 'ASN-NT-L-CARODEN');
-
--- Áo Khoác Nam Jeans Wash Xanh (ProductId = 12)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(12, 'S', 'Xanh Đậm', 15, 'AKN-JEANS-S-XD'),
-(12, 'M', 'Xanh Đậm', 25, 'AKN-JEANS-M-XD'),
-(12, 'L', 'Xanh Đậm', 20, 'AKN-JEANS-L-XD'),
-(12, 'XL', 'Xanh Đậm', 12, 'AKN-JEANS-XL-XD'),
-(12, 'S', 'Xanh Nhạt', 12, 'AKN-JEANS-S-XN'),
-(12, 'M', 'Xanh Nhạt', 20, 'AKN-JEANS-M-XN'),
-(12, 'L', 'Xanh Nhạt', 18, 'AKN-JEANS-L-XN'),
-(12, 'XL', 'Xanh Nhạt', 10, 'AKN-JEANS-XL-XN');
-
--- Quần Jeans Nam Slim Fit (ProductId = 13)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(13, '28', 'Xanh Đậm', 20, 'QJN-SF-28-XD'),
-(13, '29', 'Xanh Đậm', 28, 'QJN-SF-29-XD'),
-(13, '30', 'Xanh Đậm', 35, 'QJN-SF-30-XD'),
-(13, '31', 'Xanh Đậm', 32, 'QJN-SF-31-XD'),
-(13, '32', 'Xanh Đậm', 30, 'QJN-SF-32-XD'),
-(13, '33', 'Xanh Đậm', 22, 'QJN-SF-33-XD'),
-(13, '34', 'Xanh Đậm', 15, 'QJN-SF-34-XD'),
-(13, '28', 'Xanh Nhạt', 18, 'QJN-SF-28-XN'),
-(13, '29', 'Xanh Nhạt', 25, 'QJN-SF-29-XN'),
-(13, '30', 'Xanh Nhạt', 30, 'QJN-SF-30-XN'),
-(13, '31', 'Xanh Nhạt', 28, 'QJN-SF-31-XN'),
-(13, '32', 'Xanh Nhạt', 25, 'QJN-SF-32-XN'),
-(13, '33', 'Xanh Nhạt', 18, 'QJN-SF-33-XN');
-
--- Quần Jeans Nữ Skinny (ProductId = 14)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(14, '25', 'Xanh Đậm', 25, 'QJNU-SK-25-XD'),
-(14, '26', 'Xanh Đậm', 35, 'QJNU-SK-26-XD'),
-(14, '27', 'Xanh Đậm', 40, 'QJNU-SK-27-XD'),
-(14, '28', 'Xanh Đậm', 38, 'QJNU-SK-28-XD'),
-(14, '29', 'Xanh Đậm', 30, 'QJNU-SK-29-XD'),
-(14, '30', 'Xanh Đậm', 22, 'QJNU-SK-30-XD'),
-(14, '25', 'Đen', 22, 'QJNU-SK-25-DEN'),
-(14, '26', 'Đen', 30, 'QJNU-SK-26-DEN'),
-(14, '27', 'Đen', 35, 'QJNU-SK-27-DEN'),
-(14, '28', 'Đen', 32, 'QJNU-SK-28-DEN'),
-(14, '29', 'Đen', 25, 'QJNU-SK-29-DEN'),
-(14, '30', 'Đen', 18, 'QJNU-SK-30-DEN'),
-(14, '26', 'Xám', 20, 'QJNU-SK-26-XAM'),
-(14, '27', 'Xám', 28, 'QJNU-SK-27-XAM'),
-(14, '28', 'Xám', 25, 'QJNU-SK-28-XAM');
-
--- Quần Baggy Nữ Nỉ Caro (ProductId = 15)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(15, 'S', 'Caro Đen', 30, 'QBNU-BG-S-CAROD'),
-(15, 'M', 'Caro Đen', 45, 'QBNU-BG-M-CAROD'),
-(15, 'L', 'Caro Đen', 40, 'QBNU-BG-L-CAROD'),
-(15, 'XL', 'Caro Đen', 25, 'QBNU-BG-XL-CAROD'),
-(15, 'S', 'Caro Xanh', 25, 'QBNU-BG-S-CAROX'),
-(15, 'M', 'Caro Xanh', 40, 'QBNU-BG-M-CAROX'),
-(15, 'L', 'Caro Xanh', 35, 'QBNU-BG-L-CAROX'),
-(15, 'XL', 'Caro Xanh', 20, 'QBNU-BG-XL-CAROX'),
-(15, 'S', 'Caro Hồng', 20, 'QBNU-BG-S-CAROH'),
-(15, 'M', 'Caro Hồng', 32, 'QBNU-BG-M-CAROH'),
-(15, 'L', 'Caro Hồng', 28, 'QBNU-BG-L-CAROH');
-
--- Đầm Ngắn Nữ Bodycon (ProductId = 16)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(16, 'S', 'Đen', 28, 'DNU-BC-S-DEN'),
-(16, 'M', 'Đen', 40, 'DNU-BC-M-DEN'),
-(16, 'L', 'Đen', 32, 'DNU-BC-L-DEN'),
-(16, 'XL', 'Đen', 18, 'DNU-BC-XL-DEN'),
-(16, 'S', 'Đỏ', 22, 'DNU-BC-S-DO'),
-(16, 'M', 'Đỏ', 35, 'DNU-BC-M-DO'),
-(16, 'L', 'Đỏ', 28, 'DNU-BC-L-DO'),
-(16, 'XL', 'Đỏ', 15, 'DNU-BC-XL-DO'),
-(16, 'S', 'Xanh Navy', 18, 'DNU-BC-S-NVY'),
-(16, 'M', 'Xanh Navy', 30, 'DNU-BC-M-NVY'),
-(16, 'L', 'Xanh Navy', 24, 'DNU-BC-L-NVY'),
-(16, 'S', 'Hồng', 15, 'DNU-BC-S-HNG'),
-(16, 'M', 'Hồng', 25, 'DNU-BC-M-HNG'),
-(13, 'L', 'Hồng', 20, 'DNU-BC-L-HNG');
-
--- Giày Thể Thao Nam Classic White (ProductId = 17)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(17, '39', 'Trắng', 15, 'GTN-CW-39-TRA'),
-(17, '40', 'Trắng', 25, 'GTN-CW-40-TRA'),
-(17, '41', 'Trắng', 30, 'GTN-CW-41-TRA'),
-(17, '42', 'Trắng', 35, 'GTN-CW-42-TRA'),
-(17, '43', 'Trắng', 28, 'GTN-CW-43-TRA'),
-(17, '44', 'Trắng', 20, 'GTN-CW-44-TRA'),
-(17, '40', 'Đen', 20, 'GTN-CW-40-DEN'),
-(17, '41', 'Đen', 28, 'GTN-CW-41-DEN'),
-(17, '42', 'Đen', 32, 'GTN-CW-42-DEN'),
-(17, '43', 'Đen', 25, 'GTN-CW-43-DEN'),
-(17, '44', 'Đen', 18, 'GTN-CW-44-DEN');
-
--- Giày Thể Thao Nữ Sneaker Platform (ProductId = 18)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(18, '35', 'Trắng', 18, 'GTNU-PL-35-TRA'),
-(18, '36', 'Trắng', 30, 'GTNU-PL-36-TRA'),
-(18, '37', 'Trắng', 40, 'GTNU-PL-37-TRA'),
-(18, '38', 'Trắng', 38, 'GTNU-PL-38-TRA'),
-(18, '39', 'Trắng', 28, 'GTNU-PL-39-TRA'),
-(18, '35', 'Đen', 15, 'GTNU-PL-35-DEN'),
-(18, '36', 'Đen', 25, 'GTNU-PL-36-DEN'),
-(18, '37', 'Đen', 35, 'GTNU-PL-37-DEN'),
-(18, '38', 'Đen', 32, 'GTNU-PL-38-DEN'),
-(18, '39', 'Đen', 22, 'GTNU-PL-39-DEN'),
-(18, '36', 'Hồng', 20, 'GTNU-PL-36-HNG'),
-(18, '37', 'Hồng', 30, 'GTNU-PL-37-HNG'),
-(18, '38', 'Hồng', 28, 'GTNU-PL-38-HNG');
-
--- Áo Hoodie Nam Essentials (ProductId = 19)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(19, 'S', 'Đen', 25, 'AHN-ES-S-DEN'),
-(19, 'M', 'Đen', 40, 'AHN-ES-M-DEN'),
-(19, 'L', 'Đen', 35, 'AHN-ES-L-DEN'),
-(19, 'XL', 'Đen', 22, 'AHN-ES-XL-DEN'),
-(19, 'XXL', 'Đen', 12, 'AHN-ES-XXL-DEN'),
-(19, 'S', 'Xám', 20, 'AHN-ES-S-XAM'),
-(19, 'M', 'Xám', 35, 'AHN-ES-M-XAM'),
-(19, 'L', 'Xám', 30, 'AHN-ES-L-XAM'),
-(19, 'XL', 'Xám', 18, 'AHN-ES-XL-XAM'),
-(19, 'S', 'Navy', 18, 'AHN-ES-S-NVY'),
-(19, 'M', 'Navy', 30, 'AHN-ES-M-NVY'),
-(19, 'L', 'Navy', 25, 'AHN-ES-L-NVY'),
-(19, 'XL', 'Navy', 15, 'AHN-ES-XL-NVY'),
-(19, 'S', 'Trắng', 15, 'AHN-ES-S-TRA'),
-(19, 'M', 'Trắng', 28, 'AHN-ES-M-TRA'),
-(19, 'L', 'Trắng', 22, 'AHN-ES-L-TRA');
-
--- Áo Hoodie Nữ Cropped (ProductId = 20)
-INSERT INTO ProductVariants (ProductId, Size, Color, StockQuantity, Sku) VALUES
-(20, 'S', 'Đen', 30, 'AHNU-CR-S-DEN'),
-(20, 'M', 'Đen', 45, 'AHNU-CR-M-DEN'),
-(20, 'L', 'Đen', 38, 'AHNU-CR-L-DEN'),
-(20, 'XL', 'Đen', 22, 'AHNU-CR-XL-DEN'),
-(20, 'S', 'Trắng', 25, 'AHNU-CR-S-TRA'),
-(20, 'M', 'Trắng', 40, 'AHNU-CR-M-TRA'),
-(20, 'L', 'Trắng', 32, 'AHNU-CR-L-TRA'),
-(20, 'XL', 'Trắng', 18, 'AHNU-CR-XL-TRA'),
-(20, 'S', 'Hồng', 20, 'AHNU-CR-S-HNG'),
-(20, 'M', 'Hồng', 35, 'AHNU-CR-M-HNG'),
-(20, 'L', 'Hồng', 28, 'AHNU-CR-L-HNG'),
-(20, 'S', 'Xanh Mint', 18, 'AHNU-CR-S-MNT'),
-(20, 'M', 'Xanh Mint', 30, 'AHNU-CR-M-MNT'),
-(20, 'L', 'Xanh Mint', 25, 'AHNU-CR-L-MNT'),
-(20, 'S', 'Be', 15, 'AHNU-CR-S-BE'),
-(20, 'M', 'Be', 28, 'AHNU-CR-M-BE'),
-(20, 'L', 'Be', 22, 'AHNU-CR-L-BE');
-
-/* ============================================================
-   6. PRODUCT IMAGES (Hình ảnh sản phẩm)
-   ============================================================ */
-
-/* Áo Thun Nam */
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
 (1, 'https://picsum.photos/seed/ao-thun-nam-1/400/600', 1),
 (1, 'https://picsum.photos/seed/ao-thun-nam-1b/400/600', 0),
@@ -897,38 +1555,26 @@ INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
 (2, 'https://picsum.photos/seed/ao-thun-nam-2b/400/600', 0),
 (3, 'https://picsum.photos/seed/ao-thun-nam-3/400/600', 1),
 (3, 'https://picsum.photos/seed/ao-thun-nam-3b/400/600', 0),
-(3, 'https://picsum.photos/seed/ao-thun-nam-3c/400/600', 0);
-
-/* Áo Thun Nữ */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(3, 'https://picsum.photos/seed/ao-thun-nam-3c/400/600', 0),
 (4, 'https://picsum.photos/seed/ao-thun-nu-1/400/600', 1),
 (4, 'https://picsum.photos/seed/ao-thun-nu-1b/400/600', 0),
 (5, 'https://picsum.photos/seed/ao-thun-nu-2/400/600', 1),
 (5, 'https://picsum.photos/seed/ao-thun-nu-2b/400/600', 0),
 (6, 'https://picsum.photos/seed/ao-thun-nu-3/400/600', 1),
 (6, 'https://picsum.photos/seed/ao-thun-nu-3b/400/600', 0),
-(6, 'https://picsum.photos/seed/ao-thun-nu-3c/400/600', 0);
-
-/* Áo Sơ Mi Nam */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(6, 'https://picsum.photos/seed/ao-thun-nu-3c/400/600', 0),
 (7, 'https://picsum.photos/seed/ao-so-mi-nam-1/400/600', 1),
 (7, 'https://picsum.photos/seed/ao-so-mi-nam-1b/400/600', 0),
 (8, 'https://picsum.photos/seed/ao-so-mi-nam-2/400/600', 1),
 (8, 'https://picsum.photos/seed/ao-so-mi-nam-2b/400/600', 0),
 (9, 'https://picsum.photos/seed/ao-so-mi-nam-3/400/600', 1),
-(9, 'https://picsum.photos/seed/ao-so-mi-nam-3b/400/600', 0);
-
-/* Áo Sơ Mi Nữ */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(9, 'https://picsum.photos/seed/ao-so-mi-nam-3b/400/600', 0),
 (10, 'https://picsum.photos/seed/ao-so-mi-nu-1/400/600', 1),
 (10, 'https://picsum.photos/seed/ao-so-mi-nu-1b/400/600', 0),
 (11, 'https://picsum.photos/seed/ao-so-mi-nu-2/400/600', 1),
 (11, 'https://picsum.photos/seed/ao-so-mi-nu-2b/400/600', 0),
 (12, 'https://picsum.photos/seed/ao-so-mi-nu-3/400/600', 1),
-(12, 'https://picsum.photos/seed/ao-so-mi-nu-3b/400/600', 0);
-
-/* Áo Khoác */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(12, 'https://picsum.photos/seed/ao-so-mi-nu-3b/400/600', 0),
 (13, 'https://picsum.photos/seed/ao-khoac-nam-1/400/600', 1),
 (13, 'https://picsum.photos/seed/ao-khoac-nam-1b/400/600', 0),
 (14, 'https://picsum.photos/seed/ao-khoac-nam-2/400/600', 1),
@@ -940,38 +1586,27 @@ INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
 (17, 'https://picsum.photos/seed/ao-khoac-nu-2/400/600', 1),
 (17, 'https://picsum.photos/seed/ao-khoac-nu-2b/400/600', 0),
 (18, 'https://picsum.photos/seed/ao-khoac-nu-3/400/600', 1),
-(18, 'https://picsum.photos/seed/ao-khoac-nu-3b/400/600', 0);
-
-/* Áo Phao */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(18, 'https://picsum.photos/seed/ao-khoac-nu-3b/400/600', 0),
 (19, 'https://picsum.photos/seed/ao-phao-nam-1/400/600', 1),
 (19, 'https://picsum.photos/seed/ao-phao-nam-1b/400/600', 0),
 (20, 'https://picsum.photos/seed/ao-phao-nu-1/400/600', 1),
 (20, 'https://picsum.photos/seed/ao-phao-nu-1b/400/600', 0),
 (21, 'https://picsum.photos/seed/ao-phao-unisex-1/400/600', 1),
 (21, 'https://picsum.photos/seed/ao-phao-unisex-1b/400/600', 0),
-(21, 'https://picsum.photos/seed/ao-phao-unisex-1c/400/600', 0);
-
-/* Quần Jeans Nam */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(21, 'https://picsum.photos/seed/ao-phao-unisex-1c/400/600', 0),
 (22, 'https://picsum.photos/seed/quan-jeans-nam-1/400/600', 1),
 (22, 'https://picsum.photos/seed/quan-jeans-nam-1b/400/600', 0),
 (23, 'https://picsum.photos/seed/quan-jeans-nam-2/400/600', 1),
 (23, 'https://picsum.photos/seed/quan-jeans-nam-2b/400/600', 0),
-(24, 'https://picsum.photos/seed/quan-jeans-nam-3/400/600', 1),
-(24, 'https://picsum.photos/seed/quan-jeans-nam-3b/400/600', 0);
-
-/* Quần Jeans Nữ */
+(24, 'https://picsum.photos/seed/quan-jeans-nam-3/400/600', 1);
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(24, 'https://picsum.photos/seed/quan-jeans-nam-3b/400/600', 0),
 (25, 'https://picsum.photos/seed/quan-jeans-nu-1/400/600', 1),
 (25, 'https://picsum.photos/seed/quan-jeans-nu-1b/400/600', 0),
 (26, 'https://picsum.photos/seed/quan-jeans-nu-2/400/600', 1),
 (26, 'https://picsum.photos/seed/quan-jeans-nu-2b/400/600', 0),
 (27, 'https://picsum.photos/seed/quan-jeans-nu-3/400/600', 1),
-(27, 'https://picsum.photos/seed/quan-jeans-nu-3b/400/600', 0);
-
-/* Quần Short */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(27, 'https://picsum.photos/seed/quan-jeans-nu-3b/400/600', 0),
 (28, 'https://picsum.photos/seed/quan-short-nam-1/400/600', 1),
 (28, 'https://picsum.photos/seed/quan-short-nam-1b/400/600', 0),
 (29, 'https://picsum.photos/seed/quan-short-nam-2/400/600', 1),
@@ -983,19 +1618,13 @@ INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
 (32, 'https://picsum.photos/seed/quan-short-nu-2/400/600', 1),
 (32, 'https://picsum.photos/seed/quan-short-nu-2b/400/600', 0),
 (33, 'https://picsum.photos/seed/quan-short-nu-3/400/600', 1),
-(33, 'https://picsum.photos/seed/quan-short-nu-3b/400/600', 0);
-
-/* Quần Baggy */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(33, 'https://picsum.photos/seed/quan-short-nu-3b/400/600', 0),
 (34, 'https://picsum.photos/seed/quan-baggy-1/400/600', 1),
 (34, 'https://picsum.photos/seed/quan-baggy-1b/400/600', 0),
 (35, 'https://picsum.photos/seed/quan-baggy-2/400/600', 1),
 (35, 'https://picsum.photos/seed/quan-baggy-2b/400/600', 0),
 (36, 'https://picsum.photos/seed/quan-baggy-3/400/600', 1),
-(36, 'https://picsum.photos/seed/quan-baggy-3b/400/600', 0);
-
-/* Váy */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(36, 'https://picsum.photos/seed/quan-baggy-3b/400/600', 0),
 (37, 'https://picsum.photos/seed/vay-ngan-1/400/600', 1),
 (37, 'https://picsum.photos/seed/vay-ngan-1b/400/600', 0),
 (38, 'https://picsum.photos/seed/vay-ngan-2/400/600', 1),
@@ -1007,10 +1636,7 @@ INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
 (41, 'https://picsum.photos/seed/vay-dai-2/400/600', 1),
 (41, 'https://picsum.photos/seed/vay-dai-2b/400/600', 0),
 (42, 'https://picsum.photos/seed/vay-dai-3/400/600', 1),
-(42, 'https://picsum.photos/seed/vay-dai-3b/400/600', 0);
-
-/* Đầm */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(42, 'https://picsum.photos/seed/vay-dai-3b/400/600', 0),
 (43, 'https://picsum.photos/seed/dam-ngan-1/400/600', 1),
 (43, 'https://picsum.photos/seed/dam-ngan-1b/400/600', 0),
 (44, 'https://picsum.photos/seed/dam-ngan-2/400/600', 1),
@@ -1022,19 +1648,14 @@ INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
 (47, 'https://picsum.photos/seed/dam-dai-2/400/600', 1),
 (47, 'https://picsum.photos/seed/dam-dai-2b/400/600', 0),
 (48, 'https://picsum.photos/seed/dam-dai-3/400/600', 1),
-(48, 'https://picsum.photos/seed/dam-dai-3b/400/600', 0);
-
-/* Đầm Công Sở */
+(48, 'https://picsum.photos/seed/dam-dai-3b/400/600', 0),
+(49, 'https://picsum.photos/seed/dam-cong-so-1/400/600', 1);
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(49, 'https://picsum.photos/seed/dam-cong-so-1/400/600', 1),
 (49, 'https://picsum.photos/seed/dam-cong-so-1b/400/600', 0),
 (50, 'https://picsum.photos/seed/dam-cong-so-2/400/600', 1),
 (50, 'https://picsum.photos/seed/dam-cong-so-2b/400/600', 0),
 (51, 'https://picsum.photos/seed/dam-cong-so-3/400/600', 1),
-(51, 'https://picsum.photos/seed/dam-cong-so-3b/400/600', 0);
-
-/* Giày Thể Thao */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(51, 'https://picsum.photos/seed/dam-cong-so-3b/400/600', 0),
 (52, 'https://picsum.photos/seed/giay-nam-1/400/600', 1),
 (52, 'https://picsum.photos/seed/giay-nam-1b/400/600', 0),
 (53, 'https://picsum.photos/seed/giay-nam-2/400/600', 1),
@@ -1046,10 +1667,7 @@ INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
 (56, 'https://picsum.photos/seed/giay-nu-2/400/600', 1),
 (56, 'https://picsum.photos/seed/giay-nu-2b/400/600', 0),
 (57, 'https://picsum.photos/seed/giay-nu-3/400/600', 1),
-(57, 'https://picsum.photos/seed/giay-nu-3b/400/600', 0);
-
-/* Giày Da */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(57, 'https://picsum.photos/seed/giay-nu-3b/400/600', 0),
 (58, 'https://picsum.photos/seed/giay-da-nam-1/400/600', 1),
 (58, 'https://picsum.photos/seed/giay-da-nam-1b/400/600', 0),
 (59, 'https://picsum.photos/seed/giay-da-nam-2/400/600', 1),
@@ -1057,64 +1675,44 @@ INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
 (60, 'https://picsum.photos/seed/giay-da-nu-1/400/600', 1),
 (60, 'https://picsum.photos/seed/giay-da-nu-1b/400/600', 0),
 (61, 'https://picsum.photos/seed/giay-da-nu-2/400/600', 1),
-(61, 'https://picsum.photos/seed/giay-da-nu-2b/400/600', 0);
-
-/* Sandal */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(61, 'https://picsum.photos/seed/giay-da-nu-2b/400/600', 0),
 (62, 'https://picsum.photos/seed/sandal-nu-1/400/600', 1),
 (62, 'https://picsum.photos/seed/sandal-nu-1b/400/600', 0),
 (63, 'https://picsum.photos/seed/sandal-nu-2/400/600', 1),
 (63, 'https://picsum.photos/seed/sandal-nu-2b/400/600', 0),
 (64, 'https://picsum.photos/seed/sandal-nam-1/400/600', 1),
-(64, 'https://picsum.photos/seed/sandal-nam-1b/400/600', 0);
-
-/* Giày Cao Gót */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(64, 'https://picsum.photos/seed/sandal-nam-1b/400/600', 0),
 (65, 'https://picsum.photos/seed/giay-cao-got-1/400/600', 1),
 (65, 'https://picsum.photos/seed/giay-cao-got-1b/400/600', 0),
 (66, 'https://picsum.photos/seed/giay-cao-got-2/400/600', 1),
 (66, 'https://picsum.photos/seed/giay-cao-got-2b/400/600', 0),
 (67, 'https://picsum.photos/seed/giay-cao-got-3/400/600', 1),
-(67, 'https://picsum.photos/seed/giay-cao-got-3b/400/600', 0);
-
-/* Balo */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(67, 'https://picsum.photos/seed/giay-cao-got-3b/400/600', 0),
 (68, 'https://picsum.photos/seed/balo-nam-1/400/600', 1),
 (68, 'https://picsum.photos/seed/balo-nam-1b/400/600', 0),
 (69, 'https://picsum.photos/seed/balo-nu-1/400/600', 1),
 (69, 'https://picsum.photos/seed/balo-nu-1b/400/600', 0),
 (70, 'https://picsum.photos/seed/balo-du-lich-1/400/600', 1),
-(70, 'https://picsum.photos/seed/balo-du-lich-1b/400/600', 0);
-
-/* Túi Đeo Chéo */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(70, 'https://picsum.photos/seed/balo-du-lich-1b/400/600', 0),
 (71, 'https://picsum.photos/seed/tui-nam-1/400/600', 1),
 (71, 'https://picsum.photos/seed/tui-nam-1b/400/600', 0),
 (72, 'https://picsum.photos/seed/tui-nu-1/400/600', 1),
 (72, 'https://picsum.photos/seed/tui-nu-1b/400/600', 0),
 (73, 'https://picsum.photos/seed/tui-unisex-1/400/600', 1),
-(73, 'https://picsum.photos/seed/tui-unisex-1b/400/600', 0);
-
-/* Túi Xách */
+(73, 'https://picsum.photos/seed/tui-unisex-1b/400/600', 0),
+(74, 'https://picsum.photos/seed/tui-xach-1/400/600', 1);
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(74, 'https://picsum.photos/seed/tui-xach-1/400/600', 1),
 (74, 'https://picsum.photos/seed/tui-xach-1b/400/600', 0),
 (75, 'https://picsum.photos/seed/tui-xach-2/400/600', 1),
 (75, 'https://picsum.photos/seed/tui-xach-2b/400/600', 0),
 (76, 'https://picsum.photos/seed/tui-xach-3/400/600', 1),
-(76, 'https://picsum.photos/seed/tui-xach-3b/400/600', 0);
-
-/* Ví Nam */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(76, 'https://picsum.photos/seed/tui-xach-3b/400/600', 0),
 (77, 'https://picsum.photos/seed/vi-nam-1/400/600', 1),
 (77, 'https://picsum.photos/seed/vi-nam-1b/400/600', 0),
 (78, 'https://picsum.photos/seed/vi-nam-2/400/600', 1),
 (78, 'https://picsum.photos/seed/vi-nam-2b/400/600', 0),
 (79, 'https://picsum.photos/seed/vi-nam-3/400/600', 1),
-(79, 'https://picsum.photos/seed/vi-nam-3b/400/600', 0);
-
-/* Đồng Hồ */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(79, 'https://picsum.photos/seed/vi-nam-3b/400/600', 0),
 (80, 'https://picsum.photos/seed/dong-ho-nam-1/400/600', 1),
 (80, 'https://picsum.photos/seed/dong-ho-nam-1b/400/600', 0),
 (81, 'https://picsum.photos/seed/dong-ho-nam-2/400/600', 1),
@@ -1122,10 +1720,7 @@ INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
 (82, 'https://picsum.photos/seed/dong-ho-nu-1/400/600', 1),
 (82, 'https://picsum.photos/seed/dong-ho-nu-1b/400/600', 0),
 (83, 'https://picsum.photos/seed/dong-ho-nu-2/400/600', 1),
-(83, 'https://picsum.photos/seed/dong-ho-nu-2b/400/600', 0);
-
-/* Kính Mát */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(83, 'https://picsum.photos/seed/dong-ho-nu-2b/400/600', 0),
 (84, 'https://picsum.photos/seed/kinh-nam-1/400/600', 1),
 (84, 'https://picsum.photos/seed/kinh-nam-1b/400/600', 0),
 (85, 'https://picsum.photos/seed/kinh-nam-2/400/600', 1),
@@ -1133,10 +1728,7 @@ INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
 (86, 'https://picsum.photos/seed/kinh-nu-1/400/600', 1),
 (86, 'https://picsum.photos/seed/kinh-nu-1b/400/600', 0),
 (87, 'https://picsum.photos/seed/kinh-nu-2/400/600', 1),
-(87, 'https://picsum.photos/seed/kinh-nu-2b/400/600', 0);
-
-/* Mũ */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(87, 'https://picsum.photos/seed/kinh-nu-2b/400/600', 0),
 (88, 'https://picsum.photos/seed/mu-nam-1/400/600', 1),
 (88, 'https://picsum.photos/seed/mu-nam-1b/400/600', 0),
 (89, 'https://picsum.photos/seed/mu-nu-1/400/600', 1),
@@ -1144,10 +1736,7 @@ INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
 (90, 'https://picsum.photos/seed/mu-nam-2/400/600', 1),
 (90, 'https://picsum.photos/seed/mu-nam-2b/400/600', 0),
 (91, 'https://picsum.photos/seed/mu-nu-2/400/600', 1),
-(91, 'https://picsum.photos/seed/mu-nu-2b/400/600', 0);
-
-/* Khăn */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(91, 'https://picsum.photos/seed/mu-nu-2b/400/600', 0),
 (92, 'https://picsum.photos/seed/khan-1/400/600', 1),
 (92, 'https://picsum.photos/seed/khan-1b/400/600', 0),
 (93, 'https://picsum.photos/seed/khan-2/400/600', 1),
@@ -1155,98 +1744,150 @@ INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
 (94, 'https://picsum.photos/seed/khan-3/400/600', 1),
 (94, 'https://picsum.photos/seed/khan-3b/400/600', 0),
 (95, 'https://picsum.photos/seed/khan-4/400/600', 1),
-(95, 'https://picsum.photos/seed/khan-4b/400/600', 0);
-
-/* Áo Hoodie Nam */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(95, 'https://picsum.photos/seed/khan-4b/400/600', 0),
 (96, 'https://picsum.photos/seed/hoodie-nam-1/400/600', 1),
 (96, 'https://picsum.photos/seed/hoodie-nam-1b/400/600', 0),
 (97, 'https://picsum.photos/seed/hoodie-nam-2/400/600', 1),
 (97, 'https://picsum.photos/seed/hoodie-nam-2b/400/600', 0),
 (98, 'https://picsum.photos/seed/hoodie-nam-3/400/600', 1),
-(98, 'https://picsum.photos/seed/hoodie-nam-3b/400/600', 0);
-
-/* Áo Hoodie Nữ */
+(98, 'https://picsum.photos/seed/hoodie-nam-3b/400/600', 0),
+(99, 'https://picsum.photos/seed/hoodie-nu-1/400/600', 1);
 INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
-(99, 'https://picsum.photos/seed/hoodie-nu-1/400/600', 1),
 (99, 'https://picsum.photos/seed/hoodie-nu-1b/400/600', 0),
 (100, 'https://picsum.photos/seed/hoodie-nu-2/400/600', 1),
 (100, 'https://picsum.photos/seed/hoodie-nu-2b/400/600', 0),
 (101, 'https://picsum.photos/seed/hoodie-nu-3/400/600', 1),
-(101, 'https://picsum.photos/seed/hoodie-nu-3b/400/600', 0);
-
-/* Áo Polo Nam */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(101, 'https://picsum.photos/seed/hoodie-nu-3b/400/600', 0),
 (102, 'https://picsum.photos/seed/polo-nam-1/400/600', 1),
 (102, 'https://picsum.photos/seed/polo-nam-1b/400/600', 0),
 (103, 'https://picsum.photos/seed/polo-nam-2/400/600', 1),
 (103, 'https://picsum.photos/seed/polo-nam-2b/400/600', 0),
 (104, 'https://picsum.photos/seed/polo-nam-3/400/600', 1),
-(104, 'https://picsum.photos/seed/polo-nam-3b/400/600', 0);
-
-/* Áo Polo Nữ */
-INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(104, 'https://picsum.photos/seed/polo-nam-3b/400/600', 0),
 (105, 'https://picsum.photos/seed/polo-nu-1/400/600', 1),
 (105, 'https://picsum.photos/seed/polo-nu-1b/400/600', 0),
 (106, 'https://picsum.photos/seed/polo-nu-2/400/600', 1),
 (106, 'https://picsum.photos/seed/polo-nu-2b/400/600', 0),
 (107, 'https://picsum.photos/seed/polo-nu-3/400/600', 1),
-(107, 'https://picsum.photos/seed/polo-nu-3b/400/600', 0);
+(107, 'https://picsum.photos/seed/polo-nu-3b/400/600', 0),
+(108, 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&q=80&fit=crop', 1),
+(108, 'https://images.unsplash.com/photo-1548883354-94bcfe321cbb?w=600&q=80&fit=crop', 0),
+(108, 'https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?w=600&q=80&fit=crop', 0),
+(109, 'https://images.unsplash.com/photo-1544022613-e0ca75dff7d5?w=600&q=80&fit=crop', 1),
+(109, 'https://images.unsplash.com/photo-1578582928712-3b9b3b2c9b5e?w=600&q=80&fit=crop', 0),
+(110, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80&fit=crop', 1),
+(110, 'https://images.unsplash.com/photo-1605908502724-9093a79a1b39?w=600&q=80&fit=crop', 0),
+(111, 'https://images.unsplash.com/photo-1507679799987-c53779524cc8?w=600&q=80&fit=crop', 1),
+(111, 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80&fit=crop', 0),
+(112, 'https://images.unsplash.com/photo-1551489186-cf8726f514f8?w=600&q=80&fit=crop', 1),
+(112, 'https://images.unsplash.com/photo-1572804013309-a59a8d4f7af4?w=600&q=80&fit=crop', 0),
+(113, 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&q=80&fit=crop', 1),
+(113, 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=600&q=80&fit=crop', 0),
+(114, 'https://images.unsplash.com/photo-1565693413579-8a73ce8d8a4f?w=600&q=80&fit=crop', 1),
+(114, 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80&fit=crop', 0),
+(115, 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&q=80&fit=crop', 1),
+(115, 'https://images.unsplash.com/photo-1604176354204-9268737828e4?w=600&q=80&fit=crop', 0),
+(116, 'https://images.unsplash.com/photo-1582142306909-195724d33ffc?w=600&q=80&fit=crop', 1),
+(116, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80&fit=crop', 0),
+(117, 'https://images.unsplash.com/photo-1583496661160-fb5886a13d28?w=600&q=80&fit=crop', 1),
+(117, 'https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=600&q=80&fit=crop', 0),
+(118, 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&q=80&fit=crop', 1),
+(118, 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&q=80&fit=crop', 0),
+(119, 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&q=80&fit=crop', 1),
+(119, 'https://images.unsplash.com/photo-1604176354204-9268737828e4?w=600&q=80&fit=crop', 0),
+(120, 'https://images.unsplash.com/photo-1582142306909-195724d33ffc?w=600&q=80&fit=crop', 1),
+(120, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80&fit=crop', 0),
+(121, 'https://images.unsplash.com/photo-1583496661160-fb5886a13d28?w=600&q=80&fit=crop', 1),
+(121, 'https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=600&q=80&fit=crop', 0),
+(122, 'https://images.unsplash.com/photo-1551803091-e20673f15770?w=600&q=80&fit=crop', 1),
+(122, 'https://images.unsplash.com/photo-1564257577-2d3ee0f6f8b6?w=600&q=80&fit=crop', 0),
+(123, 'https://images.unsplash.com/photo-1577900232427-18219b9166a0?w=600&q=80&fit=crop', 1),
+(123, 'https://images.unsplash.com/photo-1612722432474-b971cdcea546?w=600&q=80&fit=crop', 0);
+INSERT INTO ProductImages (ProductId, ImageUrl, IsPrimary) VALUES
+(124, 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&q=80&fit=crop', 1),
+(124, 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80&fit=crop', 0),
+(125, 'https://images.unsplash.com/photo-1583846783214-7229a91b20ed?w=600&q=80&fit=crop', 1),
+(125, 'https://images.unsplash.com/photo-1572804013309-a59a8d4f7af4?w=600&q=80&fit=crop', 0),
+(126, 'https://images.unsplash.com/photo-1583496661160-fb5886a13d28?w=600&q=80&fit=crop', 1),
+(126, 'https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=600&q=80&fit=crop', 0),
+(127, 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&q=80&fit=crop', 1),
+(127, 'https://images.unsplash.com/photo-1604176354204-9268737828e4?w=600&q=80&fit=crop', 0),
+(128, 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=600&q=80&fit=crop', 1),
+(128, 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80&fit=crop', 0),
+(129, 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600&q=80&fit=crop', 1),
+(129, 'https://images.unsplash.com/photo-1612722432474-b971cdcea546?w=600&q=80&fit=crop', 0),
+(130, 'https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?w=600&q=80&fit=crop', 1),
+(130, 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80&fit=crop', 0),
+(131, 'https://images.unsplash.com/photo-1551803091-e20673f15770?w=600&q=80&fit=crop', 1),
+(131, 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&q=80&fit=crop', 0),
+(132, 'https://images.unsplash.com/photo-1495121605193-b116b5b9c5fe?w=600&q=80&fit=crop', 1),
+(132, 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80&fit=crop', 0),
+(133, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80&fit=crop', 1),
+(133, 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=600&q=80&fit=crop', 0),
+(133, 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=600&q=80&fit=crop', 0),
+(134, 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=600&q=80&fit=crop', 1),
+(134, 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&q=80&fit=crop', 0),
+(135, 'https://images.unsplash.com/photo-1614252369475-531eba835eb1?w=600&q=80&fit=crop', 1),
+(135, 'https://images.unsplash.com/photo-1531310197839-ccf54634509e?w=600&q=80&fit=crop', 0),
+(136, 'https://images.unsplash.com/photo-1582588678413-dbf45f4823e9?w=600&q=80&fit=crop', 1),
+(136, 'https://images.unsplash.com/photo-1564609060031-6e5c3c8a5b8e?w=600&q=80&fit=crop', 0),
+(137, 'https://images.unsplash.com/photo-1603487742131-4160ec999306?w=600&q=80&fit=crop', 1),
+(137, 'https://images.unsplash.com/photo-1531310197839-ccf54634509e?w=600&q=80&fit=crop', 0),
+(138, 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=80&fit=crop', 1),
+(138, 'https://images.unsplash.com/photo-1581101767113-d1f1f8d2f8c7?w=600&q=80&fit=crop', 0),
+(139, 'https://images.unsplash.com/photo-1535043934128-cf0b28ec52f3?w=600&q=80&fit=crop', 1),
+(139, 'https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=600&q=80&fit=crop', 0),
+(140, 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80&fit=crop', 1),
+(140, 'https://images.unsplash.com/photo-1547949003-9792a18a2601?w=600&q=80&fit=crop', 0),
+(141, 'https://images.unsplash.com/photo-1581605405669-fcdf81165afa?w=600&q=80&fit=crop', 1),
+(141, 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80&fit=crop', 0),
+(142, 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80&fit=crop', 1),
+(142, 'https://images.unsplash.com/photo-1559563458-527698bf5295?w=600&q=80&fit=crop', 0),
+(143, 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&q=80&fit=crop', 1),
+(143, 'https://images.unsplash.com/photo-1606503825008-909a67e63c3d?w=600&q=80&fit=crop', 0),
+(144, 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80&fit=crop', 1),
+(144, 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=600&q=80&fit=crop', 0),
+(145, 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600&q=80&fit=crop', 1),
+(145, 'https://images.unsplash.com/photo-1577803645773-f96470509666?w=600&q=80&fit=crop', 0),
+(146, 'https://images.unsplash.com/photo-1521369909029-2afed882baee?w=600&q=80&fit=crop', 1),
+(146, 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600&q=80&fit=crop', 0),
+(147, 'https://images.unsplash.com/photo-1601924994987-69e26d4dc8c0?w=600&q=80&fit=crop', 1),
+(147, 'https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?w=600&q=80&fit=crop', 0);
+GO
 
 /* ============================================================
-   7. SAMPLE ORDERS (Đơn hàng mẫu)
+   7. DISCOUNTS & CARTS
    ============================================================ */
-
-INSERT INTO Carts (UserId) VALUES (3), (4), (5);
-
-INSERT INTO Orders (UserId, AddressId, OrderStatus, PaymentStatus, TotalAmount, CreatedAt) VALUES
-(3, 1, 'delivered', 'paid', 1247000, DATEADD(day, -20, SYSDATETIME())),
-(4, 2, 'delivered', 'paid', 899000, DATEADD(day, -15, SYSDATETIME())),
-(5, 3, 'delivered', 'paid', 1897000, DATEADD(day, -10, SYSDATETIME())),
-(3, 1, 'shipped', 'paid', 549000, DATEADD(day, -5, SYSDATETIME())),
-(6, 4, 'confirmed', 'paid', 799000, DATEADD(day, -2, SYSDATETIME()));
-
-INSERT INTO OrderItems (OrderId, VariantId, Quantity, PriceAtPurchase) VALUES
-(1, 1, 1, 249000),
-(1, 5, 1, 299000),
-(1, 20, 1, 399000),
-(1, 70, 1, 299000),
-(2, 17, 1, 799000),
-(2, 25, 1, 499000),
-(3, 52, 1, 1599000),
-(3, 2, 1, 249000),
-(4, 99, 1, 399000),
-(4, 20, 1, 149000),
-(5, 17, 1, 799000);
-
-/* Update soldCount for products */
-UPDATE Products SET SoldCount = SoldCount + 1 WHERE ProductId = 1;
-UPDATE Products SET SoldCount = SoldCount + 1 WHERE ProductId = 4;
-UPDATE Products SET SoldCount = SoldCount + 2 WHERE ProductId = 6;
-UPDATE Products SET SoldCount = SoldCount + 1 WHERE ProductId = 7;
-UPDATE Products SET SoldCount = SoldCount + 1 WHERE ProductId = 17;
-UPDATE Products SET SoldCount = SoldCount + 1 WHERE ProductId = 19;
-UPDATE Products SET SoldCount = SoldCount + 1 WHERE ProductId = 2;
-
-/* ============================================================
-   8. DISCOUNT CODES (Mã giảm giá)
-   ============================================================ */
-
 INSERT INTO DiscountCodes (Code, DiscountType, Value, MinOrderValue, StartDate, EndDate, UsageLimit, CreatedBy) VALUES
-(N'NEWCUSTOMER', 'percent', 10, 200000, DATEADD(day, -30, SYSDATETIME()), DATEADD(day, 60, SYSDATETIME()), 1000, 1),
-(N'SUMMER2024', 'percent', 15, 500000, DATEADD(day, -15, SYSDATETIME()), DATEADD(day, 45, SYSDATETIME()), 500, 1),
-(N'FASHION500', 'fixed', 50000, 300000, DATEADD(day, -10, SYSDATETIME()), DATEADD(day, 90, SYSDATETIME()), 2000, 1),
-(N'VIPMEMBER', 'percent', 20, 1000000, DATEADD(day, -5, SYSDATETIME()), DATEADD(day, 120, SYSDATETIME()), 100, 1);
+('CHAOBANMOI', 'percent', 10, 200000, DATEADD(day, -10, SYSDATETIME()), DATEADD(day, 60, SYSDATETIME()), 500, 1),
+('FREESHIP', 'fixed', 30000, 300000, DATEADD(day, -5, SYSDATETIME()), DATEADD(day, 30, SYSDATETIME()), 1000, 1),
+('FASHION50K', 'fixed', 50000, 500000, DATEADD(day, -2, SYSDATETIME()), DATEADD(day, 45, SYSDATETIME()), 200, 1);
 
-/* ============================================================
-   HOÀN TẤT - Database Seed Data
-   Tổng kết:
-   - 8 Users
-   - 4 Addresses  
-   - 12 Parent Categories + 24 Sub Categories = 36 Categories
-   - 147 Products (Áo, Quần, Váy, Đầm, Giày, Túi, Phụ kiện)
-   - ~400+ Product Variants (Size x Color x Stock)
-   - ~250+ Product Images (2-4 ảnh mỗi sản phẩm)
-   - 5 Orders + 11 OrderItems
-   - 4 Discount Codes
-   ============================================================ */
+INSERT INTO Carts (UserId) VALUES (1), (2), (3), (4), (5), (6), (7), (8);
+GO
+
+DBCC CHECKIDENT ('Products', RESEED, 147);
+DBCC CHECKIDENT ('Categories', RESEED, 48);
+DBCC CHECKIDENT ('Users', RESEED, 8);
+DBCC CHECKIDENT ('Addresses', RESEED, 4);
+GO
+
+ALTER TABLE Users WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Addresses WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Categories WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Products WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE ProductVariants WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE ProductImages WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Carts WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE CartItems WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Orders WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE OrderItems WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Payments WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE ReturnRequests WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Reviews WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE Favorites WITH CHECK CHECK CONSTRAINT ALL;
+ALTER TABLE DiscountCodes WITH CHECK CHECK CONSTRAINT ALL;
+GO
+
+PRINT '>>> DA NAP TOAN BO SEED DATA THANH CONG 147 SAN PHAM! <<<';
+GO
