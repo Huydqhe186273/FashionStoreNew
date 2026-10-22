@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import FavoriteButton from './FavoriteButton';
+import StarRating from './StarRating';
 import { resolveProductImage, PLACEHOLDER, colorHex } from '../../utils/productImage';
 
 const SIZE_LIMIT = 4;   // show first 4 sizes; rest hidden behind "+N"
@@ -109,6 +110,12 @@ export default function ProductCard({ product }) {
         </div>
         <div className="product-card-meta">
           <span>Đã bán {product.soldCount ?? 0}</span>
+          {product.reviewCount > 0 && (
+            <span className="product-card-rating" aria-label={`Đánh giá ${Number(product.averageRating).toFixed(1)} trên 5 từ ${product.reviewCount} lượt`}>
+              <StarRating value={Math.round(Number(product.averageRating))} readOnly />
+              <span>{Number(product.averageRating).toFixed(1)} ({product.reviewCount})</span>
+            </span>
+          )}
         </div>
       </div>
     </Link>

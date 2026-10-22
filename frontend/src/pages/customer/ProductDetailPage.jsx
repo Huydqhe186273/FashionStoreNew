@@ -7,7 +7,6 @@ import { useToast } from '../../context/ToastContext';
 import ProductCard from '../../components/customer/ProductCard';
 import FavoriteButton from '../../components/customer/FavoriteButton';
 import ReviewList from '../../components/customer/ReviewList';
-import ReviewForm from '../../components/customer/ReviewForm';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
 import { getSimilarProducts } from '../../services/recommendationService';
 import { trackView, trackAddToCart } from '../../services/trackingService';
@@ -27,7 +26,6 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [reviewRefreshKey, setReviewRefreshKey] = useState(0);
   const [isAdding, setIsAdding] = useState(false);
   const [similarProducts, setSimilarProducts] = useState([]);
 
@@ -282,12 +280,7 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      <ReviewList productId={product.productId} refreshKey={reviewRefreshKey} />
-      <ReviewForm
-        productId={product.productId}
-        orderItemId={null}
-        onSubmitted={() => setReviewRefreshKey((k) => k + 1)}
-      />
+      <ReviewList productId={product.productId} />
 
       {((similarProducts.length > 0 ? similarProducts : relatedProducts).length > 0) && (
         <section className="product-detail-related">

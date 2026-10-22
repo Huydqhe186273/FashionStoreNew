@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -76,6 +77,10 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> 
                 auth.requestMatchers("/api/auth/**", "/api/payment/webhook").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/customer/reviews/eligible").authenticated()
+                    .requestMatchers(HttpMethod.POST, "/api/customer/reviews").authenticated()
+                    .requestMatchers(HttpMethod.PUT, "/api/customer/reviews/**").authenticated()
+                    .requestMatchers(HttpMethod.DELETE, "/api/customer/reviews/**").authenticated()
                     .requestMatchers("/api/customer/**").permitAll()
                     .requestMatchers("/api/staff/**").hasAnyRole("STAFF", "ADMIN")
                     .requestMatchers("/api/admin/dashboard/**", "/api/admin/users/**", "/api/admin/staff/**", "/api/admin/coupons/**", "/api/admin/reports/**").hasRole("ADMIN")

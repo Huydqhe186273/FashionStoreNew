@@ -17,6 +17,7 @@ import com.example.myapp.repos.CategoryRepository;
 import com.example.myapp.repos.ProductImageRepository;
 import com.example.myapp.repos.ProductRepository;
 import com.example.myapp.repos.ProductVariantRepository;
+import com.example.myapp.repos.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,7 @@ public class CustomerProductService {
     private final ProductVariantRepository productVariantRepository;
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
+        private final ReviewRepository reviewRepository;
 
    
 
@@ -142,8 +144,10 @@ public class CustomerProductService {
 
         List<CustomerProductDTO> content = new ArrayList<>();
         if (from < to) {
-            for (Product p : filtered.subList(from, to)) {
-                content.add(mapToDTO(p, false));
+                        List<Product> pageProducts = filtered.subList(from, to);
+                        Map<Integer, Object[]> ratingSummaries = getRatingSummaries(pageProducts);
+                        for (Product p : pageProducts) {
+                                content.add(mapToDTO(p, false, ratingSummaries.get(p.getProductId())));
             }
         }
 
@@ -496,6 +500,10 @@ public class CustomerProductService {
     }
 
     public CustomerProductDTO mapToDTO(Product p, boolean includeVariants) {
+                return mapToDTO(p, includeVariants, getRatingSummaries(List.of(p)).get(p.getProductId()));
+        }
+
+        private CustomerProductDTO mapToDTO(Product p, boolean includeVariants, Object[] ratingSummary) {
         /* Always load variants for size/color facets — the list view
          * still wants to render "Size có sẵn" + swatches even when
          * it doesn't include the full variants array. The query is
@@ -548,6 +556,8 @@ public class CustomerProductService {
                 .discountPercent(discountPercent)
                 .viewCount(p.getViewCount())
                 .soldCount(p.getSoldCount())
+                .averageRating(ratingSummary == null ? 0.0 : ((Number) ratingSummary[1]).doubleValue())
+                .reviewCount(ratingSummary == null ? 0L : ((Number) ratingSummary[2]).longValue())
                 .totalStock(totalStock)
                 .status(p.getStatus())
                 .categoryId(p.getCategory() != null ? p.getCategory().getCategoryId() : null)
@@ -561,6 +571,18 @@ public class CustomerProductService {
                 .availableColors(availableColors)
                 .build();
     }
+
+        private Map<Integer, Object[]> getRatingSummaries(List<Product> products) {
+                if (products.isEmpty()) {
+                        return Map.of();
+                }
+                List<Integer> productIds = products.stream().map(Product::getProductId).collect(Collectors.toList());
+                Map<Integer, Object[]> summaries = new HashMap<>();
+                for (Object[] row : reviewRepository.findRatingSummariesByProductIds(productIds)) {
+                        summaries.put(((Number) row[0]).intValue(), row);
+                }
+                return summaries;
+        }
 
     private VariantInfoDTO toVariantInfo(ProductVariant v) {
         return VariantInfoDTO.builder()

@@ -226,6 +226,8 @@ export default function OrderHistory() {
             };
 
             const canRepay = order.orderStatus === 'pending' && order.paymentStatus !== 'paid';
+            const canReview = order.orderStatus?.toLowerCase() === 'confirmed'
+              && order.paymentStatus?.toLowerCase() === 'paid';
 
             return (
               <div key={order.orderId} className="order-card">
@@ -302,6 +304,16 @@ export default function OrderHistory() {
                     </div>
 
                     <div className="order-actions-group">
+                      {canReview && (
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/shop/reviews?orderId=${order.orderId}`)}
+                          className="btn-order-view"
+                        >
+                          ⭐ Đánh giá
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => setSelectedOrder(order)}

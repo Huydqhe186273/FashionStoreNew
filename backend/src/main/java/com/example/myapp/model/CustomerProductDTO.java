@@ -22,6 +22,8 @@ public class CustomerProductDTO {
     private Integer discountPercent;
     private Integer viewCount;
     private Integer soldCount;
+    private Double averageRating;
+    private Long reviewCount;
     private Integer totalStock;
     private String status;
     private Integer categoryId;
