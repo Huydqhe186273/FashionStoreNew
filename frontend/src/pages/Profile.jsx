@@ -91,33 +91,59 @@ export default function Profile() {
         </div>
 
         <div className="profile-layout">
-          {/* Sidebar */}
+          {/* Sidebar Area */}
           <div className="profile-sidebar">
             <div className="profile-avatar-wrapper">
-              <div
-                className="profile-avatar"
-                style={{ backgroundImage: `url('https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=111827&color=fff&size=200')` }}
-              />
+              <div className="profile-avatar" style={{ backgroundImage: `url('https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=111827&color=fff&size=200')` }}></div>
             </div>
             <h1 className="profile-name">{profile?.fullName || 'My Account'}</h1>
-            <p className="profile-email">{profile?.email}</p>
-
-            <Link to="/shop/orders" className="profile-sidebar-link profile-sidebar-link--primary">
+            <p className="profile-email">{profile?.email || 'Manage your personal information and security settings.'}</p>
+            <Link
+              to="/shop/orders"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginTop: '16px',
+                padding: '10px 18px',
+                backgroundColor: '#0f172a',
+                color: '#ffffff',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontWeight: '600',
+                fontSize: '0.9rem'
+              }}
+            >
               📦 Đơn hàng của tôi
             </Link>
-            <Link to="/shop/notifications" className="profile-sidebar-link profile-sidebar-link--secondary">
+            <Link
+              to="/shop/notifications"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginTop: '10px',
+                padding: '10px 18px',
+                backgroundColor: '#ffffff',
+                color: '#0f172a',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontWeight: '600',
+                fontSize: '0.9rem'
+              }}
+            >
               🔔 Thông báo của tôi
             </Link>
           </div>
-
-          {/* Main content area */}
+          
+          {/* Main Content Area */}
           <div className="profile-content-area">
-            {/* Personal Info card */}
             <div className="profile-card">
               <h2 className="profile-card-title">Personal Information</h2>
               {error && <div className="profile-alert profile-alert-error">{error}</div>}
               {message && <div className="profile-alert profile-alert-success">{message}</div>}
-
+              
               {profile && (
                 <form onSubmit={handleUpdate} noValidate>
                   <div className="profile-form-group">
@@ -135,7 +161,7 @@ export default function Profile() {
                     />
                     {fieldErrors.fullName && <div className="profile-field-error">{fieldErrors.fullName}</div>}
                   </div>
-
+                  
                   <div className="profile-form-group">
                     <label className="profile-label">Phone Number</label>
                     <input
@@ -152,21 +178,21 @@ export default function Profile() {
                     />
                     {fieldErrors.phone && <div className="profile-field-error">{fieldErrors.phone}</div>}
                   </div>
-
+                  
                   <div className="profile-form-group">
                     <label className="profile-label">Email Address</label>
                     <input
                       type="email"
                       className="profile-input"
-                      value={profile.email || ''}
                       onChange={(e) => {
                         setProfile({ ...profile, email: e.target.value });
                         setFieldErrors({ ...fieldErrors, email: '' });
                       }}
+                      value={profile.email || ''}
                     />
                     {fieldErrors.email && <div className="profile-field-error">{fieldErrors.email}</div>}
                   </div>
-
+                  
                   <button type="submit" className="profile-btn">
                     Save Changes
                   </button>
@@ -174,14 +200,7 @@ export default function Profile() {
               )}
             </div>
 
-            {/* Change Password card */}
             <ChangePassword />
-
-            {/* Address Manager card */}
-            <div className="profile-card">
-              <h2 className="profile-card-title">Địa chỉ giao hàng</h2>
-              <AddressManager userId={user?.id} />
-            </div>
           </div>
         </div>
       </div>

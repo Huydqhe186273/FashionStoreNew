@@ -23,9 +23,9 @@ public class AddressController {
     @GetMapping
     public ResponseEntity<?> getAddresses(@RequestParam Integer userId) {
         try {
-            List<Address> addresses = addressRepository.findByUserId(userId);
-            return ResponseEntity.ok(addresses);
+            return ResponseEntity.ok(addressRepository.findByUserId(userId));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }

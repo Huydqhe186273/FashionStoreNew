@@ -18,7 +18,6 @@ const ProductDetailPage = lazy(() => import('./pages/customer/ProductDetailPage'
 const ProductCategoryPage = lazy(() => import('./pages/customer/ProductCategoryPage'));
 const WishlistPage = lazy(() => import('./pages/customer/WishlistPage'));
 const OrderHistory = lazy(() => import('./pages/customer/OrderHistory'));
-const ReviewCenterPage = lazy(() => import('./pages/customer/ReviewCenterPage'));
 const NotificationsPage = lazy(() => import('./pages/customer/NotificationsPage'));
 
 // Admin & Staff Pages (Lazy Loaded - Code Splitting)
@@ -77,7 +76,6 @@ export default function App() {
                 <Route path="wishlist" element={<WishlistPage />} />
                 <Route path="cart" element={<Cart />} />
                 <Route path="orders" element={<ProtectedRoute allowedRoles={['customer', 'admin', 'staff']}><OrderHistory /></ProtectedRoute>} />
-                <Route path="reviews" element={<ProtectedRoute allowedRoles={['customer', 'admin', 'staff']}><ReviewCenterPage /></ProtectedRoute>} />
                 <Route path="notifications" element={<ProtectedRoute allowedRoles={['customer', 'admin', 'staff']}><NotificationsPage /></ProtectedRoute>} />
               </Route>
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin', 'staff']}><AdminLayout /></ProtectedRoute>}>

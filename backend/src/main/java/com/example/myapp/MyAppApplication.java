@@ -12,12 +12,13 @@ public class MyAppApplication {
 	// args chứa các tham số dòng lệnh khi chạy ứng dụng.
 	public static void main(String[] args) {
 		try {
-			loadDotEnv();
-			// Connection config from environment variables / .env (with safe defaults).
-			String dbUrl = getProperty("DB_URL",
+			// Connection config from environment variables (with safe defaults).
+			// To override: set DB_URL, DB_USERNAME, DB_PASSWORD env vars or .env file.
+			String dbUrl = System.getenv().getOrDefault(
+				"DB_URL",
 				"jdbc:sqlserver://localhost:1433;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;");
-			String dbUser = getProperty("DB_USERNAME", "sa");
-			String dbPass = getProperty("DB_PASSWORD", "123456");
+			String dbUser = System.getenv().getOrDefault("DB_USERNAME", "sa");
+			String dbPass = System.getenv().getOrDefault("DB_PASSWORD", "12345");
 			DatabaseInitializer.initialize(dbUrl, dbUser, dbPass);
 		} catch (Exception exception) {
 			throw new IllegalStateException("Unable to create or verify FashionStoreDB", exception);

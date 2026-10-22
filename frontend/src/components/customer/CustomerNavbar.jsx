@@ -240,7 +240,6 @@ export default function CustomerNavbar() {
           </div>
 
           <Link to="/shop/orders" className="customer-icon-btn" title="Đơn mua / Lịch sử đơn hàng" aria-label="Đơn mua">📦</Link>
-          <Link to="/shop/reviews" className="customer-icon-btn" title="Đánh giá sản phẩm đã mua" aria-label="Đánh giá sản phẩm">⭐</Link>
           <Link to="/shop/wishlist" className="customer-icon-btn" title="Yêu thích" aria-label="Yêu thích">♡</Link>
           <Link to="/profile" className="customer-icon-btn" title="Tài khoản" aria-label="Tài khoản">👤</Link>
           <Link to="/shop/cart" className="customer-icon-btn" title="Giỏ hàng" aria-label="Giỏ hàng">

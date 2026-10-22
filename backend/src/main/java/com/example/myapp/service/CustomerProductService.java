@@ -47,6 +47,8 @@ public class CustomerProductService {
 
    
 
+   
+
     @Transactional(readOnly = true)
     public PageResponseDTO<CustomerProductDTO> getProducts(
             String keyword,
@@ -500,10 +502,6 @@ public class CustomerProductService {
     }
 
     public CustomerProductDTO mapToDTO(Product p, boolean includeVariants) {
-                return mapToDTO(p, includeVariants, getRatingSummaries(List.of(p)).get(p.getProductId()));
-        }
-
-        private CustomerProductDTO mapToDTO(Product p, boolean includeVariants, Object[] ratingSummary) {
         /* Always load variants for size/color facets — the list view
          * still wants to render "Size có sẵn" + swatches even when
          * it doesn't include the full variants array. The query is
