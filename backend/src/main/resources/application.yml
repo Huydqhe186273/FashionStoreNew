@@ -50,6 +50,6 @@ springdoc:
     operationsSorter: method
 
 payos:
-  client-id: ${PAYOS_CLIENT_ID:e14c939a-e8da-4b9f-81bd-25f05b31417c}
-  api-key: ${PAYOS_API_KEY:6ab5f354-952c-4bbf-856c-042ae5731b1a}
-  checksum-key: ${PAYOS_CHECKSUM_KEY:4467e43ad05fc1268f90844cfe29d92a7e37e32dfdb08dc59d3dac123ee23a51}
+  client-id: ${PAYOS_CLIENT_ID:}
+  api-key: ${PAYOS_API_KEY:}
+  checksum-key: ${PAYOS_CHECKSUM_KEY:}

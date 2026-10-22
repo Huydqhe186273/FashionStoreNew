@@ -14,9 +14,11 @@ import com.example.myapp.model.PopularityBucketDTO;
 import com.example.myapp.model.PriceBucketDTO;
 import com.example.myapp.model.VariantInfoDTO;
 import com.example.myapp.repos.CategoryRepository;
+import com.example.myapp.repos.FavoriteRepository;
 import com.example.myapp.repos.ProductImageRepository;
 import com.example.myapp.repos.ProductRepository;
 import com.example.myapp.repos.ProductVariantRepository;
+import com.example.myapp.repos.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +44,10 @@ public class CustomerProductService {
     private final ProductVariantRepository productVariantRepository;
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
+        private final ReviewRepository reviewRepository;
+        private final FavoriteRepository favoriteRepository;
+
+   
 
    
 
@@ -66,14 +72,21 @@ public class CustomerProductService {
             String sortBy,
             String sortDir,
             int page,
-            int pageSize) {
+            int pageSize,
+            Integer favoriteUserId) {
 
         List<Product> all = productRepository.findAll().stream()
                 .filter(p -> !Boolean.TRUE.equals(p.getIsTest()))
                 .collect(Collectors.toList());
 
+        Set<Integer> favoriteProductIds = "favorites".equalsIgnoreCase(sortBy) && favoriteUserId != null
+                ? new HashSet<>(favoriteRepository.findFavoriteProductIdsByUserId(favoriteUserId))
+                : Set.of();
+
         List<Product> filtered = all.stream()
                 .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
+                .filter(p -> !"favorites".equalsIgnoreCase(sortBy)
+                        || favoriteProductIds.contains(p.getProductId()))
                 .filter(p -> keyword == null || keyword.isBlank()
                         || (p.getName() != null && p.getName().toLowerCase().contains(keyword.toLowerCase()))
                         || (p.getDescription() != null && p.getDescription().toLowerCase().contains(keyword.toLowerCase())))
@@ -140,10 +153,10 @@ public class CustomerProductService {
         int from = Math.min(page * pageSize, totalElements);
         int to = Math.min(from + pageSize, totalElements);
 
-        List<CustomerProductDTO> content = new ArrayList<>();
+                List<CustomerProductDTO> content = new ArrayList<>();
         if (from < to) {
-            for (Product p : filtered.subList(from, to)) {
-                content.add(mapToDTO(p, false));
+                        for (Product p : filtered.subList(from, to)) {
+                                content.add(mapToDTO(p, false));
             }
         }
 
@@ -183,7 +196,7 @@ public class CustomerProductService {
         // All smart filters default to null = "don't apply"
         return getProducts(keyword, categoryId, null, minPrice, maxPrice, color, variantSize,
                 null, null, null, null, null, null, null, null, null,
-                sortBy, sortDir, page, size);
+                sortBy, sortDir, page, size, null);
     }
 
     @Transactional(readOnly = true)
@@ -192,10 +205,11 @@ public class CustomerProductService {
             String sortBy,
             String sortDir,
             int page,
-            int size) {
+                        int size,
+                        Integer favoriteUserId) {
         return getProducts(null, categoryId, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null,
-                sortBy, sortDir, page, size);
+                                sortBy, sortDir, page, size, favoriteUserId);
     }
 
     @Transactional(readOnly = true)

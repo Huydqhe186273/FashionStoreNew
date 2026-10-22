@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { getAllCategories } from '../../services/customerCategoryService';
 import { flattenCategories, slugify } from '../../services/filterService';
+import { AuthContext } from '../../context/AuthContext';
 import './ShopFilterBar.css';
 
 /* -----------------------------------------------------------------------------
@@ -35,6 +36,7 @@ const SORT_OPTIONS = [
   { value: 'price_asc',  label: 'Giá tăng dần' },
   { value: 'price_desc', label: 'Giá giảm dần' },
   { value: 'bestseller', label: 'Bán chạy' },
+  { value: 'favorites', label: 'Yêu thích' },
 ];
 
 /* ----- helpers ----- */
@@ -119,6 +121,13 @@ export default function ShopFilterBar({
   onSortChange,
   facets,
 }) {
+  const { user } = useContext(AuthContext);
+  const visibleSortOptions = user ? SORT_OPTIONS : SORT_OPTIONS.filter((option) => option.value !== 'favorites');
+
+  useEffect(() => {
+    if (!user && sortBy === 'favorites') onSortChange?.('newest');
+  }, [user, sortBy, onSortChange]);
+
   /* category list ----------------------------------------------------- */
   const [categories, setCategories] = useState([]);
   useEffect(() => {
@@ -322,7 +331,7 @@ export default function ShopFilterBar({
               value={sortBy}
               onChange={(e) => onSortChange?.(e.target.value)}
             >
-              {SORT_OPTIONS.map((opt) => (
+              {visibleSortOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>

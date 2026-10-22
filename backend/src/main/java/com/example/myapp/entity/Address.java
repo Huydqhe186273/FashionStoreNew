@@ -18,22 +18,22 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonProperty("addressId")
     private Integer AddressId;
-    
+
     @JsonProperty("recipientName")
     @Column(columnDefinition = "NVARCHAR(255)")
     private String RecipientName;
-    
+
     @JsonProperty("phone")
     private String Phone;
-    
+
     @JsonProperty("addressLine")
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String AddressLine;
-    
+
     @JsonProperty("city")
     @Column(columnDefinition = "NVARCHAR(255)")
     private String City;
-    
+
     @JsonProperty("isDefault")
     private Boolean IsDefault = false;
 

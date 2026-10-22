@@ -13,6 +13,7 @@ const SORT_OPTIONS = [
   { value: 'price_asc',  label: 'Giá tăng dần',     sortDir: 'asc'  },
   { value: 'price_desc', label: 'Giá giảm dần',     sortDir: 'desc' },
   { value: 'bestseller', label: 'Bán chạy',         sortDir: 'desc' },
+  { value: 'favorites',  label: 'Yêu thích',         sortDir: 'desc' },
 ];
 
 /* sortDir for the current sortBy — kept here so the request to the

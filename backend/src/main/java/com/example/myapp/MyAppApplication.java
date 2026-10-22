@@ -26,6 +26,38 @@ public class MyAppApplication {
 		SpringApplication.run(MyAppApplication.class, args);
 	}
 
+	private static void loadDotEnv() {
+		String[] paths = {".env", "backend/.env", "../backend/.env"};
+		for (String path : paths) {
+			java.io.File envFile = new java.io.File(path);
+			if (envFile.isFile()) {
+				try (java.io.FileInputStream fis = new java.io.FileInputStream(envFile)) {
+					java.util.Properties props = new java.util.Properties();
+					props.load(fis);
+					for (String key : props.stringPropertyNames()) {
+						if (System.getProperty(key) == null) {
+							System.setProperty(key, props.getProperty(key));
+						}
+					}
+					break;
+				} catch (Exception ignored) {
+				}
+			}
+		}
+	}
+
+	private static String getProperty(String key, String defaultValue) {
+		String sysProp = System.getProperty(key);
+		if (sysProp != null && !sysProp.isBlank()) {
+			return sysProp;
+		}
+		String envVal = System.getenv(key);
+		if (envVal != null && !envVal.isBlank()) {
+			return envVal;
+		}
+		return defaultValue;
+	}
+
 	@org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
 	// In thông báo xác nhận sau khi Spring Boot đã sẵn sàng nhận request.
 	public void logDatabaseConnectionSuccess() {

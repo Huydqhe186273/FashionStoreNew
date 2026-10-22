@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import ChangePassword from './ChangePassword';
+import AddressManager from '../components/AddressManager';
 import './Profile.css';
 
 export default function Profile() {
@@ -21,7 +22,6 @@ export default function Profile() {
     try {
       const response = await api.get('/profile');
       setProfile(response.data);
-      // Ensure context has the latest name from backend
       if (user && setUser) {
         setUser({ ...user, fullName: response.data.fullName });
       }
@@ -59,7 +59,6 @@ export default function Profile() {
       const response = await api.put('/profile', updatedProfile);
       setProfile(response.data);
       setMessage('Profile updated successfully');
-      // Update global context so header/sidebar updates immediately
       if (user && setUser) {
         setUser({ ...user, fullName: response.data.fullName, email: response.data.email });
       }
@@ -69,14 +68,18 @@ export default function Profile() {
     }
   };
 
-  if (loading) return <div style={{textAlign: 'center', padding: '40px'}}>Loading profile data...</div>;
+  if (loading) return (
+    <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af', fontSize: '0.95rem' }}>
+      Đang tải thông tin tài khoản...
+    </div>
+  );
 
   return (
     <div className="profile-page-wrapper">
       <div className="profile-cover">
         <div className="profile-cover-overlay"></div>
       </div>
-      
+
       <div className="profile-container">
         <div className="profile-back-nav">
           <Link to="/" className="profile-back-btn">

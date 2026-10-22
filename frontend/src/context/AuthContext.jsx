@@ -9,6 +9,9 @@ const getUserFromToken = () => {
     try {
         const decoded = jwtDecode(token);
         if (decoded.exp * 1000 > Date.now()) {
+            if (decoded.userId != null) {
+                localStorage.setItem('userId', String(decoded.userId));
+            }
             return {
                 id: decoded.userId,
                 email: decoded.sub,
@@ -16,10 +19,12 @@ const getUserFromToken = () => {
             };
         } else {
             localStorage.removeItem('token');
+            localStorage.removeItem('userId');
             return null;
         }
     } catch (err) {
         localStorage.removeItem('token');
+        localStorage.removeItem('userId');
         return null;
     }
 };
@@ -37,11 +42,17 @@ export const AuthProvider = ({ children }) => {
 
     const login = (token, userData) => {
         localStorage.setItem('token', token);
+        if (userData?.id != null) {
+            localStorage.setItem('userId', String(userData.id));
+        } else {
+            localStorage.removeItem('userId');
+        }
         setUser(userData);
     };
 
     const logout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('userId');
         setUser(null);
     };
 

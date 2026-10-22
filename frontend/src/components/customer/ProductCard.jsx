@@ -63,7 +63,6 @@ export default function ProductCard({ product }) {
         {product.discountPercent ? (
           <span className="product-card-discount">-{product.discountPercent}%</span>
         ) : null}
-        <FavoriteButton productId={product.productId} className="product-card-favorite" />
       </div>
 
       <div className="product-card-body">
@@ -107,9 +106,10 @@ export default function ProductCard({ product }) {
             </span>
           )}
         </div>
-        <div className="product-card-meta">
-          <span>Đã bán {product.soldCount ?? 0}</span>
-        </div>
+      </div>
+      <div className="product-card-footer">
+        <span className="product-card-meta">Đã bán {product.soldCount ?? 0}</span>
+        <FavoriteButton productId={product.productId} className="product-card-favorite" />
       </div>
     </Link>
   );
