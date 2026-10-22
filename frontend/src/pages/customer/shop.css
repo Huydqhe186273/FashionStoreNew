@@ -241,6 +241,25 @@
   color: var(--text-secondary);
 }
 
+.product-card-footer {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px 10px;
+}
+
+.product-card-footer .favorite-btn.product-card-favorite {
+  position: static;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  box-shadow: none;
+}
+
+.product-card-footer .favorite-icon { font-size: 1.2rem; }
+
 .product-card-sizes {
   display: flex;
   flex-wrap: wrap;

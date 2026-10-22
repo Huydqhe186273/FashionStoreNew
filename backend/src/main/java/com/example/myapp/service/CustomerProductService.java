@@ -14,6 +14,7 @@ import com.example.myapp.model.PopularityBucketDTO;
 import com.example.myapp.model.PriceBucketDTO;
 import com.example.myapp.model.VariantInfoDTO;
 import com.example.myapp.repos.CategoryRepository;
+import com.example.myapp.repos.FavoriteRepository;
 import com.example.myapp.repos.ProductImageRepository;
 import com.example.myapp.repos.ProductRepository;
 import com.example.myapp.repos.ProductVariantRepository;
@@ -44,6 +45,7 @@ public class CustomerProductService {
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
         private final ReviewRepository reviewRepository;
+        private final FavoriteRepository favoriteRepository;
 
    
 
@@ -70,14 +72,21 @@ public class CustomerProductService {
             String sortBy,
             String sortDir,
             int page,
-            int pageSize) {
+            int pageSize,
+            Integer favoriteUserId) {
 
         List<Product> all = productRepository.findAll().stream()
                 .filter(p -> !Boolean.TRUE.equals(p.getIsTest()))
                 .collect(Collectors.toList());
 
+        Set<Integer> favoriteProductIds = "favorites".equalsIgnoreCase(sortBy) && favoriteUserId != null
+                ? new HashSet<>(favoriteRepository.findFavoriteProductIdsByUserId(favoriteUserId))
+                : Set.of();
+
         List<Product> filtered = all.stream()
                 .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
+                .filter(p -> !"favorites".equalsIgnoreCase(sortBy)
+                        || favoriteProductIds.contains(p.getProductId()))
                 .filter(p -> keyword == null || keyword.isBlank()
                         || (p.getName() != null && p.getName().toLowerCase().contains(keyword.toLowerCase()))
                         || (p.getDescription() != null && p.getDescription().toLowerCase().contains(keyword.toLowerCase())))
@@ -144,12 +153,10 @@ public class CustomerProductService {
         int from = Math.min(page * pageSize, totalElements);
         int to = Math.min(from + pageSize, totalElements);
 
-        List<CustomerProductDTO> content = new ArrayList<>();
+                List<CustomerProductDTO> content = new ArrayList<>();
         if (from < to) {
-                        List<Product> pageProducts = filtered.subList(from, to);
-                        Map<Integer, Object[]> ratingSummaries = getRatingSummaries(pageProducts);
-                        for (Product p : pageProducts) {
-                                content.add(mapToDTO(p, false, ratingSummaries.get(p.getProductId())));
+                        for (Product p : filtered.subList(from, to)) {
+                                content.add(mapToDTO(p, false));
             }
         }
 
@@ -189,7 +196,7 @@ public class CustomerProductService {
         // All smart filters default to null = "don't apply"
         return getProducts(keyword, categoryId, null, minPrice, maxPrice, color, variantSize,
                 null, null, null, null, null, null, null, null, null,
-                sortBy, sortDir, page, size);
+                sortBy, sortDir, page, size, null);
     }
 
     @Transactional(readOnly = true)
@@ -198,10 +205,11 @@ public class CustomerProductService {
             String sortBy,
             String sortDir,
             int page,
-            int size) {
+                        int size,
+                        Integer favoriteUserId) {
         return getProducts(null, categoryId, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null,
-                sortBy, sortDir, page, size);
+                                sortBy, sortDir, page, size, favoriteUserId);
     }
 
     @Transactional(readOnly = true)
@@ -554,8 +562,6 @@ public class CustomerProductService {
                 .discountPercent(discountPercent)
                 .viewCount(p.getViewCount())
                 .soldCount(p.getSoldCount())
-                .averageRating(ratingSummary == null ? 0.0 : ((Number) ratingSummary[1]).doubleValue())
-                .reviewCount(ratingSummary == null ? 0L : ((Number) ratingSummary[2]).longValue())
                 .totalStock(totalStock)
                 .status(p.getStatus())
                 .categoryId(p.getCategory() != null ? p.getCategory().getCategoryId() : null)
@@ -569,18 +575,6 @@ public class CustomerProductService {
                 .availableColors(availableColors)
                 .build();
     }
-
-        private Map<Integer, Object[]> getRatingSummaries(List<Product> products) {
-                if (products.isEmpty()) {
-                        return Map.of();
-                }
-                List<Integer> productIds = products.stream().map(Product::getProductId).collect(Collectors.toList());
-                Map<Integer, Object[]> summaries = new HashMap<>();
-                for (Object[] row : reviewRepository.findRatingSummariesByProductIds(productIds)) {
-                        summaries.put(((Number) row[0]).intValue(), row);
-                }
-                return summaries;
-        }
 
     private VariantInfoDTO toVariantInfo(ProductVariant v) {
         return VariantInfoDTO.builder()

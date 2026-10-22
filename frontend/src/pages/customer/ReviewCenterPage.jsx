@@ -17,7 +17,7 @@ export default function ReviewCenterPage() {
   const loadItems = async () => {
     setError('');
     try {
-      setItems(await getReviewableItems());
+      setItems(await getReviewableItems(orderId));
     } catch (err) {
       const response = err.response?.data;
       setError(typeof response === 'string' ? response : response?.message || 'Không thể tải danh sách sản phẩm đã mua.');
@@ -28,9 +28,7 @@ export default function ReviewCenterPage() {
 
   useEffect(() => {
     loadItems();
-  }, []);
-
-  const visibleItems = orderId ? items.filter((item) => item.orderId === orderId) : items;
+  }, [orderId]);
 
   return (
     <main className="review-center-page">
@@ -38,7 +36,7 @@ export default function ReviewCenterPage() {
         <Link to="/shop/orders" className="review-center-back">← Đơn mua</Link>
         <p className="review-center-eyebrow">GÓC CHIA SẺ</p>
         <h1>{orderId ? `Đánh giá đơn hàng #${orderId}` : 'Sản phẩm đã mua'}</h1>
-        <p>Đánh giá chỉ mở cho sản phẩm thuộc đơn đã thanh toán.</p>
+        <p>Đánh giá chỉ mở cho đơn đã xác nhận và thanh toán.</p>
       </header>
 
       {loading ? (
@@ -48,7 +46,7 @@ export default function ReviewCenterPage() {
           <p>{error}</p>
           <button type="button" onClick={() => { setLoading(true); loadItems(); }}>Thử lại</button>
         </div>
-      ) : visibleItems.length === 0 ? (
+      ) : items.length === 0 ? (
         <div className="review-center-state">
           <h2>{orderId ? 'Đơn này chưa có sản phẩm đủ điều kiện đánh giá' : 'Chưa có sản phẩm để đánh giá'}</h2>
           <p>{orderId ? 'Chỉ đơn đã xác nhận và thanh toán mới có thể được đánh giá.' : 'Sau khi đơn được xác nhận và thanh toán, sản phẩm sẽ xuất hiện ở đây.'}</p>
@@ -56,7 +54,7 @@ export default function ReviewCenterPage() {
         </div>
       ) : (
         <section className="review-center-list" aria-label="Sản phẩm trong đơn đã thanh toán">
-          {visibleItems.map((item) => (
+          {items.map((item) => (
             <article className="review-center-item" key={item.orderItemId}>
               <div className="review-center-product">
                 <Link to={`/shop/product/${item.productId}`} className="review-center-image-link">

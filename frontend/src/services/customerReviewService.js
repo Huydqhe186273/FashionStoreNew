@@ -5,8 +5,10 @@ export const getReviewsByProduct = async (productId) => {
   return response.data || { reviews: [], count: 0, average: 0 };
 };
 
-export const getReviewableItems = async () => {
-  const response = await api.get('/customer/reviews/eligible');
+export const getReviewableItems = async (orderId) => {
+  const response = await api.get('/customer/reviews/eligible', {
+    params: orderId ? { orderId } : {}
+  });
   return response.data || [];
 };
 

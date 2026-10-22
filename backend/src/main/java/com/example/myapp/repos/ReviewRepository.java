@@ -47,7 +47,12 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
             @Param("orderItemId") Integer orderItemId,
             @Param("userId") Integer userId);
 
-    @Query("SELECT r.Product.ProductId, AVG(r.Rating), COUNT(r) FROM Review r " +
-            "WHERE r.Product.ProductId IN :productIds GROUP BY r.Product.ProductId")
+            @Query("SELECT r.Product.ProductId, AVG(r.Rating), COUNT(r) FROM Review r " +
+                "WHERE r.Product.ProductId IN :productIds " +
+                "AND r.OrderItem.Variant.Product.ProductId = r.Product.ProductId " +
+                "AND r.User.UserId = r.OrderItem.Order.User.UserId " +
+                "AND LOWER(r.OrderItem.Order.PaymentStatus) = 'paid' " +
+                "AND LOWER(r.OrderItem.Order.OrderStatus) NOT IN ('cancelled', 'returned') " +
+                "GROUP BY r.Product.ProductId")
     List<Object[]> findRatingSummariesByProductIds(@Param("productIds") List<Integer> productIds);
 }

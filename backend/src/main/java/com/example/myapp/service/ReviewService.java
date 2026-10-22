@@ -37,16 +37,25 @@ public class ReviewService {
         long count = reviewRepository.countReviewsByProduct(productId);
         Double avg = reviewRepository.averageRatingByProductId(productId);
 
+        Map<Integer, Long> ratingBreakdown = new java.util.LinkedHashMap<>();
+        for (int rating = 5; rating >= 1; rating--) {
+            int score = rating;
+            ratingBreakdown.put(score, reviews.stream()
+                    .filter(review -> review.getRating() != null && review.getRating() == score)
+                    .count());
+        }
+
         Map<String, Object> summary = new java.util.LinkedHashMap<>();
         summary.put("reviews", reviews);
         summary.put("count", count);
         summary.put("average", avg == null ? 0.0 : Math.round(avg * 10.0) / 10.0);
+        summary.put("ratingBreakdown", ratingBreakdown);
         return summary;
     }
 
-        @Transactional(readOnly = true)
-        public List<ReviewableProductDTO> listPaidItems(Integer userId) {
-        List<OrderItem> orderItems = orderItemRepository.findPaidItemsByUserId(userId);
+    @Transactional(readOnly = true)
+    public List<ReviewableProductDTO> listReviewableItems(Integer userId, Integer orderId) {
+        List<OrderItem> orderItems = orderItemRepository.findReviewableItemsByUserId(userId, orderId);
         if (orderItems.isEmpty()) {
             return List.of();
         }
@@ -86,14 +95,14 @@ public class ReviewService {
         }
 
     @Transactional
-        public ReviewDTO create(Integer userId, Integer orderItemId, Integer rating, String comment) {
+    public ReviewDTO create(Integer userId, Integer orderItemId, Integer rating, String comment) {
         if (rating == null || rating < 1 || rating > 5) {
             throw new IllegalArgumentException("Rating phải từ 1 đến 5");
         }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng ID: " + userId));
-        OrderItem orderItem = orderItemRepository.findPaidItemByIdAndUserId(orderItemId, userId)
-            .orElseThrow(() -> new IllegalArgumentException("Chỉ có thể đánh giá sản phẩm thuộc đơn đã thanh toán của bạn"));
+        OrderItem orderItem = orderItemRepository.findReviewableItemByIdAndUserId(orderItemId, userId)
+            .orElseThrow(() -> new IllegalArgumentException("Chỉ có thể đánh giá sản phẩm thuộc đơn đã xác nhận và thanh toán của bạn"));
         if (reviewRepository.existsByOrderItemIdAndUserId(orderItemId, userId)) {
             throw new IllegalArgumentException("Bạn đã đánh giá sản phẩm này rồi");
         }

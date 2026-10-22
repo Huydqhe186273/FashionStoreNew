@@ -27,8 +27,9 @@ public class ReviewController {
 
     @GetMapping("/eligible")
     public ResponseEntity<List<ReviewableProductDTO>> listPaidItems(
-            @AuthenticationPrincipal CustomUserDetails user) {
-        return ResponseEntity.ok(reviewService.listPaidItems(user.getId()));
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestParam(required = false) Integer orderId) {
+        return ResponseEntity.ok(reviewService.listReviewableItems(user.getId(), orderId));
     }
 
     @PostMapping
