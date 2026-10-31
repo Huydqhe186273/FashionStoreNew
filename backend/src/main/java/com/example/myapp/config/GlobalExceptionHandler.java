@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleException(Exception e) {
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("error", e.getMessage());
-        
+
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);

@@ -59,4 +59,9 @@ public class InboundOrderController {
             @RequestParam(required = false) String keyword) {
         return ResponseEntity.ok(inboundOrderService.getBatches(variantId, categoryId, status, keyword));
     }
+
+    @GetMapping("/stats")
+    public ResponseEntity<com.example.myapp.model.InboundStatsDTO> getInboundStats() {
+        return ResponseEntity.ok(inboundOrderService.getInboundStats());
+    }
 }

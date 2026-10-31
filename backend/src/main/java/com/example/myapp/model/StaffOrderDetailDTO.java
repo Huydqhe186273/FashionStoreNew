@@ -26,4 +26,5 @@ public class StaffOrderDetailDTO {
     private BigDecimal totalAmount;
     private LocalDateTime createdAt;
     private List<StaffOrderItemDTO> items;
+    private ReturnRequestDTO returnRequest;
 }

@@ -15,20 +15,20 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     @Query("SELECT o FROM Order o WHERE o.User.UserId = :userId ORDER BY o.CreatedAt DESC")
     List<Order> findByUserIdOrderByCreatedAtDesc(@Param("userId") Integer userId);
 
-    @Query("SELECT COALESCE(SUM(o.TotalAmount), 0) FROM Order o WHERE o.OrderStatus <> 'cancelled'")
+    @Query("SELECT COALESCE(SUM(o.TotalAmount), 0) FROM Order o WHERE LOWER(o.OrderStatus) = 'delivered'")
     BigDecimal sumTotalRevenue();
 
-    @Query("SELECT COALESCE(SUM(o.TotalAmount), 0) FROM Order o WHERE o.OrderStatus = :status")
+    @Query("SELECT COALESCE(SUM(o.TotalAmount), 0) FROM Order o WHERE LOWER(o.OrderStatus) = LOWER(:status)")
     BigDecimal sumTotalRevenueByStatus(@Param("status") String status);
 
-    @Query("SELECT COUNT(o) FROM Order o WHERE o.OrderStatus = :orderStatus")
+    @Query("SELECT COUNT(o) FROM Order o WHERE LOWER(o.OrderStatus) = LOWER(:orderStatus)")
     long countByOrderStatus(@Param("orderStatus") String orderStatus);
 
     @Query("SELECT o FROM Order o ORDER BY o.CreatedAt DESC LIMIT 10")
     List<Order> findTop10ByOrderByCreatedAtDesc();
 
     @Query("SELECT FUNCTION('MONTH', o.CreatedAt) as month, SUM(o.TotalAmount) as total, COUNT(o.OrderId) as orderCount " +
-           "FROM Order o WHERE o.OrderStatus <> 'cancelled' " +
+           "FROM Order o WHERE LOWER(o.OrderStatus) = 'delivered' " +
            "GROUP BY FUNCTION('MONTH', o.CreatedAt) " +
            "ORDER BY month ASC")
     List<Object[]> findMonthlyRevenueStats();

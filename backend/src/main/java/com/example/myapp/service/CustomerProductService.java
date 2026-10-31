@@ -45,10 +45,8 @@ public class CustomerProductService {
     private final ProductVariantRepository productVariantRepository;
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
-        private final ReviewRepository reviewRepository;
-        private final FavoriteRepository favoriteRepository;
-
-   
+    private final ReviewRepository reviewRepository;
+    private final FavoriteRepository favoriteRepository;
 
     @Transactional(readOnly = true)
     public PageResponseDTO<CustomerProductDTO> getProducts(
@@ -108,8 +106,15 @@ public class CustomerProductService {
                 .filter(p -> keyword == null || keyword.isBlank()
                         || (p.getName() != null && p.getName().toLowerCase().contains(keyword.toLowerCase()))
                         || (p.getDescription() != null && p.getDescription().toLowerCase().contains(keyword.toLowerCase())))
-                .filter(p -> categoryId == null
-                        || (p.getCategory() != null && Objects.equals(p.getCategory().getCategoryId(), categoryId)))
+                .filter(p -> {
+                    if (categoryId == null) return true;
+                    if (p.getCategory() == null) return false;
+                    if (Objects.equals(p.getCategory().getCategoryId(), categoryId)) return true;
+                    if (p.getCategory().getParent() != null
+                            && Objects.equals(p.getCategory().getParent().getCategoryId(), categoryId))
+                        return true;
+                    return false;
+                })
                 .filter(p -> {
                     if (gender == null || gender.isBlank()) return true;
                     if (p.getCategory() == null) return false;
@@ -173,10 +178,10 @@ public class CustomerProductService {
 
         List<CustomerProductDTO> content = new ArrayList<>();
         if (from < to) {
-                        List<Product> pageProducts = filtered.subList(from, to);
-                        Map<Integer, Object[]> ratingSummaries = getRatingSummaries(pageProducts);
-                        for (Product p : pageProducts) {
-                                content.add(mapToDTO(p, false, ratingSummaries.get(p.getProductId())));
+            List<Product> pageProducts = filtered.subList(from, to);
+            Map<Integer, Object[]> ratingSummaries = getRatingSummaries(pageProducts);
+            for (Product p : pageProducts) {
+                content.add(mapToDTO(p, false, ratingSummaries.get(p.getProductId())));
             }
         }
 
@@ -225,11 +230,11 @@ public class CustomerProductService {
             String sortBy,
             String sortDir,
             int page,
-                        int size,
-                        Integer favoriteUserId) {
+            int size,
+            Integer favoriteUserId) {
         return getProducts(null, categoryId, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null,
-                                sortBy, sortDir, page, size, favoriteUserId);
+                sortBy, sortDir, page, size, favoriteUserId);
     }
 
     @Transactional(readOnly = true)
@@ -287,7 +292,7 @@ public class CustomerProductService {
                 .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
                 .collect(Collectors.toList());
 
-        // --- size / color / gender histograms (unchanged from before)
+        // --- size / color / gender histograms
         Map<String, Long> sizeCounts = new LinkedHashMap<>();
         Map<String, Long> colorCounts = new LinkedHashMap<>();
         Map<String, Long> genderCounts = new LinkedHashMap<>();
@@ -308,10 +313,8 @@ public class CustomerProductService {
             }
         }
 
-        sizesByProduct.values().forEach(set ->
-                set.forEach(s -> sizeCounts.merge(s, 1L, Long::sum)));
-        colorsByProduct.values().forEach(set ->
-                set.forEach(c -> colorCounts.merge(c, 1L, Long::sum)));
+        sizesByProduct.values().forEach(set -> set.forEach(s -> sizeCounts.merge(s, 1L, Long::sum)));
+        colorsByProduct.values().forEach(set -> set.forEach(c -> colorCounts.merge(c, 1L, Long::sum)));
 
         for (Product p : activeProducts) {
             if (p.getCategory() != null && p.getCategory().getGender() != null) {
@@ -325,7 +328,8 @@ public class CustomerProductService {
                         .label(e.getKey())
                         .count(e.getValue())
                         .build())
-                .sorted(Comparator.comparingInt(this::sizeOrder).thenComparing(FacetOptionDTO::getValue))
+                .sorted(Comparator.comparingInt(this::sizeOrder)
+                        .thenComparing(FacetOptionDTO::getValue))
                 .collect(Collectors.toList());
 
         List<FacetOptionDTO> colorOptions = colorCounts.entrySet().stream()
@@ -335,33 +339,39 @@ public class CustomerProductService {
                         .count(e.getValue())
                         .hex(guessColorHex(e.getKey()))
                         .build())
-                .sorted(Comparator.comparing(FacetOptionDTO::getLabel, Comparator.nullsLast(String::compareToIgnoreCase)))
+                .sorted(Comparator.comparing(FacetOptionDTO::getLabel,
+                        Comparator.nullsLast(String::compareToIgnoreCase)))
                 .collect(Collectors.toList());
 
         List<FacetOptionDTO> genderOptions = List.of(
-                FacetOptionDTO.builder().value("nam").label("Nam").count(genderCounts.getOrDefault("nam", 0L)).build(),
-                FacetOptionDTO.builder().value("nu").label("Nữ").count(genderCounts.getOrDefault("nu", 0L)).build(),
-                FacetOptionDTO.builder().value("unisex").label("Unisex").count(genderCounts.getOrDefault("unisex", 0L)).build()
-        ).stream().filter(o -> o.getCount() > 0).collect(Collectors.toList());
+                FacetOptionDTO.builder().value("nam").label("Nam")
+                        .count(genderCounts.getOrDefault("nam", 0L)).build(),
+                FacetOptionDTO.builder().value("nu").label("Nữ")
+                        .count(genderCounts.getOrDefault("nu", 0L)).build(),
+                FacetOptionDTO.builder().value("unisex").label("Unisex")
+                        .count(genderCounts.getOrDefault("unisex", 0L)).build())
+                .stream().filter(o -> o.getCount() > 0).collect(Collectors.toList());
 
-        // --- price buckets (unchanged)
+        // --- price buckets
         BigDecimal minPrice = null, maxPrice = null;
         for (Product p : activeProducts) {
-            BigDecimal price = p.getDiscountPrice() != null && p.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
-                    ? p.getDiscountPrice() : p.getBasePrice();
+            BigDecimal price = p.getDiscountPrice() != null
+                    && p.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
+                            ? p.getDiscountPrice()
+                            : p.getBasePrice();
             if (price == null) continue;
             if (minPrice == null || price.compareTo(minPrice) < 0) minPrice = price;
             if (maxPrice == null || price.compareTo(maxPrice) > 0) maxPrice = price;
         }
 
-        BigDecimal[][] bucketDefs = new BigDecimal[][]{
-                { new BigDecimal("0"),       new BigDecimal("200000") },
-                { new BigDecimal("200000"),  new BigDecimal("500000") },
-                { new BigDecimal("500000"),  new BigDecimal("1000000") },
+        BigDecimal[][] bucketDefs = new BigDecimal[][] {
+                { new BigDecimal("0"), new BigDecimal("200000") },
+                { new BigDecimal("200000"), new BigDecimal("500000") },
+                { new BigDecimal("500000"), new BigDecimal("1000000") },
                 { new BigDecimal("1000000"), new BigDecimal("2000000") },
                 { new BigDecimal("2000000"), null }
         };
-        String[] bucketLabels = new String[]{
+        String[] bucketLabels = new String[] {
                 "Dưới 200k", "200k – 500k", "500k – 1tr", "1tr – 2tr", "Trên 2tr"
         };
 
@@ -443,7 +453,6 @@ public class CustomerProductService {
                 .minPrice(minPrice == null ? null : minPrice.longValue())
                 .maxPrice(maxPrice == null ? null : maxPrice.longValue())
                 .priceBuckets(buckets)
-                // smart facets (v3 — only the two the sidebar actually uses):
                 .productsComplete(complete)
                 .productsInStock(inStock)
                 .discountBuckets(discountBuckets)
@@ -460,19 +469,22 @@ public class CustomerProductService {
         String s = o.getValue();
         if (s == null) return 9999;
         switch (s.trim().toUpperCase()) {
-            case "XS":   return 0;
-            case "S":    return 1;
-            case "M":    return 2;
-            case "L":    return 3;
-            case "XL":   return 4;
-            case "XXL":  return 5;
-            case "3XL":  return 6;
+            case "XS": return 0;
+            case "S": return 1;
+            case "M": return 2;
+            case "L": return 3;
+            case "XL": return 4;
+            case "XXL": return 5;
+            case "3XL": return 6;
             case "FREE":
             case "ONE SIZE":
-            case "MINI":  return 100;
+            case "MINI": return 100;
         }
-        try { return 1000 + Integer.parseInt(s.trim()); }
-        catch (NumberFormatException ignored) { return 9000; }
+        try {
+            return 1000 + Integer.parseInt(s.trim());
+        } catch (NumberFormatException ignored) {
+            return 9000;
+        }
     }
 
     /**
@@ -482,24 +494,24 @@ public class CustomerProductService {
         if (label == null) return "#9ca3af";
         String key = label.toLowerCase();
         return switch (key) {
-            case "đen"          -> "#111111";
-            case "trắng"        -> "#f5f5f5";
+            case "đen" -> "#111111";
+            case "trắng" -> "#f5f5f5";
             case "xám", "xám caro" -> "#9ca3af";
-            case "đỏ"           -> "#dc2626";
+            case "đỏ" -> "#dc2626";
             case "đỏ rượu vang" -> "#7f1d1d";
             case "xanh dương", "xanh navy", "xanh đậm" -> "#1e40af";
             case "xanh mint", "xanh rêu" -> "#10b981";
             case "xanh nhạt", "xanh hoa" -> "#93c5fd";
-            case "xanh olive"   -> "#65a30d";
+            case "xanh olive" -> "#65a30d";
             case "be", "be hoa", "be sọc", "be caro" -> "#d6c19a";
             case "nâu", "nâu đất" -> "#92400e";
             case "hồng", "hồng hoa", "hồng pastel" -> "#f9a8d4";
-            case "vàng"         -> "#fbbf24";
-            case "bạc"          -> "#c0c0c0";
-            case "caro đỏ"      -> "#b91c1c";
-            case "caro xanh"    -> "#1d4ed8";
-            case "trắng ngà"    -> "#faf3e7";
-            case "nude"         -> "#e7c8a3";
+            case "vàng" -> "#fbbf24";
+            case "bạc" -> "#c0c0c0";
+            case "caro đỏ" -> "#b91c1c";
+            case "caro xanh" -> "#1d4ed8";
+            case "trắng ngà" -> "#faf3e7";
+            case "nude" -> "#e7c8a3";
             default -> "#9ca3af";
         };
     }
@@ -514,8 +526,8 @@ public class CustomerProductService {
     private CustomerCategoryDTO toCategoryDTO(Category c) {
         long productCount = c.getProducts() != null
                 ? c.getProducts().stream()
-                    .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
-                    .count()
+                        .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
+                        .count()
                 : 0L;
         return CustomerCategoryDTO.builder()
                 .categoryId(c.getCategoryId())
@@ -530,10 +542,10 @@ public class CustomerProductService {
     }
 
     public CustomerProductDTO mapToDTO(Product p, boolean includeVariants) {
-                return mapToDTO(p, includeVariants, getRatingSummaries(List.of(p)).get(p.getProductId()));
-        }
+        return mapToDTO(p, includeVariants, getRatingSummaries(List.of(p)).get(p.getProductId()));
+    }
 
-        private CustomerProductDTO mapToDTO(Product p, boolean includeVariants, Object[] ratingSummary) {
+    private CustomerProductDTO mapToDTO(Product p, boolean includeVariants, Object[] ratingSummary) {
         /* Always load variants for size/color facets — the list view
          * still wants to render "Size có sẵn" + swatches even when
          * it doesn't include the full variants array. The query is
@@ -551,11 +563,13 @@ public class CustomerProductService {
         }
         if (primary == null && !images.isEmpty()) primary = images.get(0);
 
-        int totalStock = variants.stream().mapToInt(v -> v.getStockQuantity() == null ? 0 : v.getStockQuantity()).sum();
+        int totalStock = variants.stream()
+                .mapToInt(v -> v.getStockQuantity() == null ? 0 : v.getStockQuantity()).sum();
 
-        BigDecimal finalPrice = p.getDiscountPrice() != null && p.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
-                ? p.getDiscountPrice()
-                : p.getBasePrice();
+        BigDecimal finalPrice = p.getDiscountPrice() != null
+                && p.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
+                        ? p.getDiscountPrice()
+                        : p.getBasePrice();
 
         Integer discountPercent = null;
         if (p.getDiscountPrice() != null && p.getBasePrice() != null
@@ -602,17 +616,17 @@ public class CustomerProductService {
                 .build();
     }
 
-        private Map<Integer, Object[]> getRatingSummaries(List<Product> products) {
-                if (products.isEmpty()) {
-                        return Map.of();
-                }
-                List<Integer> productIds = products.stream().map(Product::getProductId).collect(Collectors.toList());
-                Map<Integer, Object[]> summaries = new HashMap<>();
-                for (Object[] row : reviewRepository.findVerifiedRatingSummariesByProductIds(productIds)) {
-                        summaries.put(((Number) row[0]).intValue(), row);
-                }
-                return summaries;
+    private Map<Integer, Object[]> getRatingSummaries(List<Product> products) {
+        if (products.isEmpty()) {
+            return Map.of();
         }
+        List<Integer> productIds = products.stream().map(Product::getProductId).collect(Collectors.toList());
+        Map<Integer, Object[]> summaries = new HashMap<>();
+        for (Object[] row : reviewRepository.findVerifiedRatingSummariesByProductIds(productIds)) {
+            summaries.put(((Number) row[0]).intValue(), row);
+        }
+        return summaries;
+    }
 
     private VariantInfoDTO toVariantInfo(ProductVariant v) {
         return VariantInfoDTO.builder()
@@ -624,7 +638,7 @@ public class CustomerProductService {
                 .build();
     }
 
-        private Comparator<Product> buildComparator(String sortBy, String sortDir, Map<Integer, Long> favoriteCounts) {
+    private Comparator<Product> buildComparator(String sortBy, String sortDir, Map<Integer, Long> favoriteCounts) {
         String key = sortBy == null ? "" : sortBy.toLowerCase();
         // price_asc / price_desc encode the direction in their name;
         // newer / bestseller / discount don't — for those we still
@@ -643,9 +657,9 @@ public class CustomerProductService {
             case "bestseller":
                 cmp = Comparator.comparing(Product::getSoldCount, Comparator.nullsLast(Comparator.naturalOrder()));
                 break;
-                        case "favorites":
-                                cmp = Comparator.comparing(p -> favoriteCounts.getOrDefault(p.getProductId(), 0L));
-                                break;
+            case "favorites":
+                cmp = Comparator.comparing(p -> favoriteCounts.getOrDefault(p.getProductId(), 0L));
+                break;
             case "discount":
                 cmp = Comparator.comparing((Product p) -> {
                     Integer pct = computeDiscountPercent(p);

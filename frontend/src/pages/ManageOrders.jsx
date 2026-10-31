@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
-import { getStaffOrders, getStaffOrderDetail, updateOrderStatus, approveReturn, rejectReturn } from '../services/orderService';
+import {
+  getStaffOrders,
+  getStaffOrderDetail,
+  updateOrderStatus,
+  createStaffReturn,
+  markOrderRTO,
+  approveReturn,
+  rejectReturn
+} from '../services/orderService';
 
 const mockOrders = [
   {
@@ -78,6 +86,19 @@ export default function ManageOrders() {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
+
+  // Staff Return / Refund Modal State
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [returnOrder, setReturnOrder] = useState(null);
+  const [returnReason, setReturnReason] = useState('Khách thử không vừa size / chật rộng');
+  const [customReason, setCustomReason] = useState('');
+  const [refundAmount, setRefundAmount] = useState(0);
+  const [bankName, setBankName] = useState('');
+  const [bankAccount, setBankAccount] = useState('');
+  const [accountHolder, setAccountHolder] = useState('');
+  const [adminNote, setAdminNote] = useState('');
+  const [restock, setRestock] = useState(true);
+  const [submittingReturn, setSubmittingReturn] = useState(false);
 
   // Return Request modal state
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
@@ -229,6 +250,7 @@ export default function ManageOrders() {
     if (newStatus === 'SHIPPED') actionName = 'Giao hàng (SHIPPED)';
     if (newStatus === 'DELIVERED') actionName = 'Hoàn tất đơn hàng (DELIVERED)';
     if (newStatus === 'CANCELLED') actionName = 'Hủy đơn hàng (CANCELLED)';
+    if (newStatus === 'RETURNED') actionName = 'Hoàn hàng về kho (RETURNED)';
 
     if (!window.confirm(`Bạn có chắc muốn thực hiện: "${actionName}" cho đơn #${orderId}?`)) {
       return;
@@ -242,6 +264,96 @@ export default function ManageOrders() {
     } catch (err) {
       const message = err.response?.data?.message || err.response?.data?.error || err.message || 'Lỗi cập nhật trạng thái đơn!';
       setActionError(message);
+    }
+  };
+
+  // Handler: Bưu tá giao thất bại & hoàn về kho (RTO)
+  const handleMarkRTO = async (orderId) => {
+    const note = window.prompt(
+      `Xác nhận bưu tá giao thất bại & hoàn hàng về kho cho đơn #ORD-${orderId}?\nNhập ghi chú kiểm tra kiện hàng (VD: Giao không thành công 3 lần, hàng hoàn về còn nguyên tem):`,
+      'Bưu tá giao hàng thất bại, trả hàng về kho shop'
+    );
+    if (note === null) return;
+
+    try {
+      setActionError('');
+      setActionSuccess('');
+      const updated = await markOrderRTO(orderId, note);
+      setActionSuccess(`✅ Đã tiếp nhận đơn hàng #ORD-${orderId} hoàn về kho (RTO) thành công! Tồn kho các sản phẩm đã được tự động hoàn lại.`);
+      if (selectedOrder && selectedOrder.orderId === orderId) {
+        setSelectedOrder(updated);
+      }
+      loadOrders();
+    } catch (err) {
+      const message = err.response?.data?.message || err.response?.data?.error || err.message || 'Lỗi khi ghi nhận hàng hoàn RTO!';
+      setActionError(message);
+    }
+  };
+
+  // Handler: Mở modal hoàn hàng cho đơn DELIVERED
+  const handleOpenReturnModal = (order) => {
+    setReturnOrder(order);
+    setReturnReason('Khách thử không vừa size / chật rộng');
+    setCustomReason('');
+    setRefundAmount(order.totalAmount || 0);
+    setBankName('');
+    setBankAccount('');
+    setAccountHolder(order.recipientName || order.customerName || '');
+    setAdminNote('Kiểm tra hàng nguyên tem mác, bao bì còn tốt.');
+    setRestock(true);
+    setIsReturnModalOpen(true);
+  };
+
+  // Handler: Xác nhận tạo phiếu hoàn hàng & hoàn kho
+  const handleConfirmReturn = async (e) => {
+    e.preventDefault();
+    if (!returnOrder) return;
+
+    const finalReason = returnReason === 'Khác' && customReason.trim()
+      ? customReason.trim()
+      : returnReason;
+
+    const refund = Number(refundAmount) || 0;
+    if (refund < 0) {
+      alert('Số tiền hoàn trả không được âm!');
+      return;
+    }
+    const maxRefund = Number(returnOrder.totalAmount) || 0;
+    if (refund > maxRefund) {
+      alert(`Số tiền hoàn trả (${refund.toLocaleString('vi-VN')} đ) không được vượt quá giá trị đơn hàng (${maxRefund.toLocaleString('vi-VN')} đ)!`);
+      return;
+    }
+
+    const cleanBankAcc = bankAccount.trim();
+    if (cleanBankAcc && !/^[0-9]{6,25}$/.test(cleanBankAcc)) {
+      alert('Số tài khoản ngân hàng phải gồm từ 6 đến 25 chữ số!');
+      return;
+    }
+
+    setSubmittingReturn(true);
+    try {
+      const payload = {
+        reason: finalReason,
+        refundAmount: refund,
+        bankName: bankName.trim(),
+        bankAccount: cleanBankAcc,
+        accountHolder: accountHolder.trim().toUpperCase(),
+        adminNote: adminNote.trim(),
+        restock: restock
+      };
+
+      const updated = await createStaffReturn(returnOrder.orderId, payload);
+      setActionSuccess(`✅ Đã tạo phiếu hoàn hàng cho đơn #ORD-${returnOrder.orderId} thành công! ${restock ? 'Sản phẩm đã được nhập lại vào kho hàng.' : ''}`);
+      setIsReturnModalOpen(false);
+      if (selectedOrder && selectedOrder.orderId === returnOrder.orderId) {
+        setSelectedOrder(updated);
+      }
+      loadOrders();
+    } catch (err) {
+      const message = err.response?.data?.message || err.response?.data?.error || err.message || 'Lỗi khi xử lý phiếu hoàn hàng!';
+      alert('Không thể tạo phiếu hoàn: ' + message);
+    } finally {
+      setSubmittingReturn(false);
     }
   };
 
@@ -267,6 +379,8 @@ export default function ManageOrders() {
         return <span style={{ ...baseStyle, backgroundColor: '#f3e8ff', color: '#7e22ce', border: '1px solid #e9d5ff' }}>🚚 Đang giao</span>;
       case 'DELIVERED':
         return <span style={{ ...baseStyle, backgroundColor: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>🏁 Hoàn tất</span>;
+      case 'RETURNED':
+        return <span style={{ ...baseStyle, backgroundColor: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' }}>↩️ Đã hoàn hàng</span>;
       case 'CANCELLED':
         return <span style={{ ...baseStyle, backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>❌ Đã hủy</span>;
       default:
@@ -274,11 +388,12 @@ export default function ManageOrders() {
     }
   };
 
-  const countPending = orders.filter(o => o.orderStatus === 'PENDING').length;
-  const countProcessing = orders.filter(o => o.orderStatus === 'PROCESSING').length;
-  const countShipped = orders.filter(o => o.orderStatus === 'SHIPPED').length;
-  const countDelivered = orders.filter(o => o.orderStatus === 'DELIVERED').length;
-  const countReturnPending = orders.filter(o => o.returnStatus === 'pending').length;
+  const countPending = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'PENDING').length;
+  const countProcessing = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'PROCESSING').length;
+  const countShipped = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'SHIPPED').length;
+  const countDelivered = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'DELIVERED').length;
+  const countReturned = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'RETURNED').length;
+  const countReturnPending = orders.filter(o => (o.returnStatus || '').toLowerCase() === 'pending').length;
 
   return (
     <main>
@@ -289,7 +404,7 @@ export default function ManageOrders() {
         onRefresh={loadOrders}
       />
 
-      <div className="stats-grid">
+      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))' }}>
         <div className="stat-card">
           <div className="stat-icon" style={{ color: '#eab308' }}>⏳</div>
           <div>
@@ -318,7 +433,14 @@ export default function ManageOrders() {
             <div className="stat-label">Giao Thành Công (DELIVERED)</div>
           </div>
         </div>
-        <div className="stat-card" style={{ cursor: 'pointer', border: countReturnPending > 0 ? '2px solid #f59e0b' : undefined }} onClick={() => setStatusFilter('RETURN_PENDING')}>
+        <div className="stat-card">
+          <div className="stat-icon" style={{ color: '#ea580c' }}>↩️</div>
+          <div>
+            <div className="stat-val">{countReturned}</div>
+            <div className="stat-label">Đã Hoàn Hàng (RETURNED)</div>
+          </div>
+        </div>
+        <div className="stat-card" style={{ cursor: 'pointer', border: countReturnPending > 0 ? '2px solid #f59e0b' : undefined }} onClick={() => setStatusFilter(statusFilter === 'RETURN_PENDING' ? '' : 'RETURN_PENDING')}>
           <div className="stat-icon" style={{ color: '#f59e0b' }}>🔄</div>
           <div>
             <div className="stat-val" style={{ color: countReturnPending > 0 ? '#f59e0b' : undefined }}>{countReturnPending}</div>
@@ -346,6 +468,7 @@ export default function ManageOrders() {
             <option value="PROCESSING">PROCESSING (Đang xử lý)</option>
             <option value="SHIPPED">SHIPPED (Đang giao)</option>
             <option value="DELIVERED">DELIVERED (Giao thành công)</option>
+            <option value="RETURNED">RETURNED (Đã hoàn hàng / hoàn kho)</option>
             <option value="CANCELLED">CANCELLED (Đã hủy)</option>
             <option value="RETURN_PENDING">🔄 Chờ Duyệt Hoàn Tiền</option>
           </select>
@@ -387,19 +510,19 @@ export default function ManageOrders() {
         </div>
       )}
 
-      <div className="panel-card">
+      <div className="panel-card" style={{ padding: '18px' }}>
         <div className="table-responsive">
-          <table style={{ minWidth: '1020px', width: '100%' }}>
+          <table style={{ minWidth: '820px', width: '100%' }}>
             <thead>
               <tr>
-                <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Mã Đơn</th>
-                <th style={{ minWidth: '170px', whiteSpace: 'nowrap' }}>Khách Hàng / SĐT</th>
-                <th style={{ minWidth: '240px', maxWidth: '320px', whiteSpace: 'nowrap' }}>Địa Chỉ Nhận Hàng</th>
-                <th style={{ width: '90px', textAlign: 'center', whiteSpace: 'nowrap' }}>Số Lượng</th>
-                <th style={{ width: '140px', textAlign: 'right', whiteSpace: 'nowrap' }}>Tổng Tiền</th>
-                <th style={{ width: '140px', textAlign: 'center', whiteSpace: 'nowrap' }}>Trạng Thái</th>
-                <th style={{ width: '110px', whiteSpace: 'nowrap' }}>Thời Gian</th>
-                <th style={{ width: '130px', textAlign: 'center', whiteSpace: 'nowrap' }}>Thao Tác</th>
+                <th style={{ width: '85px', padding: '10px 8px', whiteSpace: 'nowrap' }}>Mã Đơn</th>
+                <th style={{ minWidth: '125px', padding: '10px 8px', whiteSpace: 'nowrap' }}>Khách Hàng / SĐT</th>
+                <th style={{ minWidth: '130px', maxWidth: '200px', padding: '10px 8px' }}>Địa Chỉ Nhận Hàng</th>
+                <th style={{ width: '65px', padding: '10px 6px', textAlign: 'center', whiteSpace: 'nowrap' }}>SL</th>
+                <th style={{ width: '105px', padding: '10px 8px', textAlign: 'right', whiteSpace: 'nowrap' }}>Tổng Tiền</th>
+                <th style={{ width: '115px', padding: '10px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>Trạng Thái</th>
+                <th style={{ width: '85px', padding: '10px 6px', textAlign: 'center', whiteSpace: 'nowrap' }}>Thời Gian</th>
+                <th style={{ width: '140px', padding: '10px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>Thao Tác</th>
               </tr>
             </thead>
             <tbody>
@@ -415,19 +538,21 @@ export default function ManageOrders() {
                   const canConfirm = status === 'PENDING';
                   const canShip = status === 'PROCESSING';
                   const canCancel = status === 'PENDING' || status === 'PROCESSING';
+                  const canRTO = status === 'SHIPPED';
+                  const canReturn = status === 'DELIVERED';
                   const hasReturnPending = o.returnStatus === 'pending';
 
                   return (
                     <tr key={o.orderId}>
-                      <td style={{ whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 8px', whiteSpace: 'nowrap' }}>
                         <span style={{
                           display: 'inline-block',
-                          padding: '4px 8px',
+                          padding: '3px 7px',
                           borderRadius: '6px',
                           backgroundColor: '#eff6ff',
                           color: '#2563eb',
                           fontFamily: 'monospace',
-                          fontSize: '0.9rem',
+                          fontSize: '0.82rem',
                           fontWeight: 700,
                           border: '1px solid #dbeafe',
                           whiteSpace: 'nowrap'
@@ -435,20 +560,20 @@ export default function ManageOrders() {
                           #ORD-{o.orderId}
                         </span>
                       </td>
-                      <td>
-                        <div style={{ fontWeight: 600, color: 'var(--text-main, #111827)', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 8px' }}>
+                        <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-main, #111827)', whiteSpace: 'nowrap' }}>
                           {o.customerName || 'Khách vãng lai'}
                         </div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted, #6b7280)', marginTop: '2px', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted, #6b7280)', marginTop: '2px', whiteSpace: 'nowrap' }}>
                           {o.customerPhone ? o.customerPhone : (o.customerEmail || 'Chưa có SĐT')}
                         </div>
                       </td>
-                      <td>
+                      <td style={{ padding: '10px 8px' }}>
                         <div
                           style={{
-                            maxWidth: '300px',
-                            fontSize: '0.85rem',
-                            lineHeight: 1.45,
+                            maxWidth: '200px',
+                            fontSize: '0.82rem',
+                            lineHeight: 1.4,
                             color: 'var(--text-main, #374151)',
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
@@ -461,7 +586,7 @@ export default function ManageOrders() {
                           {o.shippingAddress || 'Chưa cung cấp địa chỉ'}
                         </div>
                       </td>
-                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 6px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                         <span
                           className="role-tag role-staff"
                           style={{
@@ -469,20 +594,20 @@ export default function ManageOrders() {
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            padding: '4px 10px',
+                            padding: '3px 7px',
                             fontWeight: 700,
-                            fontSize: '0.78rem'
+                            fontSize: '0.72rem'
                           }}
                         >
                           {o.itemCount || 1} MÓN
                         </span>
                       </td>
-                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <strong style={{ color: '#111827', fontSize: '0.95rem', fontWeight: 800 }}>
+                      <td style={{ padding: '10px 8px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <strong style={{ color: '#111827', fontSize: '0.88rem', fontWeight: 800 }}>
                           {formatCurrency(o.totalAmount)}
                         </strong>
                       </td>
-                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                         {getStatusBadge(o.orderStatus)}
                         {o.returnStatus === 'pending' && (
                           <div style={{ marginTop: '4px' }}>
@@ -506,19 +631,19 @@ export default function ManageOrders() {
                           </div>
                         )}
                       </td>
-                      <td style={{ whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 6px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                         {(() => {
                           const { time, date } = formatDateTime(o.createdAt);
                           return (
                             <div>
-                              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#374151' }}>{time}</div>
-                              <div style={{ fontSize: '0.78rem', color: '#6b7280' }}>{date}</div>
+                              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>{time}</div>
+                              <div style={{ fontSize: '0.74rem', color: '#6b7280' }}>{date}</div>
                             </div>
                           );
                         })()}
                       </td>
-                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                        <div className="action-buttons" style={{ flexWrap: 'nowrap', justifyContent: 'center' }}>
+                      <td style={{ padding: '10px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <div className="action-buttons" style={{ display: 'inline-flex', gap: '4px', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center' }}>
                           <button
                             className="btn-action"
                             style={{
@@ -526,7 +651,8 @@ export default function ManageOrders() {
                               color: '#2563eb',
                               borderColor: 'rgba(59, 130, 246, 0.3)',
                               whiteSpace: 'nowrap',
-                              padding: '5px 10px'
+                              padding: '4px 7px',
+                              fontSize: '0.78rem'
                             }}
                             onClick={() => handleOpenDetail(o.orderId)}
                             title="Xem chi tiết các sản phẩm và xử lý đơn"
@@ -543,12 +669,13 @@ export default function ManageOrders() {
                                 color: '#059669',
                                 borderColor: 'rgba(16, 185, 129, 0.35)',
                                 whiteSpace: 'nowrap',
-                                padding: '5px 10px'
+                                padding: '4px 7px',
+                                fontSize: '0.78rem'
                               }}
                               onClick={() => handleUpdateStatus(o.orderId, 'PROCESSING')}
                               title="Xác nhận đơn hàng và trừ tồn kho biến thể"
                             >
-                              ✅ Xác nhận
+                              ✅ Duyệt
                             </button>
                           )}
 
@@ -560,12 +687,49 @@ export default function ManageOrders() {
                                 color: '#7e22ce',
                                 borderColor: 'rgba(168, 85, 247, 0.35)',
                                 whiteSpace: 'nowrap',
-                                padding: '5px 10px'
+                                padding: '4px 7px',
+                                fontSize: '0.78rem'
                               }}
                               onClick={() => handleUpdateStatus(o.orderId, 'SHIPPED')}
                               title="Chuyển sang giao hàng (SHIPPED)"
                             >
-                              🚚 Gửi hàng
+                              🚚 Gửi
+                            </button>
+                          )}
+
+                          {canRTO && (
+                            <button
+                              className="btn-action"
+                              style={{
+                                backgroundColor: 'rgba(234, 88, 12, 0.12)',
+                                color: '#c2410c',
+                                borderColor: 'rgba(234, 88, 12, 0.35)',
+                                whiteSpace: 'nowrap',
+                                padding: '4px 7px',
+                                fontSize: '0.78rem'
+                              }}
+                              onClick={() => handleMarkRTO(o.orderId)}
+                              title="Giao thất bại / Bưu tá hoàn hàng về kho (Cộng lại tồn kho)"
+                            >
+                              📦 RTO
+                            </button>
+                          )}
+
+                          {canReturn && (
+                            <button
+                              className="btn-action"
+                              style={{
+                                backgroundColor: 'rgba(234, 88, 12, 0.12)',
+                                color: '#c2410c',
+                                borderColor: 'rgba(234, 88, 12, 0.35)',
+                                whiteSpace: 'nowrap',
+                                padding: '4px 7px',
+                                fontSize: '0.78rem'
+                              }}
+                              onClick={() => handleOpenReturnModal(o)}
+                              title="Tiếp nhận khách gửi trả lại hàng về kho"
+                            >
+                              ↩️ Hoàn
                             </button>
                           )}
 
@@ -576,7 +740,8 @@ export default function ManageOrders() {
                                 borderColor: 'rgba(239, 68, 68, 0.35)',
                                 color: '#dc2626',
                                 whiteSpace: 'nowrap',
-                                padding: '5px 8px'
+                                padding: '4px 6px',
+                                fontSize: '0.78rem'
                               }}
                               onClick={() => handleUpdateStatus(o.orderId, 'CANCELLED')}
                               title="Hủy đơn hàng (Cộng lại kho nếu đã xử lý)"
@@ -672,8 +837,8 @@ export default function ManageOrders() {
                   <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Trạng thái đơn:</span> {getStatusBadge(selectedOrder.orderStatus)}
                 </div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  Thanh toán: <strong style={{ color: selectedOrder.paymentStatus === 'PAID' ? '#10b981' : '#f59e0b' }}>
-                    {selectedOrder.paymentStatus === 'PAID' ? '✅ Đã thanh toán' : '⏳ Chưa thanh toán (COD)'}
+                  Thanh toán: <strong style={{ color: selectedOrder.paymentStatus === 'PAID' ? '#10b981' : selectedOrder.paymentStatus === 'REFUNDED' ? '#c2410c' : '#f59e0b' }}>
+                    {selectedOrder.paymentStatus === 'PAID' ? '✅ Đã thanh toán' : selectedOrder.paymentStatus === 'REFUNDED' ? '↩️ Đã hoàn tiền' : '⏳ Chưa thanh toán (COD)'}
                   </strong>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
@@ -684,6 +849,60 @@ export default function ManageOrders() {
                 </div>
               </div>
             </div>
+
+            {/* Thông tin hoàn hàng nếu đơn ở trạng thái RETURNED */}
+            {selectedOrder.orderStatus === 'RETURNED' && (
+              <div style={{
+                backgroundColor: '#fff7ed',
+                border: '1px solid #fed7aa',
+                borderRadius: '8px',
+                padding: '16px 20px',
+                marginBottom: '20px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#c2410c', fontWeight: 800, fontSize: '0.95rem' }}>
+                    <span>📦 THÔNG TIN HOÀN HÀNG & HOÀN TIỀN</span>
+                    <span style={{ fontSize: '0.75rem', backgroundColor: '#fed7aa', color: '#9a3412', padding: '2px 8px', borderRadius: '12px' }}>
+                      {selectedOrder.returnRequest?.status ? selectedOrder.returnRequest.status.toUpperCase() : 'COMPLETED'}
+                    </span>
+                  </div>
+                  {selectedOrder.returnRequest?.createdAt && (
+                    <span style={{ fontSize: '0.8rem', color: '#9a3412' }}>
+                      Thời gian: {formatDate(selectedOrder.returnRequest.createdAt)}
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', fontSize: '0.875rem' }}>
+                  <div>
+                    <span style={{ color: '#9a3412', fontWeight: 600 }}>Lý do hoàn trả: </span>
+                    <span style={{ color: '#111827', fontWeight: 700 }}>
+                      {selectedOrder.returnRequest?.reason || 'Bưu tá hoàn hàng về kho / Khách gửi trả'}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#9a3412', fontWeight: 600 }}>Số tiền hoàn lại: </span>
+                    <strong style={{ color: '#dc2626', fontSize: '1rem' }}>
+                      {formatCurrency(selectedOrder.returnRequest?.refundAmount != null ? selectedOrder.returnRequest.refundAmount : selectedOrder.totalAmount)}
+                    </strong>
+                  </div>
+                  {selectedOrder.returnRequest?.bankAccount && (
+                    <div style={{ gridColumn: '1 / -1', backgroundColor: '#fff', padding: '10px 14px', borderRadius: '6px', border: '1px dashed #fdba74' }}>
+                      <div style={{ color: '#9a3412', fontWeight: 700, marginBottom: '4px' }}>🏦 Tài khoản nhận hoàn tiền:</div>
+                      <div>Ngân hàng: <strong>{selectedOrder.returnRequest.bankName || 'N/A'}</strong></div>
+                      <div>Số tài khoản: <strong style={{ fontFamily: 'monospace', color: '#2563eb' }}>{selectedOrder.returnRequest.bankAccount}</strong></div>
+                      <div>Chủ tài khoản: <strong>{selectedOrder.returnRequest.accountHolder || 'N/A'}</strong></div>
+                    </div>
+                  )}
+                  {selectedOrder.returnRequest?.adminNote && (
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <span style={{ color: '#9a3412', fontWeight: 600 }}>Ghi chú nhân viên kho: </span>
+                      <span style={{ color: '#374151', fontStyle: 'italic' }}>{selectedOrder.returnRequest.adminNote}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Items Table */}
             <div style={{ marginBottom: '20px' }}>
@@ -846,19 +1065,204 @@ export default function ManageOrders() {
                 )}
 
                 {selectedOrder.orderStatus === 'SHIPPED' && (
+                  <>
+                    <button
+                      type="button"
+                      className="btn-action"
+                      style={{ backgroundColor: 'rgba(234, 88, 12, 0.12)', color: '#c2410c', borderColor: 'rgba(234, 88, 12, 0.35)', padding: '9px 18px', fontWeight: 600 }}
+                      onClick={() => handleMarkRTO(selectedOrder.orderId)}
+                    >
+                      📦 Bưu Tá Hoàn Về Kho (RTO)
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      style={{ backgroundColor: '#10b981', borderColor: '#10b981', padding: '9px 20px', fontWeight: 600 }}
+                      onClick={() => handleUpdateStatus(selectedOrder.orderId, 'DELIVERED')}
+                    >
+                      🏁 Xác Nhận Đã Giao (DELIVERED)
+                    </button>
+                  </>
+                )}
+
+                {selectedOrder.orderStatus === 'DELIVERED' && (
                   <button
                     type="button"
-                    className="btn-primary"
-                    style={{ backgroundColor: '#10b981', borderColor: '#10b981', padding: '9px 20px', fontWeight: 600 }}
-                    onClick={() => handleUpdateStatus(selectedOrder.orderId, 'DELIVERED')}
+                    className="btn-action"
+                    style={{ backgroundColor: 'rgba(234, 88, 12, 0.12)', color: '#c2410c', borderColor: 'rgba(234, 88, 12, 0.35)', padding: '9px 18px', fontWeight: 600 }}
+                    onClick={() => handleOpenReturnModal(selectedOrder)}
                   >
-                    🏁 Xác Nhận Đã Giao (DELIVERED)
+                    ↩️ Tiếp Nhận Hoàn Hàng & Nhập Kho
                   </button>
                 )}
               </div>
             </div>
           </div>
         ) : null}
+      </Modal>
+
+      {/* Modal Tiếp Nhận Hoàn Hàng Cho Staff */}
+      <Modal
+        isOpen={isReturnModalOpen}
+        size="md"
+        title={returnOrder ? `Tạo Phiếu Hoàn Hàng #ORD-${returnOrder.orderId}` : "Tạo Phiếu Hoàn Hàng"}
+        onClose={() => setIsReturnModalOpen(false)}
+      >
+        {returnOrder && (
+          <form onSubmit={handleConfirmReturn} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{
+              backgroundColor: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              fontSize: '0.85rem'
+            }}>
+              <div>Đơn hàng: <strong>#ORD-{returnOrder.orderId}</strong> | Khách: <strong>{returnOrder.recipientName || returnOrder.customerName}</strong></div>
+              <div>Tổng giá trị ban đầu: <strong style={{ color: '#059669' }}>{formatCurrency(returnOrder.totalAmount)}</strong></div>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
+                Lý do hoàn hàng <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <select
+                className="select-control"
+                style={{ width: '100%', marginBottom: returnReason === 'Khác' ? '8px' : '0' }}
+                value={returnReason}
+                onChange={(e) => setReturnReason(e.target.value)}
+              >
+                <option value="Khách thử không vừa size / chật rộng">Khách thử không vừa size / chật rộng</option>
+                <option value="Sản phẩm lỗi đường may / vải / rách">Sản phẩm lỗi đường may / vải / rách</option>
+                <option value="Khách đổi ý không muốn nhận / không ưng mẫu">Khách đổi ý không muốn nhận / không ưng mẫu</option>
+                <option value="Giao nhầm màu / nhầm size / nhầm mã SP">Giao nhầm màu / nhầm size / nhầm mã SP</option>
+                <option value="Khách hàng liên hệ gửi trả lại kiện hàng">Khách hàng liên hệ gửi trả lại kiện hàng</option>
+                <option value="Khác">Lý do khác (tự nhập)...</option>
+              </select>
+
+              {returnReason === 'Khác' && (
+                <input
+                  type="text"
+                  className="input-control"
+                  style={{ width: '100%' }}
+                  placeholder="Nhập lý do cụ thể..."
+                  value={customReason}
+                  onChange={(e) => setCustomReason(e.target.value)}
+                  required
+                />
+              )}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
+                Số tiền hoàn lại cho khách (VNĐ) <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input
+                type="number"
+                className="input-control"
+                style={{ width: '100%' }}
+                value={refundAmount}
+                min="0"
+                max={returnOrder.totalAmount}
+                onChange={(e) => setRefundAmount(e.target.value)}
+                required
+              />
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Tương đương: {formatCurrency(refundAmount)} (có thể điều chỉnh nếu khấu trừ phí ship)
+              </div>
+            </div>
+
+            <div style={{
+              backgroundColor: '#f1f5f9',
+              padding: '14px',
+              borderRadius: '8px',
+              border: '1px solid #cbd5e1'
+            }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                🏦 Thông Tin Ngân Hàng Hoàn Tiền (Chuyển khoản)
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '8px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px' }}>Tên Ngân Hàng</label>
+                  <input
+                    type="text"
+                    className="input-control"
+                    style={{ width: '100%' }}
+                    placeholder="VD: MBBank, Vietcombank..."
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px' }}>Số Tài Khoản</label>
+                  <input
+                    type="text"
+                    className="input-control"
+                    style={{ width: '100%' }}
+                    placeholder="VD: 0987654321"
+                    value={bankAccount}
+                    onChange={(e) => setBankAccount(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px' }}>Tên Chủ Tài Khoản</label>
+                <input
+                  type="text"
+                  className="input-control"
+                  style={{ width: '100%' }}
+                  placeholder="VD: NGUYEN VAN A"
+                  value={accountHolder}
+                  onChange={(e) => setAccountHolder(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <input
+                type="checkbox"
+                id="restockCheck"
+                checked={restock}
+                onChange={(e) => setRestock(e.target.checked)}
+                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+              />
+              <label htmlFor="restockCheck" style={{ fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                📦 Nhập lại sản phẩm vào kho hàng (Cộng lại tồn kho biến thể & lô hàng)
+              </label>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
+                Ghi chú của nhân viên kiểm tra hàng
+              </label>
+              <textarea
+                className="input-control"
+                style={{ width: '100%', minHeight: '60px' }}
+                placeholder="VD: Đã kiểm tra kiện hàng, tem mác đầy đủ, sản phẩm còn mới..."
+                value={adminNote}
+                onChange={(e) => setAdminNote(e.target.value)}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => setIsReturnModalOpen(false)}
+                disabled={submittingReturn}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                style={{ backgroundColor: '#ea580c', borderColor: '#ea580c' }}
+                disabled={submittingReturn}
+              >
+                {submittingReturn ? 'Đang xử lý...' : 'Xác Nhận Hoàn Hàng & Hoàn Kho'}
+              </button>
+            </div>
+          </form>
+        )}
       </Modal>
 
       {/* Modal Từ Chối Hoàn Tiền */}

@@ -1,6 +1,7 @@
 package com.example.myapp.controller;
 
 import com.example.myapp.model.CreateVariantRequestDTO;
+import com.example.myapp.model.MatrixGenerateVariantsRequestDTO;
 import com.example.myapp.model.VariantDTO;
 import com.example.myapp.service.ProductVariantService;
 import org.springframework.http.HttpStatus;
@@ -37,6 +38,16 @@ public class AdminVariantController {
     @PostMapping
     public ResponseEntity<VariantDTO> createVariant(@RequestBody CreateVariantRequestDTO dto) {
         return new ResponseEntity<>(variantService.createVariant(dto), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/matrix")
+    public ResponseEntity<List<VariantDTO>> generateMatrixVariants(@RequestBody MatrixGenerateVariantsRequestDTO dto) {
+        return new ResponseEntity<>(variantService.generateMatrixVariants(dto), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/batch")
+    public ResponseEntity<List<VariantDTO>> createBatchVariants(@RequestBody List<CreateVariantRequestDTO> dtos) {
+        return new ResponseEntity<>(variantService.createBatchVariants(dtos), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")

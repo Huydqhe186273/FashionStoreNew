@@ -16,4 +16,7 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
            "(:gender IS NULL OR :gender = '' OR LOWER(c.Gender) = LOWER(:gender)) " +
            "ORDER BY c.CategoryId DESC")
     List<Category> searchCategories(@Param("keyword") String keyword, @Param("gender") String gender);
+
+    @Query("SELECT p.Category.CategoryId, COUNT(p) FROM Product p GROUP BY p.Category.CategoryId")
+    List<Object[]> countProductsPerCategory();
 }

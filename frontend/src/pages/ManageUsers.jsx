@@ -270,7 +270,10 @@ export default function ManageUsers() {
               className="input-control" 
               value={formData.phone} 
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
-              placeholder="ví dụ: 0912345678..."
+              placeholder="ví dụ: 0912345678 (10 chữ số)"
+              pattern="^0[35789][0-9]{8}$"
+              maxLength={10}
+              title="Số điện thoại Việt Nam gồm đúng 10 chữ số bắt đầu bằng 03, 05, 07, 08 hoặc 09"
             />
           </div>
 

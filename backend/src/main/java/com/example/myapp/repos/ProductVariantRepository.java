@@ -27,5 +27,25 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
 
     @Query("SELECT CASE WHEN COUNT(pv) > 0 THEN true ELSE false END FROM ProductVariant pv WHERE LOWER(TRIM(pv.Sku)) = LOWER(TRIM(:sku)) AND pv.VariantId <> :variantId")
     boolean existsBySkuIgnoreCaseAndVariantIdNot(@Param("sku") String sku, @Param("variantId") Integer variantId);
+
+    @Query("SELECT CASE WHEN COUNT(pv) > 0 THEN true ELSE false END FROM ProductVariant pv " +
+           "WHERE pv.Product.ProductId = :productId " +
+           "AND LOWER(TRIM(COALESCE(pv.Color, ''))) = LOWER(TRIM(:color)) " +
+           "AND LOWER(TRIM(COALESCE(pv.Size, ''))) = LOWER(TRIM(:size))")
+    boolean existsByProductIdAndColorAndSize(
+            @Param("productId") Integer productId,
+            @Param("color") String color,
+            @Param("size") String size);
+
+    @Query("SELECT CASE WHEN COUNT(pv) > 0 THEN true ELSE false END FROM ProductVariant pv " +
+           "WHERE pv.Product.ProductId = :productId " +
+           "AND LOWER(TRIM(COALESCE(pv.Color, ''))) = LOWER(TRIM(:color)) " +
+           "AND LOWER(TRIM(COALESCE(pv.Size, ''))) = LOWER(TRIM(:size)) " +
+           "AND pv.VariantId <> :variantId")
+    boolean existsByProductIdAndColorAndSizeAndVariantIdNot(
+            @Param("productId") Integer productId,
+            @Param("color") String color,
+            @Param("size") String size,
+            @Param("variantId") Integer variantId);
 }
 

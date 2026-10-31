@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -39,7 +40,24 @@ public class InboundOrderService {
         String st = (status != null && !status.trim().isEmpty()) ? status.trim() : null;
 
         List<InboundOrder> orders = inboundOrderRepository.searchInboundOrders(kw, categoryId, st);
-        return orders.stream().map(this::toOrderDTO).collect(Collectors.toList());
+        if (orders.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Map orderId -> [totalItems, totalQuantity]
+        Map<Integer, int[]> statsMap = new HashMap<>();
+        List<Object[]> statsList = inboundBatchRepository.countBatchesAndQuantityPerOrder();
+        for (Object[] row : statsList) {
+            Integer oId = ((Number) row[0]).intValue();
+            int totalItems = ((Number) row[1]).intValue();
+            int totalQty = ((Number) row[2]).intValue();
+            statsMap.put(oId, new int[]{totalItems, totalQty});
+        }
+
+        return orders.stream().map(o -> {
+            int[] stats = statsMap.getOrDefault(o.getInboundOrderId(), new int[]{0, 0});
+            return toOrderSummaryDTO(o, stats[0], stats[1]);
+        }).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -50,22 +68,45 @@ public class InboundOrderService {
     }
 
     @Transactional(readOnly = true)
+    public InboundStatsDTO getInboundStats() {
+        long totalOrders = inboundOrderRepository.count();
+        List<Object[]> statsList = inboundBatchRepository.getBatchStatistics();
+        long totalBatches = 0;
+        long activeBatches = 0;
+        long depletedBatches = 0;
+        long totalRemainingStock = 0;
+
+        if (statsList != null && !statsList.isEmpty()) {
+            Object[] row = statsList.get(0);
+            totalBatches = row[0] != null ? ((Number) row[0]).longValue() : 0L;
+            activeBatches = row[1] != null ? ((Number) row[1]).longValue() : 0L;
+            depletedBatches = row[2] != null ? ((Number) row[2]).longValue() : 0L;
+            totalRemainingStock = row[3] != null ? ((Number) row[3]).longValue() : 0L;
+        }
+
+        return InboundStatsDTO.builder()
+                .totalOrders(totalOrders)
+                .totalBatches(totalBatches)
+                .activeBatches(activeBatches)
+                .depletedBatches(depletedBatches)
+                .totalRemainingStock(totalRemainingStock)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
     public List<InboundBatchItemDTO> getBatches(Integer variantId, Integer categoryId, String status, String keyword) {
         String kw = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
         String st = (status != null && !status.trim().isEmpty()) ? status.trim() : null;
 
-        List<InboundBatch> batches = inboundBatchRepository.searchBatches(variantId, categoryId, st, kw);
+        List<InboundBatch> batches;
+        if (variantId == null && categoryId == null && st == null && kw == null) {
+            batches = inboundBatchRepository.findAllBatchesForList();
+        } else {
+            batches = inboundBatchRepository.searchBatches(variantId, categoryId, st, kw);
+        }
 
         // Đánh dấu lô nào là lô đang ưu tiên xuất bán theo FIFO (lô cũ nhất còn hàng của từng biến thể)
         Map<Integer, Integer> oldestActiveBatchPerVariant = new HashMap<>();
-        for (InboundBatch b : batches) {
-            if ("ACTIVE".equalsIgnoreCase(b.getStatus()) && b.getRemainingQuantity() > 0) {
-                Integer vId = b.getVariant().getVariantId();
-                if (!oldestActiveBatchPerVariant.containsKey(vId)) {
-                    // Do query order by importDate DESC, ta cần tìm lô có importDate cũ nhất
-                }
-            }
-        }
 
         // Tìm lô cũ nhất còn hàng của tất cả variant
         List<InboundBatch> allActive = batches.stream()
@@ -99,16 +140,67 @@ public class InboundOrderService {
             batchCode = "LO-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
         } else {
             batchCode = batchCode.trim().toUpperCase();
+            if (batchCode.length() > 50) {
+                throw new IllegalArgumentException("Mã đợt nhập / mã lô không được vượt quá 50 ký tự!");
+            }
+            if (!batchCode.matches("^[A-Z0-9_-]+$")) {
+                throw new IllegalArgumentException("Mã đợt nhập chỉ được chứa chữ cái, số, dấu gạch ngang (-) hoặc gạch dưới (_)!");
+            }
             if (inboundOrderRepository.existsByBatchCode(batchCode)) {
                 throw new IllegalArgumentException("Mã đợt nhập / mã lô '" + batchCode + "' đã tồn tại! Vui lòng chọn mã khác.");
             }
         }
 
+        LocalDateTime importDate = dto.getImportDate() != null ? dto.getImportDate() : LocalDateTime.now();
+        if (importDate.toLocalDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Ngày nhập kho không hợp lệ! Chỉ cho phép tạo phiếu nhập kho trong ngày hôm nay hoặc tương lai.");
+        }
+        if (importDate.isAfter(LocalDateTime.now().plusYears(1))) {
+            throw new IllegalArgumentException("Ngày nhập kho không được vượt quá 1 năm trong tương lai!");
+        }
+
+        String supplier = (dto.getSupplierName() != null && !dto.getSupplierName().trim().isEmpty())
+                ? dto.getSupplierName().trim()
+                : "Nhà cung cấp nội bộ";
+        if (supplier.length() > 150) {
+            throw new IllegalArgumentException("Tên nhà cung cấp không được vượt quá 150 ký tự!");
+        }
+
+        String note = (dto.getNote() != null && !dto.getNote().trim().isEmpty()) ? dto.getNote().trim() : null;
+        if (note != null && note.length() > 500) {
+            throw new IllegalArgumentException("Ghi chú đợt nhập không được vượt quá 500 ký tự!");
+        }
+
+        // Kiểm tra chống trùng biến thể trong cùng một đơn nhập
+        Set<Integer> uniqueVariants = new HashSet<>();
+        for (int i = 0; i < dto.getItems().size(); i++) {
+            CreateInboundBatchItemDTO itemDTO = dto.getItems().get(i);
+            if (itemDTO.getVariantId() == null) {
+                throw new IllegalArgumentException("Dòng #" + (i + 1) + ": Biến thể sản phẩm không được để trống!");
+            }
+            if (!uniqueVariants.add(itemDTO.getVariantId())) {
+                throw new IllegalArgumentException("Biến thể ID #" + itemDTO.getVariantId() + " bị chọn trùng lặp nhiều lần trong cùng một đợt nhập! Vui lòng gộp số lượng vào 1 dòng.");
+            }
+            if (itemDTO.getQuantity() == null || itemDTO.getQuantity() <= 0) {
+                throw new IllegalArgumentException("Dòng #" + (i + 1) + ": Số lượng nhập phải lớn hơn 0!");
+            }
+            if (itemDTO.getQuantity() > 100000) {
+                throw new IllegalArgumentException("Dòng #" + (i + 1) + ": Số lượng nhập mỗi mặt hàng tối đa là 100.000 sản phẩm!");
+            }
+            BigDecimal price = itemDTO.getImportPrice() != null ? itemDTO.getImportPrice() : BigDecimal.ZERO;
+            if (price.compareTo(BigDecimal.ZERO) < 0) {
+                throw new IllegalArgumentException("Dòng #" + (i + 1) + ": Giá nhập không được âm!");
+            }
+            if (price.compareTo(new BigDecimal("1000000000")) > 0) {
+                throw new IllegalArgumentException("Dòng #" + (i + 1) + ": Giá nhập không được vượt quá 1.000.000.000 đ!");
+            }
+        }
+
         InboundOrder order = new InboundOrder();
         order.setBatchCode(batchCode);
-        order.setSupplierName(dto.getSupplierName() != null ? dto.getSupplierName().trim() : "Nhà cung cấp nội bộ");
-        order.setImportDate(dto.getImportDate() != null ? dto.getImportDate() : LocalDateTime.now());
-        order.setNote(dto.getNote());
+        order.setSupplierName(supplier);
+        order.setImportDate(importDate);
+        order.setNote(note);
         order.setStatus("COMPLETED");
 
         if (dto.getCategoryId() != null) {
@@ -123,17 +215,7 @@ public class InboundOrderService {
         List<InboundBatch> batches = new ArrayList<>();
 
         for (CreateInboundBatchItemDTO itemDTO : dto.getItems()) {
-            if (itemDTO.getVariantId() == null) {
-                throw new IllegalArgumentException("Biến thể sản phẩm không được để trống!");
-            }
-            if (itemDTO.getQuantity() == null || itemDTO.getQuantity() <= 0) {
-                throw new IllegalArgumentException("Số lượng nhập phải lớn hơn 0!");
-            }
             BigDecimal price = itemDTO.getImportPrice() != null ? itemDTO.getImportPrice() : BigDecimal.ZERO;
-            if (price.compareTo(BigDecimal.ZERO) < 0) {
-                throw new IllegalArgumentException("Giá nhập không được âm!");
-            }
-
             ProductVariant variant = productVariantRepository.findById(itemDTO.getVariantId())
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy biến thể #" + itemDTO.getVariantId()));
 
@@ -161,6 +243,28 @@ public class InboundOrderService {
         order = inboundOrderRepository.save(order);
 
         return toOrderDTO(order);
+    }
+
+    private InboundOrderDTO toOrderSummaryDTO(InboundOrder o, int totalItems, int totalQty) {
+        String catName = o.getCategory() != null ? o.getCategory().getName() : "Đa danh mục";
+        String userName = o.getCreatedBy() != null ? o.getCreatedBy().getFullName() : "Hệ thống";
+
+        return InboundOrderDTO.builder()
+                .inboundOrderId(o.getInboundOrderId())
+                .batchCode(o.getBatchCode())
+                .categoryId(o.getCategory() != null ? o.getCategory().getCategoryId() : null)
+                .categoryName(catName)
+                .supplierName(o.getSupplierName())
+                .importDate(o.getImportDate())
+                .totalAmount(o.getTotalAmount())
+                .note(o.getNote())
+                .status(o.getStatus())
+                .totalItems(totalItems)
+                .totalQuantity(totalQty)
+                .createdByName(userName)
+                .createdAt(o.getCreatedAt())
+                .items(Collections.emptyList())
+                .build();
     }
 
     private InboundOrderDTO toOrderDTO(InboundOrder o) {

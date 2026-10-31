@@ -155,6 +155,12 @@ public class CouponService {
         }
 
         String cleanCode = dto.getCode().trim().toUpperCase();
+        if (cleanCode.length() > 50) {
+            throw new IllegalArgumentException("Mã giảm giá (Code) không được vượt quá 50 ký tự!");
+        }
+        if (!cleanCode.matches("^[A-Z0-9_-]+$")) {
+            throw new IllegalArgumentException("Mã giảm giá chỉ được chứa chữ cái, chữ số, dấu gạch ngang (-) hoặc gạch dưới (_)!");
+        }
 
         if (existingId == null) {
             if (discountCodeRepository.existsByCodeIgnoreCase(cleanCode)) {
@@ -187,14 +193,19 @@ public class CouponService {
             if (dto.getValue().compareTo(BigDecimal.ZERO) <= 0) {
                 throw new IllegalArgumentException("Giá trị giảm giá cố định phải lớn hơn 0!");
             }
+            if (dto.getMinOrderValue() != null && dto.getMinOrderValue().compareTo(BigDecimal.ZERO) > 0
+                    && dto.getValue().compareTo(dto.getMinOrderValue()) > 0) {
+                throw new IllegalArgumentException("Giá trị giảm giá cố định (" + dto.getValue() 
+                        + " đ) không được lớn hơn giá trị đơn hàng tối thiểu (" + dto.getMinOrderValue() + " đ)!");
+            }
         }
 
         if (dto.getMinOrderValue() != null && dto.getMinOrderValue().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Giá trị đơn hàng tối thiểu không được âm!");
         }
 
-        if (dto.getUsageLimit() != null && dto.getUsageLimit() < 0) {
-            throw new IllegalArgumentException("Giới hạn số lần sử dụng không được âm!");
+        if (dto.getUsageLimit() != null && dto.getUsageLimit() <= 0) {
+            throw new IllegalArgumentException("Giới hạn số lần sử dụng phải lớn hơn 0!");
         }
 
         if (dto.getStartDate() != null && dto.getEndDate() != null && dto.getEndDate().isBefore(dto.getStartDate())) {

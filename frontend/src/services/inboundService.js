@@ -19,3 +19,9 @@ export const getInboundBatches = async (params) => {
   const response = await api.get('/staff/inbound/batches', { params });
   return response.data;
 };
+
+export const getInboundStats = async () => {
+  const response = await api.get('/staff/inbound/stats');
+  return response.data;
+};
+

@@ -27,7 +27,14 @@ public class AdminReportService {
         this.productRepository = productRepository;
     }
 
+    private void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Khoảng thời gian không hợp lệ: Ngày bắt đầu không được sau ngày kết thúc!");
+        }
+    }
+
     public RevenueReportDTO getRevenueReport(LocalDate startDate, LocalDate endDate) {
+        validateDateRange(startDate, endDate);
         LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
         LocalDateTime endDateTime = endDate != null ? endDate.atTime(23, 59, 59, 999999999) : null;
 
@@ -87,6 +94,7 @@ public class AdminReportService {
     }
 
     public OrderReportDTO getOrderReport(LocalDate startDate, LocalDate endDate) {
+        validateDateRange(startDate, endDate);
         LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
         LocalDateTime endDateTime = endDate != null ? endDate.atTime(23, 59, 59, 999999999) : null;
 
@@ -154,6 +162,10 @@ public class AdminReportService {
     }
 
     public BestSellerReportDTO getBestSellerReport(LocalDate startDate, LocalDate endDate, Integer limit) {
+        validateDateRange(startDate, endDate);
+        if (limit != null && (limit < 1 || limit > 100)) {
+            throw new IllegalArgumentException("Số lượng giới hạn (limit) phải từ 1 đến 100!");
+        }
         int maxResults = (limit != null && limit > 0) ? limit : 10;
         LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
         LocalDateTime endDateTime = endDate != null ? endDate.atTime(23, 59, 59, 999999999) : null;

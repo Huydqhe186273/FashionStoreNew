@@ -15,6 +15,10 @@ public interface ReturnRequestRepository extends JpaRepository<ReturnRequest, In
     @Query("SELECT r FROM ReturnRequest r WHERE r.Order.OrderId = :orderId ORDER BY r.CreatedAt DESC")
     List<ReturnRequest> findByOrderIdOrderByCreatedAtDesc(@Param("orderId") Integer orderId);
 
+    default Optional<ReturnRequest> findLatestByOrderId(Integer orderId) {
+        List<ReturnRequest> list = findByOrderIdOrderByCreatedAtDesc(orderId);
+        return (list != null && !list.isEmpty()) ? Optional.of(list.get(0)) : Optional.empty();
+    }
     /**
      * Lấy return request mới nhất của một đơn hàng.
      * Dùng List + lấy phần tử đầu để tránh "LIMIT" không tương thích SQL Server trong JPQL.

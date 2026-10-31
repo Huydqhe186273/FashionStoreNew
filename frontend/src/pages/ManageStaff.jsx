@@ -15,7 +15,7 @@ export default function ManageStaff() {
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  // Modal State (Gộp Thêm & Sửa làm 1)
+  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null); // null: Thêm mới, object: Đang sửa
 
@@ -91,8 +91,12 @@ export default function ManageStaff() {
         handleCloseModal();
         loadStaff();
       } catch (err) {
-        setStaffList(prev => prev.map(s => s.userId === editingStaff.userId ? { ...s, ...formData } : s));
-        handleCloseModal();
+        const msg = err.response?.data?.message || err.response?.data?.error || err.message;
+        alert("Lỗi khi cập nhật nhân viên: " + msg);
+        if (!err.response) {
+          setStaffList(prev => prev.map(s => s.userId === editingStaff.userId ? { ...s, ...formData } : s));
+          handleCloseModal();
+        }
       }
     } else {
       try {
@@ -100,16 +104,20 @@ export default function ManageStaff() {
         handleCloseModal();
         loadStaff();
       } catch (err) {
-        setStaffList(prev => [...prev, { ...formData, userId: prev.length + 1, status: 'active' }]);
-        handleCloseModal();
+        const msg = err.response?.data?.message || err.response?.data?.error || err.message;
+        alert("Lỗi khi tạo nhân viên: " + msg);
+        if (!err.response) {
+          setStaffList(prev => [...prev, { ...formData, userId: prev.length + 1, status: 'active' }]);
+          handleCloseModal();
+        }
       }
     }
   };
 
   return (
     <main>
-      <Header 
-        title="Quản Lý Tài Khoản Nhân Viên" 
+      <Header
+        title="Quản Lý Tài Khoản Nhân Viên"
         subtitle="Thêm nhân viên mới, phân quyền vai trò (`staff` / `admin`) và quản lý trạng thái tài khoản"
         isLive={isLive}
         onRefresh={loadStaff}
@@ -141,12 +149,12 @@ export default function ManageStaff() {
 
       <div className="toolbar-card">
         <div className="filter-group">
-          <input 
-            type="text" 
-            className="input-control" 
-            placeholder="Tìm theo tên hoặc email nhân viên..." 
-            value={search} 
-            onChange={(e) => setSearch(e.target.value)} 
+          <input
+            type="text"
+            className="input-control"
+            placeholder="Tìm theo tên hoặc email nhân viên..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
           <select className="select-control" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
             <option value="">Tất cả Vai Trò</option>
@@ -206,59 +214,70 @@ export default function ManageStaff() {
       </div>
 
       {/* Modal Unified Staff (Thêm / Sửa gộp làm 1) */}
-      <Modal 
-        isOpen={isModalOpen} 
-        title={editingStaff ? `Cập Nhật Hồ Sơ Nhân Viên (#STF-${editingStaff.userId})` : "Thêm Nhân Viên Mới"} 
+      <Modal
+        isOpen={isModalOpen}
+        title={editingStaff ? `Cập Nhật Hồ Sơ Nhân Viên (#STF-${editingStaff.userId})` : "Thêm Nhân Viên Mới"}
         onClose={handleCloseModal}
       >
         <form onSubmit={handleSubmitStaff}>
           <div className="form-group">
             <label>Họ và Tên</label>
-            <input 
-              type="text" 
-              className="input-control" 
-              value={formData.fullName} 
-              onChange={e => setFormData({ ...formData, fullName: e.target.value })} 
-              required 
+            <input
+              type="text"
+              className="input-control"
+              value={formData.fullName}
+              onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+              required
+              placeholder="ví dụ: Nguyễn Văn A..."
+              minLength={2}
+              maxLength={100}
             />
           </div>
           <div className="form-group">
             <label>Email Đăng Nhập</label>
-            <input 
-              type="email" 
-              className="input-control" 
-              value={formData.email} 
-              onChange={e => setFormData({ ...formData, email: e.target.value })} 
-              required={!editingStaff} 
+            <input
+              type="email"
+              className="input-control"
+              value={formData.email}
+              onChange={e => setFormData({ ...formData, email: e.target.value })}
+              required={!editingStaff}
               disabled={!!editingStaff}
+              placeholder="ví dụ: staff@gmail.com"
             />
           </div>
           {!editingStaff && (
             <div className="form-group">
               <label>Mật Khẩu Ban Đầu</label>
-              <input 
-                type="password" 
-                className="input-control" 
-                value={formData.password} 
-                onChange={e => setFormData({ ...formData, password: e.target.value })} 
-                required 
+              <input
+                type="password"
+                className="input-control"
+                value={formData.password}
+                onChange={e => setFormData({ ...formData, password: e.target.value })}
+                required
+                minLength={6}
+                maxLength={32}
+                placeholder="Tối thiểu 6 ký tự..."
               />
             </div>
           )}
           <div className="form-group">
             <label>Số Điện Thoại</label>
-            <input 
-              type="text" 
-              className="input-control" 
-              value={formData.phone} 
-              onChange={e => setFormData({ ...formData, phone: e.target.value })} 
+            <input
+              type="tel"
+              className="input-control"
+              value={formData.phone}
+              onChange={e => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="ví dụ: 0912345678 (10 chữ số)"
+              pattern="^0[35789][0-9]{8}$"
+              maxLength={10}
+              title="Số điện thoại Việt Nam gồm đúng 10 chữ số bắt đầu bằng 03, 05, 07, 08 hoặc 09"
             />
           </div>
           <div className="form-group">
             <label>Phân Quyền Vai Trò</label>
-            <select 
-              className="select-control" 
-              value={formData.role} 
+            <select
+              className="select-control"
+              value={formData.role}
               onChange={e => setFormData({ ...formData, role: e.target.value })}
             >
               <option value="staff">Staff (Nhân viên)</option>
@@ -268,9 +287,9 @@ export default function ManageStaff() {
           {editingStaff && (
             <div className="form-group">
               <label>Trạng Thái Tài Khoản</label>
-              <select 
-                className="select-control" 
-                value={formData.status} 
+              <select
+                className="select-control"
+                value={formData.status}
                 onChange={e => setFormData({ ...formData, status: e.target.value })}
               >
                 <option value="active">Active (Hoạt động)</option>

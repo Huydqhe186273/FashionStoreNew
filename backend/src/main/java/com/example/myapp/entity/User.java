@@ -20,8 +20,10 @@ public class User {
     private Integer UserId;
     @Column(columnDefinition = "NVARCHAR(255)")
     private String FullName;
+    @Column(unique = true)
     private String Email;
     private String PasswordHash;
+    @Column(unique = true)
     private String Phone;
     private String Role = "customer";
     private String Status = "active";

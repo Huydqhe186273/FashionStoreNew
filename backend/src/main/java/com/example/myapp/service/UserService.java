@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
 public class UserService {
@@ -38,20 +40,29 @@ public class UserService {
     @Transactional
     // Tạo mới tài khoản khách hàng từ trang quản trị.
     public UserDTO createUser(UpdateUserRequestDTO dto) {
-        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("Email không được để trống");
-        }
-        String email = dto.getEmail().trim().toLowerCase();
+        String fullName = com.example.myapp.util.UserValidationUtils.validateAndNormalizeFullName(
+                dto.getFullName() != null && !dto.getFullName().trim().isEmpty() ? dto.getFullName() : "Khách hàng mới"
+        );
+        String email = com.example.myapp.util.UserValidationUtils.validateAndNormalizeEmail(dto.getEmail());
         if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email '" + email + "' đã tồn tại trong hệ thống");
         }
+
+        String phone = com.example.myapp.util.UserValidationUtils.validateAndNormalizePhone(dto.getPhone(), false);
+        if (phone != null && userRepository.existsByPhone(phone)) {
+            throw new IllegalArgumentException("Số điện thoại '" + phone + "' đã tồn tại trong hệ thống!");
+        }
+
+        String role = com.example.myapp.util.UserValidationUtils.validateAndNormalizeRole(dto.getRole());
+        String status = com.example.myapp.util.UserValidationUtils.validateAndNormalizeStatus(dto.getStatus());
+
         User user = new User();
-        user.setFullName(dto.getFullName() != null && !dto.getFullName().trim().isEmpty() ? dto.getFullName().trim() : "Khách hàng mới");
+        user.setFullName(fullName);
         user.setEmail(email);
-        user.setPhone(dto.getPhone() != null ? dto.getPhone().trim() : null);
+        user.setPhone(phone);
         user.setPasswordHash("admin123");
-        user.setRole(dto.getRole() != null && !dto.getRole().trim().isEmpty() ? dto.getRole().trim().toLowerCase() : "customer");
-        user.setStatus(dto.getStatus() != null && !dto.getStatus().trim().isEmpty() ? dto.getStatus().trim().toLowerCase() : "active");
+        user.setRole(role);
+        user.setStatus(status);
         user.setCreatedAt(java.time.LocalDateTime.now());
 
         User saved = userRepository.save(user);
@@ -64,23 +75,36 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + userId));
 
-        if (dto.getFullName() != null && !dto.getFullName().trim().isEmpty()) {
-            user.setFullName(dto.getFullName().trim());
+        if (dto.getFullName() != null) {
+            user.setFullName(com.example.myapp.util.UserValidationUtils.validateAndNormalizeFullName(dto.getFullName()));
         }
         if (dto.getPhone() != null) {
-            user.setPhone(dto.getPhone().trim());
-        }
-        if (dto.getEmail() != null && !dto.getEmail().trim().equalsIgnoreCase(user.getEmail())) {
-            if (userRepository.existsByEmail(dto.getEmail().trim())) {
-                throw new RuntimeException("Email is already in use");
+            String phone = com.example.myapp.util.UserValidationUtils.validateAndNormalizePhone(dto.getPhone(), false);
+            if (phone != null) {
+                if (!phone.equals(user.getPhone())) {
+                    if (userRepository.existsByPhoneAndUserIdNot(phone, userId)) {
+                        throw new IllegalArgumentException("Số điện thoại '" + phone + "' đã được sử dụng bởi người dùng khác!");
+                    }
+                }
+                user.setPhone(phone);
+            } else {
+                user.setPhone(null);
             }
-            user.setEmail(dto.getEmail().trim().toLowerCase());
         }
-        if (dto.getRole() != null && !dto.getRole().trim().isEmpty()) {
-            user.setRole(dto.getRole().trim().toLowerCase());
+        if (dto.getEmail() != null) {
+            String email = com.example.myapp.util.UserValidationUtils.validateAndNormalizeEmail(dto.getEmail());
+            if (!email.equalsIgnoreCase(user.getEmail())) {
+                if (userRepository.existsByEmailAndUserIdNot(email, userId)) {
+                    throw new IllegalArgumentException("Email '" + email + "' đã được sử dụng bởi người dùng khác!");
+                }
+            }
+            user.setEmail(email);
         }
-        if (dto.getStatus() != null && !dto.getStatus().trim().isEmpty()) {
-            user.setStatus(dto.getStatus().trim().toLowerCase());
+        if (dto.getRole() != null) {
+            user.setRole(com.example.myapp.util.UserValidationUtils.validateAndNormalizeRole(dto.getRole()));
+        }
+        if (dto.getStatus() != null) {
+            user.setStatus(com.example.myapp.util.UserValidationUtils.validateAndNormalizeStatus(dto.getStatus()));
         }
 
         User updatedUser = userRepository.save(user);
@@ -91,7 +115,12 @@ public class UserService {
     // Đảo trạng thái tài khoản giữa active và locked.
     public UserDTO toggleUserLock(Integer userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + userId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng với ID: " + userId));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getName() != null && auth.getName().equalsIgnoreCase(user.getEmail())) {
+            throw new IllegalArgumentException("Không thể tự khóa tài khoản của chính bạn đang đăng nhập!");
+        }
 
         if ("locked".equalsIgnoreCase(user.getStatus())) {
             user.setStatus("active");
