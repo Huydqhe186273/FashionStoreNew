@@ -9,11 +9,13 @@ import useDocumentTitle from '../../hooks/useDocumentTitle';
 import './shop.css';
 
 const SORT_OPTIONS = [
+  { value: 'all',        label: 'Tất cả',           sortDir: 'desc' },
   { value: 'newest',     label: 'Mới nhất',         sortDir: 'desc' },
+  { value: 'bestseller', label: 'Bán chạy',         sortDir: 'desc' },
+  { value: 'discount',   label: 'Giảm giá',         sortDir: 'desc' },
+  { value: 'favorites',  label: 'Yêu thích',        sortDir: 'desc' },
   { value: 'price_asc',  label: 'Giá tăng dần',     sortDir: 'asc'  },
   { value: 'price_desc', label: 'Giá giảm dần',     sortDir: 'desc' },
-  { value: 'bestseller', label: 'Bán chạy',         sortDir: 'desc' },
-  { value: 'favorites',  label: 'Yêu thích',         sortDir: 'desc' },
 ];
 
 /* sortDir for the current sortBy — kept here so the request to the
@@ -29,6 +31,7 @@ function sortDirFor(sortBy) {
 export default function ProductListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialKeyword = searchParams.get('keyword') || '';
+  const initialSort = searchParams.get('sortBy');
 
   const [filters, setFilters] = useState({
     keyword: initialKeyword,
@@ -38,7 +41,9 @@ export default function ProductListPage() {
     size: '',
     minDiscountPercent: null,
   });
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState(
+    initialSort && SORT_OPTIONS.some((o) => o.value === initialSort) ? initialSort : 'all'
+  );
   const [page, setPage] = useState(0);
   const [size] = useState(18);
 
@@ -62,8 +67,13 @@ export default function ProductListPage() {
 
   useEffect(() => {
     const kw = searchParams.get('keyword') || '';
+    const sb = searchParams.get('sortBy');
     if (kw !== filters.keyword) {
       setFilters((f) => ({ ...f, keyword: kw }));
+      setPage(0);
+    }
+    if (sb && sb !== sortBy && SORT_OPTIONS.some((o) => o.value === sb)) {
+      setSortBy(sb);
       setPage(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,6 +132,10 @@ export default function ProductListPage() {
   const changeSort = (sort) => {
     setSortBy(sort);
     setPage(0);
+    const sp = new URLSearchParams(searchParams);
+    if (sort && sort !== 'all') sp.set('sortBy', sort);
+    else sp.delete('sortBy');
+    setSearchParams(sp, { replace: true });
   };
 
   const setKeyword = (value) => {
@@ -161,7 +175,7 @@ export default function ProductListPage() {
         <p>
           <span className="shop-hero-count">{totalElements} sản phẩm</span>
           {loading && <span className="shop-hero-sort-hint"> — đang tải…</span>}
-          {!loading && sortLabel && sortBy !== 'newest' && (
+          {!loading && sortLabel && sortBy !== 'all' && (
             <span className="shop-hero-sort-hint"> — đang lọc theo: {sortLabel}</span>
           )}
         </p>

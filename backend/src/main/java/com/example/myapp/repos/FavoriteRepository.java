@@ -28,8 +28,9 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Integer> {
     @Query("SELECT COUNT(f) FROM Favorite f WHERE f.User.UserId = :userId")
     long countFavoritesByUser(@Param("userId") Integer userId);
 
-    @Query("SELECT f.Product.ProductId FROM Favorite f WHERE f.User.UserId = :userId")
-    List<Integer> findFavoriteProductIdsByUserId(@Param("userId") Integer userId);
+        @Query("SELECT f.Product.ProductId, COUNT(f) FROM Favorite f " +
+            "WHERE f.User.UserId = :userId GROUP BY f.Product.ProductId")
+        List<Object[]> countFavoritesByProductForUser(@Param("userId") Integer userId);
 
     @Modifying
     @Query("DELETE FROM Favorite f WHERE f.User.UserId = :userId AND f.Product.ProductId = :productId")

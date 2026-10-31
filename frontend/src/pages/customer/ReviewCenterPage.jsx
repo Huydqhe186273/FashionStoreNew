@@ -53,7 +53,7 @@ export default function ReviewCenterPage() {
           <Link to={orderId ? '/shop/orders' : '/shop'}>{orderId ? 'Quay lại đơn mua' : 'Khám phá sản phẩm'}</Link>
         </div>
       ) : (
-        <section className="review-center-list" aria-label="Sản phẩm trong đơn đã thanh toán">
+        <section className="review-center-list" aria-label="Sản phẩm thuộc đơn đã xác nhận và thanh toán">
           {items.map((item) => (
             <article className="review-center-item" key={item.orderItemId}>
               <div className="review-center-product">
@@ -65,9 +65,7 @@ export default function ReviewCenterPage() {
                   )}
                 </Link>
                 <div className="review-center-product-info">
-                  <Link to={`/shop/product/${item.productId}`} className="review-center-product-name">
-                    {item.productName}
-                  </Link>
+                  <Link to={`/shop/product/${item.productId}`} className="review-center-product-name">{item.productName}</Link>
                   <span>{[item.color, item.size && `Size ${item.size}`].filter(Boolean).join(' · ')}</span>
                   <span>Số lượng: {item.quantity}</span>
                 </div>

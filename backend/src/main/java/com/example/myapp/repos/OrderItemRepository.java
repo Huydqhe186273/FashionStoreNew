@@ -25,9 +25,9 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             "AND LOWER(o.PaymentStatus) = 'paid' " +
             "AND LOWER(o.OrderStatus) = 'confirmed' " +
             "ORDER BY o.CreatedAt DESC")
-        List<OrderItem> findReviewableItemsByUserId(
-            @Param("userId") Integer userId,
-            @Param("orderId") Integer orderId);
+            List<OrderItem> findReviewableItemsByUserId(
+                @Param("userId") Integer userId,
+                @Param("orderId") Integer orderId);
 
         @Query("SELECT oi FROM OrderItem oi " +
             "JOIN FETCH oi.Order o " +
@@ -40,6 +40,5 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
         Optional<OrderItem> findReviewableItemByIdAndUserId(
             @Param("orderItemId") Integer orderItemId,
             @Param("userId") Integer userId);
-
 }
 

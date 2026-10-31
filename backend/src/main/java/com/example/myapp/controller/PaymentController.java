@@ -49,7 +49,6 @@ public class PaymentController {
             long orderCode = order.getOrderId() * 100000L + (System.currentTimeMillis() % 100000L);
 
             String returnUrl = "http://localhost:3000/shop/cart?payment=success&orderCode=" + orderCode;
-            
             String cancelUrl = "http://localhost:3000/shop/cart?payment=cancel&orderCode=" + orderCode;
 
             CreatePaymentLinkRequest request = CreatePaymentLinkRequest.builder()

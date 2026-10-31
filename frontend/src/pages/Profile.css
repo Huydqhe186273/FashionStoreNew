@@ -45,13 +45,12 @@
   padding: 8px 16px;
   border-radius: 20px;
   backdrop-filter: blur(4px);
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .profile-back-btn:hover {
   background: rgba(0, 0, 0, 0.6);
-  transform: translateX(-4px);
   border-color: rgba(255, 255, 255, 0.4);
 }
 
@@ -221,9 +220,8 @@
 }
 
 .profile-btn:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(210, 159, 150, 0.4);
+  opacity: 0.88;
+  box-shadow: 0 8px 16px rgba(210, 159, 150, 0.45);
 }
 
 .profile-alert {

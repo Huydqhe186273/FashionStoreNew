@@ -1,6 +1,7 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { getAllCategories } from '../../services/customerCategoryService';
 import { flattenCategories, slugify } from '../../services/filterService';
+import { useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import './ShopFilterBar.css';
 
@@ -32,11 +33,13 @@ const SIZE_VALUES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const POPOVER_PRICE_DEFAULT_CAP = 3_000_000;
 
 const SORT_OPTIONS = [
+  { value: 'all',        label: 'Tất cả' },
   { value: 'newest',     label: 'Mới nhất' },
+  { value: 'bestseller', label: 'Bán chạy' },
+  { value: 'discount',   label: 'Giảm giá' },
+  { value: 'favorites',  label: 'Yêu thích' },
   { value: 'price_asc',  label: 'Giá tăng dần' },
   { value: 'price_desc', label: 'Giá giảm dần' },
-  { value: 'bestseller', label: 'Bán chạy' },
-  { value: 'favorites', label: 'Yêu thích' },
 ];
 
 /* ----- helpers ----- */
@@ -116,7 +119,7 @@ function PriceSlider({ min, max, valueMin, valueMax, onChange }) {
 
 export default function ShopFilterBar({
   filters = {},
-  sortBy = 'newest',
+  sortBy = 'all',
   onFiltersChange,
   onSortChange,
   facets,
@@ -125,7 +128,9 @@ export default function ShopFilterBar({
   const visibleSortOptions = user ? SORT_OPTIONS : SORT_OPTIONS.filter((option) => option.value !== 'favorites');
 
   useEffect(() => {
-    if (!user && sortBy === 'favorites') onSortChange?.('newest');
+    if (!user && sortBy === 'favorites') {
+      onSortChange?.('all');
+    }
   }, [user, sortBy, onSortChange]);
 
   /* category list ----------------------------------------------------- */

@@ -36,13 +36,12 @@ public class ReviewService {
 
         long count = reviewRepository.countReviewsByProduct(productId);
         Double avg = reviewRepository.averageRatingByProductId(productId);
-
         Map<Integer, Long> ratingBreakdown = new java.util.LinkedHashMap<>();
         for (int rating = 5; rating >= 1; rating--) {
-            int score = rating;
+            final int score = rating;
             ratingBreakdown.put(score, reviews.stream()
-                    .filter(review -> review.getRating() != null && review.getRating() == score)
-                    .count());
+                .filter(review -> review.getRating() != null && review.getRating() == score)
+                .count());
         }
 
         Map<String, Object> summary = new java.util.LinkedHashMap<>();
@@ -61,38 +60,38 @@ public class ReviewService {
         }
 
         List<Integer> orderItemIds = orderItems.stream()
-            .map(OrderItem::getOrderItemId)
-            .collect(Collectors.toList());
+                .map(OrderItem::getOrderItemId)
+                .collect(Collectors.toList());
         Map<Integer, Review> reviewsByOrderItemId = reviewRepository.findByOrderItemIdsAndUserId(orderItemIds, userId).stream()
-            .collect(Collectors.toMap(
-                review -> review.getOrderItem().getOrderItemId(),
-                Function.identity(),
-                (first, second) -> first.getCreatedAt() != null && second.getCreatedAt() != null
-                    && first.getCreatedAt().isAfter(second.getCreatedAt()) ? first : second));
+                .collect(Collectors.toMap(
+                        review -> review.getOrderItem().getOrderItemId(),
+                        Function.identity(),
+                        (first, second) -> first.getCreatedAt() != null && second.getCreatedAt() != null
+                                && first.getCreatedAt().isAfter(second.getCreatedAt()) ? first : second));
 
         return orderItems.stream().map(orderItem -> {
             Product product = orderItem.getVariant().getProduct();
             ProductImage image = product.getProductImages().stream()
-                .filter(candidate -> Boolean.TRUE.equals(candidate.getIsPrimary()))
-                .findFirst()
-                .orElseGet(() -> product.getProductImages().stream().findFirst().orElse(null));
+                    .filter(candidate -> Boolean.TRUE.equals(candidate.getIsPrimary()))
+                    .findFirst()
+                    .orElseGet(() -> product.getProductImages().stream().findFirst().orElse(null));
             Review review = reviewsByOrderItemId.get(orderItem.getOrderItemId());
 
             return ReviewableProductDTO.builder()
                     .orderId(orderItem.getOrder().getOrderId())
-                .orderItemId(orderItem.getOrderItemId())
-                .productId(product.getProductId())
-                .productName(product.getName())
-                .imageUrl(image != null ? image.getImageUrl() : null)
-                .color(orderItem.getVariant().getColor())
-                .size(orderItem.getVariant().getSize())
-                .quantity(orderItem.getQuantity())
-                .rating(review != null ? review.getRating() : null)
-                .comment(review != null ? review.getComment() : null)
-                .reviewedAt(review != null ? review.getCreatedAt() : null)
-                .build();
+                    .orderItemId(orderItem.getOrderItemId())
+                    .productId(product.getProductId())
+                    .productName(product.getName())
+                    .imageUrl(image != null ? image.getImageUrl() : null)
+                    .color(orderItem.getVariant().getColor())
+                    .size(orderItem.getVariant().getSize())
+                    .quantity(orderItem.getQuantity())
+                    .rating(review != null ? review.getRating() : null)
+                    .comment(review != null ? review.getComment() : null)
+                    .reviewedAt(review != null ? review.getCreatedAt() : null)
+                    .build();
         }).collect(Collectors.toList());
-        }
+    }
 
     @Transactional
     public ReviewDTO create(Integer userId, Integer orderItemId, Integer rating, String comment) {

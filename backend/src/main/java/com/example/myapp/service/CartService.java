@@ -108,7 +108,6 @@ public class CartService {
             if (item.getVariant().getStockQuantity() < quantity) {
                 throw new RuntimeException("Not enough stock");
             }
-            // gán giá trị mới cho số lượng
             item.setQuantity(quantity);
         }
 

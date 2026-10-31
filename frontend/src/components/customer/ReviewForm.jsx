@@ -37,10 +37,13 @@ export default function ReviewForm({ orderItemId, onSubmitted }) {
     <form className="review-form" onSubmit={handleSubmit}>
       <h4>Viết đánh giá của bạn</h4>
       <div className="review-form-row">
-        <label>Chất lượng:</label>
+        <label>Đánh giá của bạn</label>
         <StarRating value={rating} onChange={setRating} />
+        <span className="review-center-rating-value">{rating}/5</span>
       </div>
+      <label className="review-center-comment-label" htmlFor={`review-comment-${orderItemId}`}>Nhận xét</label>
       <textarea
+        id={`review-comment-${orderItemId}`}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         placeholder="Chia sẻ cảm nhận của bạn về sản phẩm…"

@@ -6,12 +6,13 @@ import { getProductsByCategory } from '../../services/customerProductService';
 import { AuthContext } from '../../context/AuthContext';
 
 const SORT_OPTIONS = [
+  { value: 'all', label: 'Tất cả' },
   { value: 'newest', label: 'Mới nhất' },
+  { value: 'bestseller', label: 'Bán chạy' },
+  { value: 'discount', label: 'Giảm giá' },
+  { value: 'favorites', label: 'Yêu thích' },
   { value: 'price_asc', label: 'Giá tăng dần' },
   { value: 'price_desc', label: 'Giá giảm dần' },
-  { value: 'bestseller', label: 'Bán chạy' },
-  { value: 'favorites', label: 'Yêu thích' },
-  { value: 'discount', label: 'Giảm giá nhiều' },
 ];
 
 export default function ProductCategoryPage() {
@@ -23,12 +24,14 @@ export default function ProductCategoryPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(0);
   const [size] = useState(12);
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState('all');
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {
-    if (!user && sortBy === 'favorites') setSortBy('newest');
+    if (!user && sortBy === 'favorites') {
+      setSortBy('all');
+    }
   }, [user, sortBy]);
 
   // Load category only when id changes

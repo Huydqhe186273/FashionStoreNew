@@ -54,7 +54,7 @@ export default function ReviewList({ productId, refreshKey }) {
         </div>
         <div className="review-breakdown" aria-label="Phân bố số lượt đánh giá theo sao">
           {[5, 4, 3, 2, 1].map((rating) => {
-            const ratingCount = ratingBreakdown[rating] || 0;
+            const ratingCount = Number(ratingBreakdown[rating] || 0);
             const percentage = count > 0 ? (ratingCount / count) * 100 : 0;
             return (
               <div className="review-breakdown-row" key={rating}>

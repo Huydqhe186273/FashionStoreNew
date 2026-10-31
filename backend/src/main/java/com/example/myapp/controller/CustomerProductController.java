@@ -51,7 +51,7 @@ public class CustomerProductController {
             @RequestParam(required = false) Integer minViewCount,
             @RequestParam(required = false) Integer minSizeCount,
             @RequestParam(required = false) Integer minColorCount,
-            @RequestParam(required = false, defaultValue = "newest") String sortBy,
+            @RequestParam(required = false, defaultValue = "all") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String sortDir,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "12") int size) {
@@ -80,7 +80,7 @@ public class CustomerProductController {
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) String color,
             @RequestParam(required = false) String variantSize,
-            @RequestParam(required = false, defaultValue = "newest") String sortBy,
+            @RequestParam(required = false, defaultValue = "all") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String sortDir,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "12") int size) {
@@ -92,7 +92,7 @@ public class CustomerProductController {
     public ResponseEntity<PageResponseDTO<CustomerProductDTO>> getProductsByCategory(
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable("id") Integer id,
-            @RequestParam(required = false, defaultValue = "newest") String sortBy,
+            @RequestParam(required = false, defaultValue = "all") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String sortDir,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "12") int size) {

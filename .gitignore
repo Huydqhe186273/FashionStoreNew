@@ -6,6 +6,8 @@ node_modules/
 target/
 *.log
 *.tmp
+powershell.cmd
+**/powershell.cmd
 
 # IDE caches
 .metals/

@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -46,8 +47,6 @@ public class CustomerProductService {
     private final CategoryRepository categoryRepository;
         private final ReviewRepository reviewRepository;
         private final FavoriteRepository favoriteRepository;
-
-   
 
    
 
@@ -79,14 +78,33 @@ public class CustomerProductService {
                 .filter(p -> !Boolean.TRUE.equals(p.getIsTest()))
                 .collect(Collectors.toList());
 
-        Set<Integer> favoriteProductIds = "favorites".equalsIgnoreCase(sortBy) && favoriteUserId != null
-                ? new HashSet<>(favoriteRepository.findFavoriteProductIdsByUserId(favoriteUserId))
-                : Set.of();
+        Map<Integer, Long> favoriteCounts = "favorites".equalsIgnoreCase(sortBy)
+                && favoriteUserId != null
+                ? favoriteRepository.countFavoritesByProductForUser(favoriteUserId).stream()
+                        .collect(Collectors.toMap(
+                                row -> ((Number) row[0]).intValue(),
+                                row -> ((Number) row[1]).longValue()))
+                : Map.of();
+
+        LocalDateTime latestCreatedAt = all.stream()
+                .map(Product::getCreatedAt)
+                .filter(Objects::nonNull)
+                .max(LocalDateTime::compareTo)
+                .orElse(LocalDateTime.now());
+        LocalDateTime recentCutoff = latestCreatedAt.minusDays(14);
 
         List<Product> filtered = all.stream()
                 .filter(p -> "active".equalsIgnoreCase(p.getStatus()))
                 .filter(p -> !"favorites".equalsIgnoreCase(sortBy)
-                        || favoriteProductIds.contains(p.getProductId()))
+                        || favoriteCounts.containsKey(p.getProductId()))
+                .filter(p -> !"discount".equalsIgnoreCase(sortBy)
+                        || (p.getDiscountPrice() != null && p.getBasePrice() != null
+                            && p.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
+                            && p.getDiscountPrice().compareTo(p.getBasePrice()) < 0))
+                .filter(p -> !"bestseller".equalsIgnoreCase(sortBy)
+                        || (p.getSoldCount() != null && p.getSoldCount() >= 50))
+                .filter(p -> !"newest".equalsIgnoreCase(sortBy)
+                        || (p.getCreatedAt() != null && !p.getCreatedAt().isBefore(recentCutoff)))
                 .filter(p -> keyword == null || keyword.isBlank()
                         || (p.getName() != null && p.getName().toLowerCase().contains(keyword.toLowerCase()))
                         || (p.getDescription() != null && p.getDescription().toLowerCase().contains(keyword.toLowerCase())))
@@ -145,7 +163,7 @@ public class CustomerProductService {
                         || distinctVariantValues(p, ProductVariant::getSize).size() >= minSizeCount)
                 .filter(p -> minColorCount == null
                         || distinctVariantValues(p, ProductVariant::getColor).size() >= minColorCount)
-                .sorted(buildComparator(sortBy, sortDir))
+                .sorted(buildComparator(sortBy, sortDir, favoriteCounts))
                 .collect(Collectors.toList());
 
         int totalElements = filtered.size();
@@ -153,10 +171,12 @@ public class CustomerProductService {
         int from = Math.min(page * pageSize, totalElements);
         int to = Math.min(from + pageSize, totalElements);
 
-                List<CustomerProductDTO> content = new ArrayList<>();
+        List<CustomerProductDTO> content = new ArrayList<>();
         if (from < to) {
-                        for (Product p : filtered.subList(from, to)) {
-                                content.add(mapToDTO(p, false));
+                        List<Product> pageProducts = filtered.subList(from, to);
+                        Map<Integer, Object[]> ratingSummaries = getRatingSummaries(pageProducts);
+                        for (Product p : pageProducts) {
+                                content.add(mapToDTO(p, false, ratingSummaries.get(p.getProductId())));
             }
         }
 
@@ -510,6 +530,10 @@ public class CustomerProductService {
     }
 
     public CustomerProductDTO mapToDTO(Product p, boolean includeVariants) {
+                return mapToDTO(p, includeVariants, getRatingSummaries(List.of(p)).get(p.getProductId()));
+        }
+
+        private CustomerProductDTO mapToDTO(Product p, boolean includeVariants, Object[] ratingSummary) {
         /* Always load variants for size/color facets — the list view
          * still wants to render "Size có sẵn" + swatches even when
          * it doesn't include the full variants array. The query is
@@ -562,6 +586,8 @@ public class CustomerProductService {
                 .discountPercent(discountPercent)
                 .viewCount(p.getViewCount())
                 .soldCount(p.getSoldCount())
+                .averageRating(ratingSummary == null ? 0.0 : ((Number) ratingSummary[1]).doubleValue())
+                .reviewCount(ratingSummary == null ? 0L : ((Number) ratingSummary[2]).longValue())
                 .totalStock(totalStock)
                 .status(p.getStatus())
                 .categoryId(p.getCategory() != null ? p.getCategory().getCategoryId() : null)
@@ -576,6 +602,18 @@ public class CustomerProductService {
                 .build();
     }
 
+        private Map<Integer, Object[]> getRatingSummaries(List<Product> products) {
+                if (products.isEmpty()) {
+                        return Map.of();
+                }
+                List<Integer> productIds = products.stream().map(Product::getProductId).collect(Collectors.toList());
+                Map<Integer, Object[]> summaries = new HashMap<>();
+                for (Object[] row : reviewRepository.findVerifiedRatingSummariesByProductIds(productIds)) {
+                        summaries.put(((Number) row[0]).intValue(), row);
+                }
+                return summaries;
+        }
+
     private VariantInfoDTO toVariantInfo(ProductVariant v) {
         return VariantInfoDTO.builder()
                 .variantId(v.getVariantId())
@@ -586,7 +624,7 @@ public class CustomerProductService {
                 .build();
     }
 
-    private Comparator<Product> buildComparator(String sortBy, String sortDir) {
+        private Comparator<Product> buildComparator(String sortBy, String sortDir, Map<Integer, Long> favoriteCounts) {
         String key = sortBy == null ? "" : sortBy.toLowerCase();
         // price_asc / price_desc encode the direction in their name;
         // newer / bestseller / discount don't — for those we still
@@ -605,9 +643,16 @@ public class CustomerProductService {
             case "bestseller":
                 cmp = Comparator.comparing(Product::getSoldCount, Comparator.nullsLast(Comparator.naturalOrder()));
                 break;
+                        case "favorites":
+                                cmp = Comparator.comparing(p -> favoriteCounts.getOrDefault(p.getProductId(), 0L));
+                                break;
             case "discount":
-                cmp = Comparator.comparing(this::discountValue, Comparator.nullsLast(BigDecimal::compareTo));
+                cmp = Comparator.comparing((Product p) -> {
+                    Integer pct = computeDiscountPercent(p);
+                    return pct != null ? pct : 0;
+                }).thenComparing(this::discountValue);
                 break;
+            case "all":
             case "newest":
             default:
                 cmp = Comparator.comparing(Product::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()));
@@ -624,7 +669,9 @@ public class CustomerProductService {
 
     private BigDecimal discountValue(Product p) {
         if (p.getBasePrice() == null || p.getDiscountPrice() == null) return BigDecimal.ZERO;
-        if (p.getBasePrice().compareTo(BigDecimal.ZERO) == 0) return BigDecimal.ZERO;
+        if (p.getBasePrice().compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
+        if (p.getDiscountPrice().compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
+        if (p.getDiscountPrice().compareTo(p.getBasePrice()) >= 0) return BigDecimal.ZERO;
         return p.getBasePrice().subtract(p.getDiscountPrice());
     }
 
@@ -635,6 +682,7 @@ public class CustomerProductService {
     private Integer computeDiscountPercent(Product p) {
         if (p.getBasePrice() == null || p.getDiscountPrice() == null) return null;
         if (p.getBasePrice().compareTo(BigDecimal.ZERO) <= 0) return null;
+        if (p.getDiscountPrice().compareTo(BigDecimal.ZERO) <= 0) return null;
         if (p.getDiscountPrice().compareTo(p.getBasePrice()) >= 0) return null;
         return p.getBasePrice().subtract(p.getDiscountPrice())
                 .multiply(BigDecimal.valueOf(100))

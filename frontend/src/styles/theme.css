@@ -1599,9 +1599,7 @@ tr:hover td { background: var(--bg-soft); }
   font-size: var(--fs-xs);
 }
 
-.product-card-rating .star {
-  font-size: 0.82rem;
-}
+.product-card-rating .star { font-size: 0.82rem; }
 
 .star-rating { display: inline-flex; gap: 2px; }
 .star {
