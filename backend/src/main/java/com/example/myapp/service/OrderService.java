@@ -26,6 +26,7 @@ public class OrderService {
     private final EmailService emailService;
     private final NotificationService notificationService;
     private final TrackingService trackingService;
+    private final ReturnRequestRepository returnRequestRepository;
 
     @Transactional
     public Order createOrderFromCart(Integer userId, Integer addressId) {
@@ -290,6 +291,55 @@ public class OrderService {
         }
     }
 
+    @Transactional
+    public ReturnRequest createReturnRequest(Integer orderId, Integer userId, String reason) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Đơn hàng #" + orderId + " không tồn tại."));
+
+        if (userId != null && !order.getUser().getUserId().equals(userId)) {
+            throw new RuntimeException("Bạn không có quyền gửi yêu cầu trả hàng cho đơn này.");
+        }
+
+        if (!"paid".equalsIgnoreCase(order.getPaymentStatus())) {
+            throw new RuntimeException("Chỉ có thể yêu cầu trả hàng / hoàn tiền cho đơn đã thanh toán.");
+        }
+
+        if ("cancelled".equalsIgnoreCase(order.getOrderStatus()) || "returned".equalsIgnoreCase(order.getOrderStatus())) {
+            throw new RuntimeException("Đơn hàng này không thể gửi yêu cầu hoàn tiền.");
+        }
+
+        java.util.Optional<ReturnRequest> latestOpt = returnRequestRepository.findLatestByOrderId(orderId);
+        if (latestOpt.isPresent()) {
+            String currStatus = latestOpt.get().getStatus();
+            if ("pending".equalsIgnoreCase(currStatus)) {
+                throw new RuntimeException("Đơn hàng này đã có yêu cầu hoàn tiền đang chờ duyệt.");
+            } else if ("approved".equalsIgnoreCase(currStatus) || "refunded".equalsIgnoreCase(currStatus)) {
+                throw new RuntimeException("Đơn hàng này đã được duyệt hoàn tiền.");
+            }
+        }
+
+        ReturnRequest request = new ReturnRequest();
+        request.setOrder(order);
+        request.setReason(reason != null && !reason.trim().isEmpty() ? reason.trim() : "Khách hàng yêu cầu trả hàng hoàn tiền");
+        request.setStatus("pending");
+        request.setRefundAmount(order.getTotalAmount());
+        request.setCreatedAt(LocalDateTime.now());
+        ReturnRequest saved = returnRequestRepository.save(request);
+
+        // Gửi thông báo cho khách hàng
+        try {
+            notificationService.createNotification(
+                    order.getUser().getUserId(),
+                    "order",
+                    "Yêu cầu trả hàng & hoàn tiền cho đơn hàng #" + orderId + " đã được gửi thành công và đang chờ xét duyệt."
+            );
+        } catch (Exception e) {
+            System.err.println("Lỗi tạo thông báo yêu cầu hoàn tiền: " + e.getMessage());
+        }
+
+        return saved;
+    }
+
     private com.example.myapp.model.OrderResponseDTO mapToOrderResponseDTO(Order order) {
         List<com.example.myapp.model.OrderItemDetailDTO> itemDTOs = new ArrayList<>();
         if (order.getOrderItems() != null) {
@@ -328,6 +378,18 @@ public class OrderService {
         int totalCount = itemDTOs.stream().mapToInt(com.example.myapp.model.OrderItemDetailDTO::getQuantity).sum();
         boolean canCancel = "pending".equalsIgnoreCase(order.getOrderStatus());
 
+        String returnStatus = null;
+        String returnReason = null;
+        java.util.Optional<ReturnRequest> returnOpt = returnRequestRepository.findLatestByOrderId(order.getOrderId());
+        if (returnOpt.isPresent()) {
+            returnStatus = returnOpt.get().getStatus();
+            returnReason = returnOpt.get().getReason();
+        }
+
+        boolean isPaid = "paid".equalsIgnoreCase(order.getPaymentStatus());
+        boolean notClosed = !"cancelled".equalsIgnoreCase(order.getOrderStatus()) && !"returned".equalsIgnoreCase(order.getOrderStatus());
+        boolean canReturn = isPaid && notClosed && (returnStatus == null || "rejected".equalsIgnoreCase(returnStatus));
+
         return com.example.myapp.model.OrderResponseDTO.builder()
                 .orderId(order.getOrderId())
                 .orderStatus(order.getOrderStatus())
@@ -343,6 +405,9 @@ public class OrderService {
                 .discountValue(order.getDiscountCode() != null ? order.getDiscountCode().getValue() : null)
                 .itemCount(totalCount)
                 .canCancel(canCancel)
+                .canReturn(canReturn)
+                .returnStatus(returnStatus)
+                .returnReason(returnReason)
                 .items(itemDTOs)
                 .build();
     }

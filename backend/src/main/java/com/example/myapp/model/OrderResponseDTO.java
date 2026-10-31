@@ -34,5 +34,8 @@ public class OrderResponseDTO {
     // Danh sách món hàng
     private int itemCount;
     private boolean canCancel;
+    private boolean canReturn;
+    private String returnStatus;
+    private String returnReason;
     private List<OrderItemDetailDTO> items;
 }

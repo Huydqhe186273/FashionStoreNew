@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUserOrders, cancelOrder } from '../../services/orderService';
+import { getUserOrders, cancelOrder, createReturnRequest } from '../../services/orderService';
 import { createPaymentLink } from '../../services/cartService';
 import { AuthContext } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -44,6 +44,12 @@ export default function OrderHistory() {
   const [orderToCancel, setOrderToCancel] = useState(null);
   const [cancelling, setCancelling] = useState(false);
   const [payingOrderId, setPayingOrderId] = useState(null);
+
+  // Return & Refund Modal
+  const [orderToReturn, setOrderToReturn] = useState(null);
+  const [returnReasonType, setReturnReasonType] = useState('Hàng bị lỗi hoặc hư hại do vận chuyển');
+  const [returnReasonDetail, setReturnReasonDetail] = useState('');
+  const [submittingReturn, setSubmittingReturn] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     if (!userId) {
@@ -92,6 +98,28 @@ export default function OrderHistory() {
       toast.error(err.response?.data?.error || err.message || 'Hủy đơn hàng thất bại.');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  // Gửi yêu cầu trả hàng & hoàn tiền
+  const handleConfirmReturn = async () => {
+    if (!orderToReturn) return;
+    const fullReason = returnReasonDetail.trim()
+      ? `${returnReasonType}: ${returnReasonDetail.trim()}`
+      : returnReasonType;
+
+    try {
+      setSubmittingReturn(true);
+      await createReturnRequest(orderToReturn.orderId, userId, fullReason);
+      toast.success(`Đã gửi yêu cầu trả hàng & hoàn tiền cho đơn #${orderToReturn.orderId}`);
+      setOrderToReturn(null);
+      setReturnReasonDetail('');
+      fetchOrders();
+    } catch (err) {
+      console.error('Lỗi gửi yêu cầu hoàn tiền:', err);
+      toast.error(err.response?.data?.error || err.message || 'Gửi yêu cầu hoàn tiền thất bại.');
+    } finally {
+      setSubmittingReturn(false);
     }
   };
 
@@ -322,6 +350,38 @@ export default function OrderHistory() {
                         Chi tiết
                       </button>
 
+                      {order.returnStatus === 'pending' && (
+                        <span className="badge-return-status pending" title={order.returnReason || ''}>
+                          ⏳ Chờ duyệt hoàn tiền
+                        </span>
+                      )}
+
+                      {(order.returnStatus === 'approved' || order.returnStatus === 'refunded') && (
+                        <span className="badge-return-status approved">
+                          ✅ Đã hoàn tiền
+                        </span>
+                      )}
+
+                      {order.returnStatus === 'rejected' && (
+                        <span className="badge-return-status rejected" title={order.returnReason || ''}>
+                          ❌ Hoàn tiền bị từ chối
+                        </span>
+                      )}
+
+                      {order.canReturn && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOrderToReturn(order);
+                            setReturnReasonType('Hàng bị lỗi hoặc hư hại do vận chuyển');
+                            setReturnReasonDetail('');
+                          }}
+                          className="btn-order-return"
+                        >
+                          🔄 Trả hàng / Hoàn tiền
+                        </button>
+                      )}
+
                       {order.canCancel && (
                         <button
                           type="button"
@@ -475,6 +535,96 @@ export default function OrderHistory() {
                 style={{ padding: '9px 18px', backgroundColor: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', opacity: cancelling ? 0.7 : 1 }}
               >
                 {cancelling ? 'Đang hủy...' : 'Xác nhận hủy'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: Yêu Cầu Trả Hàng & Hoàn Tiền */}
+      {orderToReturn && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px' }}>
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '520px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>
+                  🔄 Yêu cầu trả hàng & hoàn tiền
+                </h3>
+                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                  Đơn hàng #{orderToReturn.orderId}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOrderToReturn(null)}
+                style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#94a3b8' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Thông tin hoàn tiền */}
+            <div style={{ backgroundColor: '#f8fafc', padding: '14px 16px', borderRadius: '10px', marginBottom: '18px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '0.875rem', color: '#64748b' }}>Số tiền dự kiến hoàn:</span>
+                <strong style={{ fontSize: '1.1rem', color: '#0f172a', fontWeight: '800' }}>
+                  {orderToReturn.totalAmount?.toLocaleString()}₫
+                </strong>
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                * Số tiền sẽ được hoàn lại sau khi yêu cầu được nhân viên cửa hàng xác nhận.
+              </div>
+            </div>
+
+            {/* Chọn lý do */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '700', color: '#334155', marginBottom: '6px' }}>
+                Lý do hoàn trả:
+              </label>
+              <select
+                value={returnReasonType}
+                onChange={(e) => setReturnReasonType(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', color: '#1e293b', backgroundColor: '#ffffff', outline: 'none' }}
+              >
+                <option value="Hàng bị lỗi hoặc hư hại do vận chuyển">Hàng bị lỗi hoặc hư hại do vận chuyển</option>
+                <option value="Giao sai sản phẩm / sai kích thước hoặc màu sắc">Giao sai sản phẩm / sai kích thước hoặc màu sắc</option>
+                <option value="Sản phẩm khác biệt so với mô tả & hình ảnh">Sản phẩm khác biệt so với mô tả & hình ảnh</option>
+                <option value="Không vừa kích cỡ, muốn đổi trả">Không vừa kích cỡ, muốn đổi trả</option>
+                <option value="Khác">Lý do khác</option>
+              </select>
+            </div>
+
+            {/* Mô tả chi tiết */}
+            <div style={{ marginBottom: '22px' }}>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '700', color: '#334155', marginBottom: '6px' }}>
+                Mô tả chi tiết / Ghi chú thêm:
+              </label>
+              <textarea
+                rows={3}
+                value={returnReasonDetail}
+                onChange={(e) => setReturnReasonDetail(e.target.value)}
+                placeholder="Mô tả cụ thể tình trạng sản phẩm để shop hỗ trợ nhanh nhất..."
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', color: '#1e293b', resize: 'vertical', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            {/* Nút hành động */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setOrderToReturn(null)}
+                disabled={submittingReturn}
+                style={{ padding: '9px 18px', backgroundColor: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' }}
+              >
+                Đóng
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmReturn}
+                disabled={submittingReturn}
+                style={{ padding: '9px 20px', backgroundColor: '#b45309', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.9rem', opacity: submittingReturn ? 0.7 : 1, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                {submittingReturn ? 'Đang gửi...' : 'Xác nhận gửi yêu cầu'}
               </button>
             </div>
           </div>
