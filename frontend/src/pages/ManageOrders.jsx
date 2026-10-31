@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
+<<<<<<< HEAD
 import {
   getStaffOrders,
   getStaffOrderDetail,
@@ -8,6 +9,9 @@ import {
   createStaffReturn,
   markOrderRTO
 } from '../services/orderService';
+=======
+import { getStaffOrders, getStaffOrderDetail, updateOrderStatus, approveReturn, rejectReturn } from '../services/orderService';
+>>>>>>> origin/main
 
 const mockOrders = [
   {
@@ -85,6 +89,7 @@ export default function ManageOrders() {
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
 
+<<<<<<< HEAD
   // Staff Return / Refund Modal State
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [returnOrder, setReturnOrder] = useState(null);
@@ -97,6 +102,12 @@ export default function ManageOrders() {
   const [adminNote, setAdminNote] = useState('');
   const [restock, setRestock] = useState(true);
   const [submittingReturn, setSubmittingReturn] = useState(false);
+=======
+  // Return Request modal state
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [returningOrderId, setReturningOrderId] = useState(null);
+>>>>>>> origin/main
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
@@ -194,6 +205,43 @@ export default function ManageOrders() {
       }
     } finally {
       setLoadingDetail(false);
+    }
+  };
+
+  const handleApproveReturn = async (orderId) => {
+    setActionError('');
+    setActionSuccess('');
+    if (!window.confirm(`Bạn có chắc muốn DUYỆT yêu cầu trả hàng & hoàn tiền cho đơn #${orderId}?`)) return;
+    try {
+      const updated = await approveReturn(orderId);
+      setActionSuccess(`✅ Đã duyệt hoàn tiền cho đơn #${orderId} thành công!`);
+      setSelectedOrder(updated);
+      loadOrders();
+    } catch (err) {
+      const message = err.response?.data?.message || err.response?.data?.error || err.message || 'Lỗi khi duyệt hoàn tiền!';
+      setActionError(message);
+    }
+  };
+
+  const handleOpenRejectModal = (orderId) => {
+    setReturningOrderId(orderId);
+    setRejectReason('');
+    setIsRejectModalOpen(true);
+  };
+
+  const handleConfirmReject = async () => {
+    setActionError('');
+    setActionSuccess('');
+    try {
+      const updated = await rejectReturn(returningOrderId, rejectReason || 'Không đủ điều kiện hoàn trả');
+      setActionSuccess(`❌ Đã từ chối hoàn tiền cho đơn #${returningOrderId}.`);
+      setIsRejectModalOpen(false);
+      setSelectedOrder(updated);
+      loadOrders();
+    } catch (err) {
+      const message = err.response?.data?.message || err.response?.data?.error || err.message || 'Lỗi khi từ chối hoàn tiền!';
+      setActionError(message);
+      setIsRejectModalOpen(false);
     }
   };
 
@@ -344,11 +392,19 @@ export default function ManageOrders() {
     }
   };
 
+<<<<<<< HEAD
   const countPending = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'PENDING').length;
   const countProcessing = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'PROCESSING').length;
   const countShipped = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'SHIPPED').length;
   const countDelivered = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'DELIVERED').length;
   const countReturned = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'RETURNED').length;
+=======
+  const countPending = orders.filter(o => o.orderStatus === 'PENDING').length;
+  const countProcessing = orders.filter(o => o.orderStatus === 'PROCESSING').length;
+  const countShipped = orders.filter(o => o.orderStatus === 'SHIPPED').length;
+  const countDelivered = orders.filter(o => o.orderStatus === 'DELIVERED').length;
+  const countReturnPending = orders.filter(o => o.returnStatus === 'pending').length;
+>>>>>>> origin/main
 
   return (
     <main>
@@ -388,11 +444,19 @@ export default function ManageOrders() {
             <div className="stat-label">Giao Thành Công (DELIVERED)</div>
           </div>
         </div>
+<<<<<<< HEAD
         <div className="stat-card">
           <div className="stat-icon" style={{ color: '#ea580c' }}>↩️</div>
           <div>
             <div className="stat-val">{countReturned}</div>
             <div className="stat-label">Đã Hoàn Hàng (RETURNED)</div>
+=======
+        <div className="stat-card" style={{ cursor: 'pointer', border: countReturnPending > 0 ? '2px solid #f59e0b' : undefined }} onClick={() => setStatusFilter('RETURN_PENDING')}>
+          <div className="stat-icon" style={{ color: '#f59e0b' }}>🔄</div>
+          <div>
+            <div className="stat-val" style={{ color: countReturnPending > 0 ? '#f59e0b' : undefined }}>{countReturnPending}</div>
+            <div className="stat-label">Chờ Duyệt Hoàn Tiền</div>
+>>>>>>> origin/main
           </div>
         </div>
       </div>
@@ -418,6 +482,7 @@ export default function ManageOrders() {
             <option value="DELIVERED">DELIVERED (Giao thành công)</option>
             <option value="RETURNED">RETURNED (Đã hoàn hàng / hoàn kho)</option>
             <option value="CANCELLED">CANCELLED (Đã hủy)</option>
+            <option value="RETURN_PENDING">🔄 Chờ Duyệt Hoàn Tiền</option>
           </select>
         </div>
       </div>
@@ -485,8 +550,12 @@ export default function ManageOrders() {
                   const canConfirm = status === 'PENDING';
                   const canShip = status === 'PROCESSING';
                   const canCancel = status === 'PENDING' || status === 'PROCESSING';
+<<<<<<< HEAD
                   const canRTO = status === 'SHIPPED';
                   const canReturn = status === 'DELIVERED';
+=======
+                  const hasReturnPending = o.returnStatus === 'pending';
+>>>>>>> origin/main
 
                   return (
                     <tr key={o.orderId}>
@@ -555,6 +624,27 @@ export default function ManageOrders() {
                       </td>
                       <td style={{ padding: '10px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                         {getStatusBadge(o.orderStatus)}
+                        {o.returnStatus === 'pending' && (
+                          <div style={{ marginTop: '4px' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '12px', backgroundColor: '#fef3c7', color: '#b45309', fontSize: '0.75rem', fontWeight: 700, border: '1px solid #fde68a' }}>
+                              🔄 Chờ duyệt hoàn tiền
+                            </span>
+                          </div>
+                        )}
+                        {o.returnStatus === 'approved' && (
+                          <div style={{ marginTop: '4px' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '12px', backgroundColor: '#ecfdf5', color: '#047857', fontSize: '0.75rem', fontWeight: 700, border: '1px solid #a7f3d0' }}>
+                              ✅ Đã hoàn tiền
+                            </span>
+                          </div>
+                        )}
+                        {o.returnStatus === 'rejected' && (
+                          <div style={{ marginTop: '4px' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '12px', backgroundColor: '#fef2f2', color: '#b91c1c', fontSize: '0.75rem', fontWeight: 700, border: '1px solid #fecaca' }}>
+                              ❌ Từ chối hoàn tiền
+                            </span>
+                          </div>
+                        )}
                       </td>
                       <td style={{ padding: '10px 6px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                         {(() => {
@@ -673,6 +763,26 @@ export default function ManageOrders() {
                             >
                               ❌ Hủy
                             </button>
+                          )}
+
+                          {hasReturnPending && (
+                            <>
+                              <button
+                                className="btn-action"
+                                style={{
+                                  backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                                  color: '#047857',
+                                  borderColor: 'rgba(16, 185, 129, 0.35)',
+                                  whiteSpace: 'nowrap',
+                                  padding: '5px 8px',
+                                  fontWeight: 700
+                                }}
+                                onClick={() => { handleOpenDetail(o.orderId); }}
+                                title="Duyệt yêu cầu hoàn tiền"
+                              >
+                                🔄 Duyệt HT
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
@@ -869,6 +979,51 @@ export default function ManageOrders() {
               </div>
             </div>
 
+            {/* Return Request Info & Actions */}
+            {selectedOrder.returnStatus && (
+              <div style={{ marginBottom: '20px', padding: '14px 18px', borderRadius: '10px', border: '1.5px solid #fde68a', backgroundColor: '#fffbeb' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#92400e', marginBottom: '8px' }}>
+                  🔄 Yêu cầu trả hàng & hoàn tiền
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#78350f', marginBottom: '4px' }}>
+                  <strong>Trạng thái:</strong>{' '}
+                  {selectedOrder.returnStatus === 'pending' && <span style={{ color: '#b45309', fontWeight: 700 }}>⏳ Đang chờ duyệt</span>}
+                  {selectedOrder.returnStatus === 'approved' && <span style={{ color: '#047857', fontWeight: 700 }}>✅ Đã duyệt</span>}
+                  {selectedOrder.returnStatus === 'rejected' && <span style={{ color: '#b91c1c', fontWeight: 700 }}>❌ Đã từ chối</span>}
+                </div>
+                {selectedOrder.returnReason && (
+                  <div style={{ fontSize: '0.85rem', color: '#78350f', marginBottom: '4px' }}>
+                    <strong>Lý do khách hàng:</strong> {selectedOrder.returnReason}
+                  </div>
+                )}
+                {selectedOrder.refundAmount != null && (
+                  <div style={{ fontSize: '0.85rem', color: '#78350f', marginBottom: '8px' }}>
+                    <strong>Số tiền hoàn:</strong> {formatCurrency(selectedOrder.refundAmount)}
+                  </div>
+                )}
+                {selectedOrder.returnStatus === 'pending' && (
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      style={{ backgroundColor: '#10b981', borderColor: '#10b981', padding: '8px 18px', fontWeight: 700 }}
+                      onClick={() => handleApproveReturn(selectedOrder.orderId)}
+                    >
+                      ✅ Duyệt hoàn tiền
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-action btn-lock"
+                      style={{ borderColor: 'rgba(239,68,68,0.4)', color: '#dc2626', padding: '8px 18px', fontWeight: 700 }}
+                      onClick={() => handleOpenRejectModal(selectedOrder.orderId)}
+                    >
+                      ❌ Từ chối
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Workflow Action Buttons */}
             <div className="modal-footer" style={{
               display: 'flex',
@@ -961,6 +1116,7 @@ export default function ManageOrders() {
         ) : null}
       </Modal>
 
+<<<<<<< HEAD
       {/* Modal Tiếp Nhận Hoàn Hàng Cho Staff */}
       <Modal
         isOpen={isReturnModalOpen}
@@ -1109,10 +1265,35 @@ export default function ManageOrders() {
                 className="btn-cancel"
                 onClick={() => setIsReturnModalOpen(false)}
                 disabled={submittingReturn}
+=======
+      {/* Modal Từ Chối Hoàn Tiền */}
+      {isRejectModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999, padding: '20px' }}>
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 40px -8px rgba(0,0,0,0.25)' }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '1.15rem', fontWeight: '800', color: '#0f172a' }}>
+              ❌ Từ chối yêu cầu hoàn tiền #{returningOrderId}
+            </h3>
+            <p style={{ margin: '0 0 14px 0', color: '#475569', fontSize: '0.9rem', lineHeight: 1.5 }}>
+              Vui lòng nhập lý do từ chối để thông báo đến khách hàng.
+            </p>
+            <textarea
+              rows={3}
+              value={rejectReason}
+              onChange={e => setRejectReason(e.target.value)}
+              placeholder="Ví dụ: Sản phẩm đã qua sử dụng, không đáp ứng điều kiện hoàn trả..."
+              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', color: '#1e293b', resize: 'vertical', boxSizing: 'border-box', marginBottom: '18px' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setIsRejectModalOpen(false)}
+                style={{ padding: '9px 18px', backgroundColor: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' }}
+>>>>>>> origin/main
               >
                 Hủy bỏ
               </button>
               <button
+<<<<<<< HEAD
                 type="submit"
                 className="btn-primary"
                 style={{ backgroundColor: '#ea580c', borderColor: '#ea580c' }}
@@ -1124,6 +1305,18 @@ export default function ManageOrders() {
           </form>
         )}
       </Modal>
+=======
+                type="button"
+                onClick={handleConfirmReject}
+                style={{ padding: '9px 20px', backgroundColor: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.9rem' }}
+              >
+                Xác nhận từ chối
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+>>>>>>> origin/main
     </main>
   );
 }
