@@ -10,6 +10,7 @@ import {
   approveReturn,
   rejectReturn
 } from '../services/orderService';
+import { getStaffOrders, getStaffOrderDetail, updateOrderStatus, approveReturn, rejectReturn } from '../services/orderService';
 
 const mockOrders = [
   {
@@ -394,6 +395,11 @@ export default function ManageOrders() {
   const countDelivered = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'DELIVERED').length;
   const countReturned = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'RETURNED').length;
   const countReturnPending = orders.filter(o => (o.returnStatus || '').toLowerCase() === 'pending').length;
+  const countPending = orders.filter(o => o.orderStatus === 'PENDING').length;
+  const countProcessing = orders.filter(o => o.orderStatus === 'PROCESSING').length;
+  const countShipped = orders.filter(o => o.orderStatus === 'SHIPPED').length;
+  const countDelivered = orders.filter(o => o.orderStatus === 'DELIVERED').length;
+  const countReturnPending = orders.filter(o => o.returnStatus === 'pending').length;
 
   return (
     <main>
@@ -441,6 +447,7 @@ export default function ManageOrders() {
           </div>
         </div>
         <div className="stat-card" style={{ cursor: 'pointer', border: countReturnPending > 0 ? '2px solid #f59e0b' : undefined }} onClick={() => setStatusFilter(statusFilter === 'RETURN_PENDING' ? '' : 'RETURN_PENDING')}>
+        <div className="stat-card" style={{ cursor: 'pointer', border: countReturnPending > 0 ? '2px solid #f59e0b' : undefined }} onClick={() => setStatusFilter('RETURN_PENDING')}>
           <div className="stat-icon" style={{ color: '#f59e0b' }}>🔄</div>
           <div>
             <div className="stat-val" style={{ color: countReturnPending > 0 ? '#f59e0b' : undefined }}>{countReturnPending}</div>
