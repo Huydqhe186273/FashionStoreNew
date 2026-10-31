@@ -1,17 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
-<<<<<<< HEAD
 import {
   getStaffOrders,
   getStaffOrderDetail,
   updateOrderStatus,
   createStaffReturn,
-  markOrderRTO
+  markOrderRTO,
+  approveReturn,
+  rejectReturn
 } from '../services/orderService';
-=======
-import { getStaffOrders, getStaffOrderDetail, updateOrderStatus, approveReturn, rejectReturn } from '../services/orderService';
->>>>>>> origin/main
 
 const mockOrders = [
   {
@@ -89,7 +87,6 @@ export default function ManageOrders() {
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
 
-<<<<<<< HEAD
   // Staff Return / Refund Modal State
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [returnOrder, setReturnOrder] = useState(null);
@@ -102,12 +99,11 @@ export default function ManageOrders() {
   const [adminNote, setAdminNote] = useState('');
   const [restock, setRestock] = useState(true);
   const [submittingReturn, setSubmittingReturn] = useState(false);
-=======
+
   // Return Request modal state
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [returningOrderId, setReturningOrderId] = useState(null);
->>>>>>> origin/main
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
@@ -392,19 +388,12 @@ export default function ManageOrders() {
     }
   };
 
-<<<<<<< HEAD
   const countPending = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'PENDING').length;
   const countProcessing = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'PROCESSING').length;
   const countShipped = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'SHIPPED').length;
   const countDelivered = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'DELIVERED').length;
   const countReturned = orders.filter(o => (o.orderStatus || '').toUpperCase() === 'RETURNED').length;
-=======
-  const countPending = orders.filter(o => o.orderStatus === 'PENDING').length;
-  const countProcessing = orders.filter(o => o.orderStatus === 'PROCESSING').length;
-  const countShipped = orders.filter(o => o.orderStatus === 'SHIPPED').length;
-  const countDelivered = orders.filter(o => o.orderStatus === 'DELIVERED').length;
-  const countReturnPending = orders.filter(o => o.returnStatus === 'pending').length;
->>>>>>> origin/main
+  const countReturnPending = orders.filter(o => (o.returnStatus || '').toLowerCase() === 'pending').length;
 
   return (
     <main>
@@ -444,19 +433,18 @@ export default function ManageOrders() {
             <div className="stat-label">Giao Thành Công (DELIVERED)</div>
           </div>
         </div>
-<<<<<<< HEAD
         <div className="stat-card">
           <div className="stat-icon" style={{ color: '#ea580c' }}>↩️</div>
           <div>
             <div className="stat-val">{countReturned}</div>
             <div className="stat-label">Đã Hoàn Hàng (RETURNED)</div>
-=======
-        <div className="stat-card" style={{ cursor: 'pointer', border: countReturnPending > 0 ? '2px solid #f59e0b' : undefined }} onClick={() => setStatusFilter('RETURN_PENDING')}>
+          </div>
+        </div>
+        <div className="stat-card" style={{ cursor: 'pointer', border: countReturnPending > 0 ? '2px solid #f59e0b' : undefined }} onClick={() => setStatusFilter(statusFilter === 'RETURN_PENDING' ? '' : 'RETURN_PENDING')}>
           <div className="stat-icon" style={{ color: '#f59e0b' }}>🔄</div>
           <div>
             <div className="stat-val" style={{ color: countReturnPending > 0 ? '#f59e0b' : undefined }}>{countReturnPending}</div>
             <div className="stat-label">Chờ Duyệt Hoàn Tiền</div>
->>>>>>> origin/main
           </div>
         </div>
       </div>
@@ -550,12 +538,9 @@ export default function ManageOrders() {
                   const canConfirm = status === 'PENDING';
                   const canShip = status === 'PROCESSING';
                   const canCancel = status === 'PENDING' || status === 'PROCESSING';
-<<<<<<< HEAD
                   const canRTO = status === 'SHIPPED';
                   const canReturn = status === 'DELIVERED';
-=======
                   const hasReturnPending = o.returnStatus === 'pending';
->>>>>>> origin/main
 
                   return (
                     <tr key={o.orderId}>
@@ -1116,7 +1101,6 @@ export default function ManageOrders() {
         ) : null}
       </Modal>
 
-<<<<<<< HEAD
       {/* Modal Tiếp Nhận Hoàn Hàng Cho Staff */}
       <Modal
         isOpen={isReturnModalOpen}
@@ -1265,7 +1249,22 @@ export default function ManageOrders() {
                 className="btn-cancel"
                 onClick={() => setIsReturnModalOpen(false)}
                 disabled={submittingReturn}
-=======
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                style={{ backgroundColor: '#ea580c', borderColor: '#ea580c' }}
+                disabled={submittingReturn}
+              >
+                {submittingReturn ? 'Đang xử lý...' : 'Xác Nhận Hoàn Hàng & Hoàn Kho'}
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
       {/* Modal Từ Chối Hoàn Tiền */}
       {isRejectModalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999, padding: '20px' }}>
@@ -1288,24 +1287,10 @@ export default function ManageOrders() {
                 type="button"
                 onClick={() => setIsRejectModalOpen(false)}
                 style={{ padding: '9px 18px', backgroundColor: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' }}
->>>>>>> origin/main
               >
                 Hủy bỏ
               </button>
               <button
-<<<<<<< HEAD
-                type="submit"
-                className="btn-primary"
-                style={{ backgroundColor: '#ea580c', borderColor: '#ea580c' }}
-                disabled={submittingReturn}
-              >
-                {submittingReturn ? 'Đang xử lý...' : 'Xác Nhận Hoàn Hàng & Hoàn Kho'}
-              </button>
-            </div>
-          </form>
-        )}
-      </Modal>
-=======
                 type="button"
                 onClick={handleConfirmReject}
                 style={{ padding: '9px 20px', backgroundColor: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.9rem' }}
@@ -1316,7 +1301,6 @@ export default function ManageOrders() {
           </div>
         </div>
       )}
->>>>>>> origin/main
     </main>
   );
 }

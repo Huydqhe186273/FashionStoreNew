@@ -44,3 +44,13 @@ export const createReturnRequest = async (orderId, userId, reason) => {
   const response = await api.post(`/orders/${orderId}/return-request`, { reason }, { params: { userId } });
   return response.data;
 };
+
+export const approveReturn = async (orderId) => {
+  const response = await api.put(`/staff/orders/${orderId}/approve-return`);
+  return response.data;
+};
+
+export const rejectReturn = async (orderId, reason) => {
+  const response = await api.put(`/staff/orders/${orderId}/reject-return`, { reason });
+  return response.data;
+};
