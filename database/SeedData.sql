@@ -68,14 +68,14 @@ GO
    ============================================================ */
 SET IDENTITY_INSERT Users ON;
 INSERT INTO Users (UserId, FullName, Email, PasswordHash, Phone, Role, Status) VALUES
-(1, N'Admin Hệ Thống', 'admin@fashionstore.vn', 'admin123', '0909123456', 'admin', 'active'),
-(2, N'Nhân Viên Kho', 'staff@fashionstore.vn', 'admin123', '0909234567', 'staff', 'active'),
-(3, N'Nguyễn Minh Tuấn', 'tuan.nguyen@email.com', 'admin123', '0912345678', 'customer', 'active'),
-(4, N'Trần Thu Hà', 'ha.tran@email.com', 'admin123', '0923456789', 'customer', 'active'),
-(5, N'Lê Hoàng Nam', 'nam.le@email.com', 'admin123', '0934567890', 'customer', 'active'),
-(6, N'Phạm Thị Mai', 'mai.pham@email.com', 'admin123', '0945678901', 'customer', 'active'),
-(7, N'Đào Huy', 'daohuy1@gmail.com', 'admin123', '0956789012', 'customer', 'active'),
-(8, N'Hồ Ngọc Hân', 'han.ho@email.com', 'admin123', '0967890123', 'customer', 'active');
+(1, N'Admin Hệ Thống', 'admin@fashionstore.vn', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0909123456', 'admin', 'active'),
+(2, N'Nhân Viên Kho', 'staff@fashionstore.vn', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0909234567', 'staff', 'active'),
+(3, N'Nguyễn Minh Tuấn', 'tuan.nguyen@email.com', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0912345678', 'customer', 'active'),
+(4, N'Trần Thu Hà', 'ha.tran@email.com', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0923456789', 'customer', 'active'),
+(5, N'Lê Hoàng Nam', 'nam.le@email.com', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0934567890', 'customer', 'active'),
+(6, N'Phạm Thị Mai', 'mai.pham@email.com', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0945678901', 'customer', 'active'),
+(7, N'Đào Huy', 'daohuy1@gmail.com', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0956789012', 'customer', 'active'),
+(8, N'Hồ Ngọc Hân', 'han.ho@email.com', '$2a$10$NeNZaHk4pyzYOgh8FzBceu3nxJPxeMDMs5RgxWYTDff2iUk1Qhtlu', '0967890123', 'customer', 'active');
 SET IDENTITY_INSERT Users OFF;
 GO
 

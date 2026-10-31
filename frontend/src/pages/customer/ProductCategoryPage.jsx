@@ -1,18 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import ProductCard from '../../components/customer/ProductCard';
 import { getCategoryById } from '../../services/customerCategoryService';
 import { getProductsByCategory } from '../../services/customerProductService';
+import { AuthContext } from '../../context/AuthContext';
 
 const SORT_OPTIONS = [
+  { value: 'all', label: 'Tất cả' },
   { value: 'newest', label: 'Mới nhất' },
+  { value: 'bestseller', label: 'Bán chạy' },
+  { value: 'discount', label: 'Giảm giá' },
+  { value: 'favorites', label: 'Yêu thích' },
   { value: 'price_asc', label: 'Giá tăng dần' },
   { value: 'price_desc', label: 'Giá giảm dần' },
-  { value: 'bestseller', label: 'Bán chạy' },
-  { value: 'discount', label: 'Giảm giá nhiều' },
 ];
 
 export default function ProductCategoryPage() {
+  const { user } = useContext(AuthContext);
   const { id } = useParams();
   const [category, setCategory] = useState(null);
   const [products, setProducts] = useState([]);
@@ -20,9 +24,15 @@ export default function ProductCategoryPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(0);
   const [size] = useState(12);
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState('all');
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
+
+  useEffect(() => {
+    if (!user && sortBy === 'favorites') {
+      setSortBy('all');
+    }
+  }, [user, sortBy]);
 
   // Load category only when id changes
   useEffect(() => {
@@ -89,7 +99,8 @@ export default function ProductCategoryPage() {
           <div className="shop-toolbar-sort">
             <label>Sắp xếp:</label>
             <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setPage(0); }}>
-              {SORT_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+              {SORT_OPTIONS.filter((opt) => user || opt.value !== 'favorites')
+                .map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
         </div>

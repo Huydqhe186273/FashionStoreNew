@@ -12,7 +12,7 @@ import {
 } from '../services/cartService';
 import { getProductVariants } from '../services/customerProductService';
 import { getActiveCoupons, applyCoupon } from '../services/couponService';
-import { getUserAddresses, createAddress } from '../services/addressService';
+import { getAddresses, createAddress } from '../services/addressService';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import './Cart.css';
@@ -83,7 +83,7 @@ export default function Cart() {
   const loadAddresses = useCallback(async () => {
     if (!userId) return;
     try {
-      const list = await getUserAddresses(userId);
+      const list = await getAddresses(userId);
       setSavedAddresses(list || []);
       if (list && list.length > 0) {
         const defaultAddr = list.find((a) => a.isDefault) || list[0];

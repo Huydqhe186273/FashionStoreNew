@@ -80,4 +80,24 @@ public class OrderController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    @PostMapping("/{orderId}/return-request")
+    public ResponseEntity<?> createReturnRequest(
+            @PathVariable Integer orderId,
+            @RequestParam Integer userId,
+            @RequestBody(required = false) Map<String, String> body) {
+        try {
+            String reason = body != null && body.containsKey("reason") ? body.get("reason") : "Yêu cầu trả hàng & hoàn tiền";
+            com.example.myapp.entity.ReturnRequest request = orderService.createReturnRequest(orderId, userId, reason);
+            return ResponseEntity.ok(Map.of(
+                    "message", "Đã gửi yêu cầu trả hàng & hoàn tiền thành công!",
+                    "returnId", request.getReturnId(),
+                    "status", request.getStatus(),
+                    "refundAmount", request.getRefundAmount() != null ? request.getRefundAmount() : 0
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

@@ -19,4 +19,7 @@ public interface ReturnRequestRepository extends JpaRepository<ReturnRequest, In
         List<ReturnRequest> list = findByOrderIdOrderByCreatedAtDesc(orderId);
         return (list != null && !list.isEmpty()) ? Optional.of(list.get(0)) : Optional.empty();
     }
+
+    @Query("SELECT r FROM ReturnRequest r WHERE r.Order.User.UserId = :userId ORDER BY r.CreatedAt DESC")
+    List<ReturnRequest> findByUserIdOrderByCreatedAtDesc(@Param("userId") Integer userId);
 }

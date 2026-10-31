@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import StarRating from './StarRating';
 import { createReview } from '../../services/customerReviewService';
 
-export default function ReviewForm({ productId, orderItemId, onSubmitted }) {
+export default function ReviewForm({ orderItemId, onSubmitted }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
@@ -21,12 +21,13 @@ export default function ReviewForm({ productId, orderItemId, onSubmitted }) {
     }
     setBusy(true);
     try {
-      await createReview({ productId, orderItemId, rating, comment: comment.trim() });
+      await createReview({ orderItemId, rating, comment: comment.trim() });
       setComment('');
       setRating(5);
       if (onSubmitted) onSubmitted();
     } catch (err) {
-      setError(err?.message || 'Không thể gửi đánh giá.');
+      const response = err.response?.data;
+      setError(typeof response === 'string' ? response : response?.message || response?.error || err?.message || 'Không thể gửi đánh giá.');
     } finally {
       setBusy(false);
     }
@@ -36,10 +37,13 @@ export default function ReviewForm({ productId, orderItemId, onSubmitted }) {
     <form className="review-form" onSubmit={handleSubmit}>
       <h4>Viết đánh giá của bạn</h4>
       <div className="review-form-row">
-        <label>Chất lượng:</label>
+        <label>Đánh giá của bạn</label>
         <StarRating value={rating} onChange={setRating} />
+        <span className="review-center-rating-value">{rating}/5</span>
       </div>
+      <label className="review-center-comment-label" htmlFor={`review-comment-${orderItemId}`}>Nhận xét</label>
       <textarea
+        id={`review-comment-${orderItemId}`}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         placeholder="Chia sẻ cảm nhận của bạn về sản phẩm…"

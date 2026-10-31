@@ -1108,6 +1108,68 @@ tr:hover td {
   line-height: 1.3;
 }
 
+.product-detail-name-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.favorite-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  padding: 0;
+  border: 1.5px solid #c9d1dc;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  color: #647080;
+  box-shadow: 0 3px 12px rgba(20, 28, 40, 0.12);
+  cursor: pointer;
+  transition: transform 150ms ease, color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.favorite-icon {
+  display: block;
+  font-family: Arial, sans-serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1;
+  transform: translateY(-1px);
+  -webkit-text-stroke: 0.35px currentColor;
+}
+
+.favorite-btn:hover {
+  transform: translateY(-1px);
+  background: #fff;
+  color: #c97978;
+  box-shadow: 0 5px 16px rgba(20, 28, 40, 0.16);
+}
+
+.favorite-btn.is-active { color: #c66f70; }
+.favorite-btn.is-active .favorite-icon { animation: favorite-heart-pop 220ms ease-out; }
+.favorite-btn:disabled { cursor: wait; opacity: 0.72; }
+.favorite-btn:focus-visible { outline: 2px solid #c97978; outline-offset: 3px; }
+
+.favorite-btn.product-detail-favorite {
+  position: static;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  margin-top: 1px;
+}
+
+@keyframes favorite-heart-pop {
+  0% { transform: translateY(-1px) scale(0.75); }
+  70% { transform: translateY(-1px) scale(1.18); }
+  100% { transform: translateY(-1px) scale(1); }
+}
+
 .product-detail-meta {
   display: flex;
   flex-wrap: wrap;

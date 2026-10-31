@@ -5,9 +5,11 @@ import com.example.myapp.model.CustomerProductDTO;
 import com.example.myapp.model.FilterFacetsDTO;
 import com.example.myapp.model.PageResponseDTO;
 import com.example.myapp.model.VariantInfoDTO;
+import com.example.myapp.security.CustomUserDetails;
 import com.example.myapp.service.CustomerProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -31,6 +33,7 @@ public class CustomerProductController {
 
     @GetMapping("/products")
     public ResponseEntity<PageResponseDTO<CustomerProductDTO>> getProducts(
+            @AuthenticationPrincipal CustomUserDetails user,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) String gender,
@@ -48,7 +51,7 @@ public class CustomerProductController {
             @RequestParam(required = false) Integer minViewCount,
             @RequestParam(required = false) Integer minSizeCount,
             @RequestParam(required = false) Integer minColorCount,
-            @RequestParam(required = false, defaultValue = "newest") String sortBy,
+            @RequestParam(required = false, defaultValue = "all") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String sortDir,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "12") int size) {
@@ -56,7 +59,7 @@ public class CustomerProductController {
                 keyword, categoryId, gender, minPrice, maxPrice, color, variantSize,
                 inStockOnly, hasImage, hasDescription, hasDiscount,
                 minDiscountPercent, minSoldCount, minViewCount, minSizeCount, minColorCount,
-                sortBy, sortDir, page, size));
+                sortBy, sortDir, page, size, user != null ? user.getId() : null));
     }
 
     @GetMapping("/products/{id}")
@@ -77,7 +80,7 @@ public class CustomerProductController {
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) String color,
             @RequestParam(required = false) String variantSize,
-            @RequestParam(required = false, defaultValue = "newest") String sortBy,
+            @RequestParam(required = false, defaultValue = "all") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String sortDir,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "12") int size) {
@@ -87,12 +90,14 @@ public class CustomerProductController {
 
     @GetMapping("/products/category/{id}")
     public ResponseEntity<PageResponseDTO<CustomerProductDTO>> getProductsByCategory(
+            @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable("id") Integer id,
-            @RequestParam(required = false, defaultValue = "newest") String sortBy,
+            @RequestParam(required = false, defaultValue = "all") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String sortDir,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "12") int size) {
-        return ResponseEntity.ok(customerProductService.getProductsByCategory(id, sortBy, sortDir, page, size));
+        return ResponseEntity.ok(customerProductService.getProductsByCategory(
+            id, sortBy, sortDir, page, size, user != null ? user.getId() : null));
     }
 
     @GetMapping("/categories")

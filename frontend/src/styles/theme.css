@@ -1626,6 +1626,16 @@ tr:hover td { background: var(--bg-soft); }
 }
 .review-summary-count { color: var(--text-tertiary); font-size: var(--fs-sm); }
 
+.product-card-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+}
+
+.product-card-rating .star { font-size: 0.82rem; }
+
 .star-rating { display: inline-flex; gap: 2px; }
 .star {
   background: none;

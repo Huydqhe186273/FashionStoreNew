@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { getAllCategories } from '../../services/customerCategoryService';
 import { flattenCategories, slugify } from '../../services/filterService';
+import { useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
 import './ShopFilterBar.css';
 
 /* -----------------------------------------------------------------------------
@@ -31,10 +33,13 @@ const SIZE_VALUES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const POPOVER_PRICE_DEFAULT_CAP = 3_000_000;
 
 const SORT_OPTIONS = [
+  { value: 'all',        label: 'Tất cả' },
   { value: 'newest',     label: 'Mới nhất' },
+  { value: 'bestseller', label: 'Bán chạy' },
+  { value: 'discount',   label: 'Giảm giá' },
+  { value: 'favorites',  label: 'Yêu thích' },
   { value: 'price_asc',  label: 'Giá tăng dần' },
   { value: 'price_desc', label: 'Giá giảm dần' },
-  { value: 'bestseller', label: 'Bán chạy' },
 ];
 
 /* ----- helpers ----- */
@@ -114,11 +119,20 @@ function PriceSlider({ min, max, valueMin, valueMax, onChange }) {
 
 export default function ShopFilterBar({
   filters = {},
-  sortBy = 'newest',
+  sortBy = 'all',
   onFiltersChange,
   onSortChange,
   facets,
 }) {
+  const { user } = useContext(AuthContext);
+  const visibleSortOptions = user ? SORT_OPTIONS : SORT_OPTIONS.filter((option) => option.value !== 'favorites');
+
+  useEffect(() => {
+    if (!user && sortBy === 'favorites') {
+      onSortChange?.('all');
+    }
+  }, [user, sortBy, onSortChange]);
+
   /* category list ----------------------------------------------------- */
   const [categories, setCategories] = useState([]);
   useEffect(() => {
@@ -322,7 +336,7 @@ export default function ShopFilterBar({
               value={sortBy}
               onChange={(e) => onSortChange?.(e.target.value)}
             >
-              {SORT_OPTIONS.map((opt) => (
+              {visibleSortOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getReviewsByProduct } from '../../services/customerReviewService';
 import StarRating from './StarRating';
+import './ReviewList.css';
 
 const formatDate = (iso) => {
   if (!iso) return '';
@@ -17,6 +18,14 @@ export default function ReviewList({ productId, refreshKey }) {
   const [count, setCount] = useState(0);
   const [average, setAverage] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const ratingBreakdown = reviews.reduce((breakdown, review) => {
+    const rating = Number(review.rating);
+    if (Number.isInteger(rating) && rating >= 1 && rating <= 5) {
+      breakdown[rating] = (breakdown[rating] || 0) + 1;
+    }
+    return breakdown;
+  }, {});
 
   useEffect(() => {
     let cancelled = false;
@@ -37,10 +46,33 @@ export default function ReviewList({ productId, refreshKey }) {
     <section className="review-section">
       <h3>Đánh giá sản phẩm</h3>
       <div className="review-summary">
-        <div className="review-summary-score">
+        <div className="review-summary-overview">
+          <span className="review-summary-caption">Điểm trung bình</span>
           <span className="review-summary-number">{Number(average).toFixed(1)}</span>
           <StarRating value={Math.round(Number(average))} readOnly />
-          <span className="review-summary-count">{count} đánh giá</span>
+          <span className="review-summary-count">{count} lượt đánh giá</span>
+        </div>
+        <div className="review-breakdown" aria-label="Phân bố số lượt đánh giá theo sao">
+          {[5, 4, 3, 2, 1].map((rating) => {
+            const ratingCount = Number(ratingBreakdown[rating] || 0);
+            const percentage = count > 0 ? (ratingCount / count) * 100 : 0;
+            return (
+              <div className="review-breakdown-row" key={rating}>
+                <span className="review-breakdown-label">{rating} sao</span>
+                <div
+                  className="review-breakdown-track"
+                  role="progressbar"
+                  aria-label={`${rating} sao`}
+                  aria-valuemin={0}
+                  aria-valuemax={count}
+                  aria-valuenow={ratingCount}
+                >
+                  <span style={{ width: `${percentage}%` }} />
+                </div>
+                <span className="review-breakdown-count">{ratingCount}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
