@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 
 import java.util.Optional;
-
+ 
 @Repository
 public interface CartRepository extends JpaRepository<Cart, Integer> {
     @Query("SELECT c FROM Cart c WHERE c.User.UserId = :userId")
