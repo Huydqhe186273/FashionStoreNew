@@ -368,11 +368,16 @@ aside:not(.filter-sidebar) {
 }
 
 /* ============================== MAIN LAYOUT ============================== */
-main {
+.admin-sidebar ~ main,
+.admin-layout main {
   margin-left: 260px;
   flex: 1;
+  min-width: 0;
+  width: calc(100% - 260px);
+  max-width: calc(100% - 260px);
   padding: var(--s-6);
-  max-width: calc(100vw - 260px);
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s-5); }
@@ -478,8 +483,38 @@ header { display: flex; justify-content: space-between; align-items: center; mar
   border-radius: var(--r-md);
   padding: var(--s-5);
   box-shadow: var(--shadow-xs);
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
-.table-responsive { width: 100%; overflow-x: auto; }
+.table-responsive {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.table-responsive table,
+.admin-table {
+  min-width: 960px;
+}
 
 table { width: 100%; border-collapse: collapse; text-align: left; font-size: var(--fs-sm); }
 th {

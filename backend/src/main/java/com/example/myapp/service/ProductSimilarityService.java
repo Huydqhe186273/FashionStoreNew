@@ -36,10 +36,12 @@ public class ProductSimilarityService {
     @Transactional(readOnly = true)
     public List<CustomerProductDTO> getSimilarProducts(Integer productId, int limit) {
         int safeLimit = Math.max(1, Math.min(limit, 20));
-        if (productId == null) return Collections.emptyList();
+        if (productId == null)
+            return Collections.emptyList();
 
         Product currentProduct = productRepository.findById(productId).orElse(null);
-        if (currentProduct == null) return Collections.emptyList();
+        if (currentProduct == null)
+            return Collections.emptyList();
 
         List<ProductSimilarity> precomputed = productSimilarityRepository.findTopSimilar(productId);
         List<CustomerProductDTO> result = new ArrayList<>();
@@ -59,7 +61,8 @@ public class ProductSimilarityService {
             }
         }
 
-        // Fallback: If not enough precomputed similarities, calculate dynamically on-the-fly
+        // Fallback: If not enough precomputed similarities, calculate dynamically
+        // on-the-fly
         if (result.size() < safeLimit) {
             List<Product> candidates = productRepository.findAll().stream()
                     .filter(p -> !p.getProductId().equals(productId))
@@ -69,16 +72,22 @@ public class ProductSimilarityService {
                     .collect(Collectors.toList());
 
             List<ProductVariant> currentVariants = productVariantRepository.findByProductId(productId);
-            Set<String> currentColors = currentVariants.stream().map(ProductVariant::getColor).filter(Objects::nonNull).collect(Collectors.toSet());
-            Set<String> currentSizes = currentVariants.stream().map(ProductVariant::getSize).filter(Objects::nonNull).collect(Collectors.toSet());
+            Set<String> currentColors = currentVariants.stream().map(ProductVariant::getColor).filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            Set<String> currentSizes = currentVariants.stream().map(ProductVariant::getSize).filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
 
             List<ScoredProduct> scored = new ArrayList<>();
             for (Product candidate : candidates) {
-                List<ProductVariant> candidateVariants = productVariantRepository.findByProductId(candidate.getProductId());
-                Set<String> candidateColors = candidateVariants.stream().map(ProductVariant::getColor).filter(Objects::nonNull).collect(Collectors.toSet());
-                Set<String> candidateSizes = candidateVariants.stream().map(ProductVariant::getSize).filter(Objects::nonNull).collect(Collectors.toSet());
+                List<ProductVariant> candidateVariants = productVariantRepository
+                        .findByProductId(candidate.getProductId());
+                Set<String> candidateColors = candidateVariants.stream().map(ProductVariant::getColor)
+                        .filter(Objects::nonNull).collect(Collectors.toSet());
+                Set<String> candidateSizes = candidateVariants.stream().map(ProductVariant::getSize)
+                        .filter(Objects::nonNull).collect(Collectors.toSet());
 
-                double score = computeSimilarityScore(currentProduct, candidate, currentColors, currentSizes, candidateColors, candidateSizes);
+                double score = computeSimilarityScore(currentProduct, candidate, currentColors, currentSizes,
+                        candidateColors, candidateSizes);
                 scored.add(new ScoredProduct(candidate, score));
             }
 
@@ -87,7 +96,8 @@ public class ProductSimilarityService {
             for (ScoredProduct sp : scored) {
                 result.add(customerProductService.mapToDTO(sp.product, false));
                 includedIds.add(sp.product.getProductId());
-                if (result.size() >= safeLimit) break;
+                if (result.size() >= safeLimit)
+                    break;
             }
         }
 
@@ -95,7 +105,8 @@ public class ProductSimilarityService {
     }
 
     /**
-     * Batch job or trigger to precompute similarities across all active catalog products.
+     * Batch job or trigger to precompute similarities across all active catalog
+     * products.
      */
     @Transactional
     public int computeAndStoreSimilarities() {
@@ -104,15 +115,18 @@ public class ProductSimilarityService {
                 .filter(p -> !Boolean.TRUE.equals(p.getIsTest()))
                 .collect(Collectors.toList());
 
-        if (products.size() < 2) return 0;
+        if (products.size() < 2)
+            return 0;
 
         // Preload variants for efficiency
         Map<Integer, Set<String>> colorsMap = new HashMap<>();
         Map<Integer, Set<String>> sizesMap = new HashMap<>();
         for (Product p : products) {
             List<ProductVariant> variants = productVariantRepository.findByProductId(p.getProductId());
-            colorsMap.put(p.getProductId(), variants.stream().map(ProductVariant::getColor).filter(Objects::nonNull).collect(Collectors.toSet()));
-            sizesMap.put(p.getProductId(), variants.stream().map(ProductVariant::getSize).filter(Objects::nonNull).collect(Collectors.toSet()));
+            colorsMap.put(p.getProductId(), variants.stream().map(ProductVariant::getColor).filter(Objects::nonNull)
+                    .collect(Collectors.toSet()));
+            sizesMap.put(p.getProductId(), variants.stream().map(ProductVariant::getSize).filter(Objects::nonNull)
+                    .collect(Collectors.toSet()));
         }
 
         int totalSaved = 0;
@@ -121,13 +135,13 @@ public class ProductSimilarityService {
         for (Product a : products) {
             List<ScoredProduct> scoredOthers = new ArrayList<>();
             for (Product b : products) {
-                if (a.getProductId().equals(b.getProductId())) continue;
+                if (a.getProductId().equals(b.getProductId()))
+                    continue;
 
                 double score = computeSimilarityScore(
                         a, b,
                         colorsMap.get(a.getProductId()), sizesMap.get(a.getProductId()),
-                        colorsMap.get(b.getProductId()), sizesMap.get(b.getProductId())
-                );
+                        colorsMap.get(b.getProductId()), sizesMap.get(b.getProductId()));
                 scoredOthers.add(new ScoredProduct(b, score));
             }
 
@@ -157,8 +171,8 @@ public class ProductSimilarityService {
     }
 
     private double computeSimilarityScore(Product a, Product b,
-                                          Set<String> colorsA, Set<String> sizesA,
-                                          Set<String> colorsB, Set<String> sizesB) {
+            Set<String> colorsA, Set<String> sizesA,
+            Set<String> colorsB, Set<String> sizesB) {
         double score = 0.0;
 
         // 1. Category match (Weight 0.40)
@@ -208,7 +222,8 @@ public class ProductSimilarityService {
     }
 
     private double jaccardSimilarity(Set<String> setA, Set<String> setB) {
-        if (setA == null || setB == null || setA.isEmpty() || setB.isEmpty()) return 0.0;
+        if (setA == null || setB == null || setA.isEmpty() || setB.isEmpty())
+            return 0.0;
         Set<String> intersection = new HashSet<>(setA);
         intersection.retainAll(setB);
         Set<String> union = new HashSet<>(setA);

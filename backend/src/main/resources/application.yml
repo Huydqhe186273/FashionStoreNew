@@ -53,3 +53,9 @@ payos:
   client-id: ${PAYOS_CLIENT_ID:e14c939a-e8da-4b9f-81bd-25f05b31417c}
   api-key: ${PAYOS_API_KEY:6ab5f354-952c-4bbf-856c-042ae5731b1a}
   checksum-key: ${PAYOS_CHECKSUM_KEY:4467e43ad05fc1268f90844cfe29d92a7e37e32dfdb08dc59d3dac123ee23a51}
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:dgaqvhz4}
+  api-key: ${CLOUDINARY_API_KEY:866399415591917}
+  api-secret: ${CLOUDINARY_API_SECRET:ovLTmqmu-_jCt2-MrGEoYKJo9l4}
+

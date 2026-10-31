@@ -8,10 +8,7 @@
  * ============================================================ */
 
 .shop-page {
-  padding: 16px;
-  /* keep the 6-col grid in a predictable container so 1fr columns
-     never balloon to 100% wide when the grid item's content is
-     overflowing. */
+  padding: 8px 0 24px;
   max-width: 1280px;
   margin: 0 auto;
   width: 100%;

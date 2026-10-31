@@ -292,6 +292,8 @@ export default function ManageReports() {
                     </tr>
                   ) : (
                     revenueReport.dailyBreakdown.map((d, idx) => {
+                      const totalRev = Number(revenueReport.totalRevenue) || 1;
+                      const percentOfTotal = ((Number(d.revenue) || 0) / totalRev * 100).toFixed(1);
                       const maxDaily = Math.max(...revenueReport.dailyBreakdown.map((x) => Number(x.revenue) || 1));
                       const percentOfMax = Math.min(100, Math.round(((Number(d.revenue) || 0) / maxDaily) * 100));
 
@@ -310,11 +312,103 @@ export default function ManageReports() {
                           </td>
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <div style={{ flex: 1, height: '8px', background: '#f3f4f6', borderRadius: '4px', overflow: 'hidden' }}>
+                              <div
+                                style={{ flex: 1, height: '8px', background: '#f3f4f6', borderRadius: '4px', overflow: 'hidden' }}
+                                title={`Doanh thu ngày ${d.formattedDate}: ${formatVND(d.revenue)} / Tổng ${formatVND(totalRev)} (${percentOfTotal}%)`}
+                              >
                                 <div style={{ width: `${percentOfMax}%`, height: '100%', background: '#10b981', borderRadius: '4px' }}></div>
                               </div>
-                              <span style={{ fontSize: '0.75rem', color: '#6b7280', minWidth: '40px' }}>{percentOfMax}%</span>
+                              <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#10b981', minWidth: '48px' }}>
+                                {percentOfTotal}%
+                              </span>
                             </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Delivered Orders Detail Table */}
+          <div className="table-card" style={{ marginBottom: '20px' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h4 style={{ margin: 0, fontSize: '1rem', color: '#1f2937' }}>
+                🧾 Danh Sách Chi Tiết Đơn Hàng Giao Thành Công (Đóng Góp Doanh Thu)
+              </h4>
+              <span style={{ fontSize: '0.82rem', color: '#6b7280' }}>
+                Tổng cộng: <strong>{revenueReport.deliveredOrders?.length || 0} đơn hàng</strong>
+              </span>
+            </div>
+
+            <div style={{ overflowX: 'auto', maxHeight: '420px' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '90px' }}>MÃ ĐƠN</th>
+                    <th>KHÁCH HÀNG</th>
+                    <th>EMAIL</th>
+                    <th>NGÀY ĐẶT / GIAO</th>
+                    <th style={{ textAlign: 'center' }}>TRẠNG THÁI</th>
+                    <th style={{ textAlign: 'center' }}>THANH TOÁN</th>
+                    <th style={{ textAlign: 'right' }}>SỐ TIỀN</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {!revenueReport.deliveredOrders || revenueReport.deliveredOrders.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '24px', color: '#9ca3af' }}>
+                        Không có đơn hàng DELIVERED nào trong khoảng thời gian này.
+                      </td>
+                    </tr>
+                  ) : (
+                    revenueReport.deliveredOrders.map((o) => {
+                      const orderDate = o.createdAt
+                        ? new Date(o.createdAt).toLocaleDateString('vi-VN', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : 'N/A';
+
+                      return (
+                        <tr key={o.orderId}>
+                          <td>
+                            <strong style={{ color: '#4f46e5' }}>#{o.orderId}</strong>
+                          </td>
+                          <td>
+                            <strong>{o.customerName}</strong>
+                          </td>
+                          <td style={{ color: '#6b7280', fontSize: '0.85rem' }}>
+                            {o.customerEmail}
+                          </td>
+                          <td style={{ fontSize: '0.85rem' }}>
+                            {orderDate}
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span className="badge badge-success">
+                              {o.orderStatus || 'DELIVERED'}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span
+                              className="badge"
+                              style={{
+                                background: o.paymentStatus?.toLowerCase() === 'paid' ? '#dcfce7' : '#fef3c7',
+                                color: o.paymentStatus?.toLowerCase() === 'paid' ? '#15803d' : '#b45309'
+                              }}
+                            >
+                              {o.paymentStatus?.toLowerCase() === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <strong style={{ color: '#10b981', fontSize: '0.95rem' }}>
+                              {formatVND(o.totalAmount)}
+                            </strong>
                           </td>
                         </tr>
                       );
@@ -373,10 +467,10 @@ export default function ManageReports() {
                 st.percentage > 0 && (
                   <div
                     key={st.status}
+                    title={`${st.label}: ${st.count} đơn (${st.percentage}%)`}
                     style={{
                       width: `${st.percentage}%`,
-                      background: st.color,
-                      title: `${st.label}: ${st.count} đơn (${st.percentage}%)`
+                      background: st.color
                     }}
                   />
                 )

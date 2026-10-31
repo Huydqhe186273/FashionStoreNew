@@ -3,8 +3,10 @@ package com.example.myapp.service;
 import com.example.myapp.entity.*;
 import com.example.myapp.repos.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,6 +25,7 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final DiscountCodeService discountCodeService;
     private final PaymentRepository paymentRepository;
+    private final ProductRepository productRepository;
     private final EmailService emailService;
     private final NotificationService notificationService;
     private final TrackingService trackingService;
@@ -44,7 +47,28 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Cart not found or empty"));
 
         if (cart.getCartItems().isEmpty()) {
-            throw new RuntimeException("Cart is empty");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Giỏ hàng đang trống");
+        }
+
+        // 0. Kiểm tra số lượng tồn kho từng sản phẩm trong giỏ hàng trước khi cho phép
+        // tạo đơn
+        for (CartItem cartItem : cart.getCartItems()) {
+            ProductVariant variant = cartItem.getVariant();
+            if (variant == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Biến thể sản phẩm không tồn tại trong hệ thống");
+            }
+            int availableStock = variant.getStockQuantity() != null ? variant.getStockQuantity() : 0;
+            int requestedQty = cartItem.getQuantity() != null ? cartItem.getQuantity() : 1;
+            if (availableStock < requestedQty) {
+                String prodName = variant.getProduct() != null ? variant.getProduct().getName() : "Sản phẩm";
+                String variantInfo = (variant.getColor() != null ? variant.getColor() : "") + " "
+                        + (variant.getSize() != null ? variant.getSize() : "");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Sản phẩm '" + prodName + " (" + variantInfo.trim()
+                                + ")' không đủ tồn kho để đặt hàng! Hiện chỉ còn " + availableStock
+                                + " chiếc (Bạn đặt: " + requestedQty + " chiếc). Vui lòng cập nhật lại giỏ hàng.");
+            }
         }
 
         // 1. Tính tổng tiền trước từ giỏ hàng
@@ -121,8 +145,8 @@ public class OrderService {
             notificationService.createNotification(
                     userId,
                     "order",
-                    "Đơn hàng #" + order.getOrderId() + " đã được tạo thành công với tổng thanh toán " + df.format(order.getTotalAmount()) + ". Vui lòng hoàn tất thanh toán qua PayOS."
-            );
+                    "Đơn hàng #" + order.getOrderId() + " đã được tạo thành công với tổng thanh toán "
+                            + df.format(order.getTotalAmount()) + ". Vui lòng hoàn tất thanh toán qua PayOS.");
         } catch (Exception e) {
             System.err.println("Lỗi tạo thông báo đơn hàng: " + e.getMessage());
         }
@@ -139,7 +163,8 @@ public class OrderService {
             try {
                 for (OrderItem item : orderItems) {
                     if (item.getVariant() != null && item.getVariant().getProduct() != null) {
-                        com.example.myapp.model.BehaviorLogRequestDTO logReq = com.example.myapp.model.BehaviorLogRequestDTO.builder()
+                        com.example.myapp.model.BehaviorLogRequestDTO logReq = com.example.myapp.model.BehaviorLogRequestDTO
+                                .builder()
                                 .userId(userId)
                                 .productId(item.getVariant().getProduct().getProductId())
                                 .actionType("purchase")
@@ -178,6 +203,19 @@ public class OrderService {
                 cartRepository.save(cart);
             }
 
+            // Tăng số lượng đã bán (soldCount) cho sản phẩm
+            if (order.getOrderItems() != null) {
+                for (OrderItem oi : order.getOrderItems()) {
+                    if (oi.getVariant() != null && oi.getVariant().getProduct() != null) {
+                        Product p = oi.getVariant().getProduct();
+                        int currentSold = p.getSoldCount() != null ? p.getSoldCount() : 0;
+                        int buyQty = oi.getQuantity() != null ? oi.getQuantity() : 1;
+                        p.setSoldCount(currentSold + buyQty);
+                        productRepository.save(p);
+                    }
+                }
+            }
+
             BigDecimal paidAmount = amount != null ? BigDecimal.valueOf(amount) : order.getTotalAmount();
             String txId = transactionId != null ? transactionId : ("PAYOS-" + orderId);
 
@@ -201,8 +239,8 @@ public class OrderService {
                 notificationService.createNotification(
                         order.getUser().getUserId(),
                         "order",
-                        "Đơn hàng #" + order.getOrderId() + " đã được thanh toán thành công qua PayOS (" + df.format(paidAmount) + "). Fashion Store đang tiến hành đóng gói sản phẩm."
-                );
+                        "Đơn hàng #" + order.getOrderId() + " đã được thanh toán thành công qua PayOS ("
+                                + df.format(paidAmount) + "). Fashion Store đang tiến hành đóng gói sản phẩm.");
             } catch (Exception e) {
                 System.err.println("Lỗi tạo thông báo thanh toán: " + e.getMessage());
             }
@@ -255,8 +293,7 @@ public class OrderService {
             notificationService.createNotification(
                     userId,
                     "order",
-                    "Đơn hàng #" + order.getOrderId() + " đã được hủy thành công theo yêu cầu của bạn."
-            );
+                    "Đơn hàng #" + order.getOrderId() + " đã được hủy thành công theo yêu cầu của bạn.");
         } catch (Exception e) {
             System.err.println("Lỗi tạo thông báo hủy đơn: " + e.getMessage());
         }
@@ -283,8 +320,7 @@ public class OrderService {
             notificationService.createNotification(
                     order.getUser().getUserId(),
                     "order",
-                    "Đơn hàng #" + order.getOrderId() + " của bạn hiện " + statusDesc + "."
-            );
+                    "Đơn hàng #" + order.getOrderId() + " của bạn hiện " + statusDesc + ".");
         } catch (Exception e) {
             System.err.println("Lỗi tạo thông báo cập nhật tiến độ đơn: " + e.getMessage());
         }
@@ -313,8 +349,12 @@ public class OrderService {
 
                 itemDTOs.add(com.example.myapp.model.OrderItemDetailDTO.builder()
                         .orderItemId(oi.getOrderItemId())
-                        .productId(oi.getVariant() != null && oi.getVariant().getProduct() != null ? oi.getVariant().getProduct().getProductId() : null)
-                        .productName(oi.getVariant() != null && oi.getVariant().getProduct() != null ? oi.getVariant().getProduct().getName() : "Sản phẩm")
+                        .productId(oi.getVariant() != null && oi.getVariant().getProduct() != null
+                                ? oi.getVariant().getProduct().getProductId()
+                                : null)
+                        .productName(oi.getVariant() != null && oi.getVariant().getProduct() != null
+                                ? oi.getVariant().getProduct().getName()
+                                : "Sản phẩm")
                         .size(oi.getVariant() != null ? oi.getVariant().getSize() : "")
                         .color(oi.getVariant() != null ? oi.getVariant().getColor() : "")
                         .quantity(oi.getQuantity())

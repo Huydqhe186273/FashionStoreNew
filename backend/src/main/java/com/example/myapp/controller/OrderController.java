@@ -26,8 +26,7 @@ public class OrderController {
             return ResponseEntity.ok(Map.of(
                     "orderId", order.getOrderId(),
                     "totalAmount", order.getTotalAmount(),
-                    "message", "Order created successfully"
-            ));
+                    "message", "Order created successfully"));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

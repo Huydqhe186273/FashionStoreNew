@@ -22,6 +22,11 @@ public class ReturnRequest {
     private BigDecimal RefundAmount;
     private LocalDateTime CreatedAt;
 
+    private String BankName;
+    private String BankAccount;
+    private String AccountHolder;
+    private String AdminNote;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "OrderId", nullable = false, foreignKey = @ForeignKey(name = "FK_Return_Orders"))
     private Order Order;

@@ -78,26 +78,34 @@ export default function ManageCategories() {
       parentId: formData.parentId ? parseInt(formData.parentId) : null
     };
 
+    if (!formData.name || !formData.name.trim()) {
+      toast.error('Tên danh mục không được để trống!');
+      return;
+    }
+    if (formData.name.trim().length > 100) {
+      toast.error('Tên danh mục không được vượt quá 100 ký tự!');
+      return;
+    }
+
     if (editingCategory) {
       // Cập nhật danh mục
       try {
         await updateCategory(editingCategory.categoryId, payload);
+        toast.success('Cập nhật danh mục thành công!');
         handleCloseModal();
         loadCategories();
       } catch (err) {
-        setCategories(prev => prev.map(c => c.categoryId === editingCategory.categoryId ? { ...c, ...payload } : c));
-        handleCloseModal();
+        toast.error(err.response?.data?.message || err.response?.data?.error || 'Có lỗi xảy ra khi cập nhật danh mục!');
       }
     } else {
       // Tạo danh mục mới
       try {
         await createCategory(payload);
+        toast.success('Tạo danh mục mới thành công!');
         handleCloseModal();
         loadCategories();
       } catch (err) {
-        const parent = mockCategories.find(x => x.categoryId === payload.parentId);
-        setCategories(prev => [...prev, { ...payload, categoryId: prev.length + 1, parentName: parent ? parent.name : null }]);
-        handleCloseModal();
+        toast.error(err.response?.data?.message || err.response?.data?.error || 'Có lỗi xảy ra khi tạo danh mục!');
       }
     }
   };
@@ -116,8 +124,7 @@ export default function ManageCategories() {
       loadCategories();
       toast.success('Đã xóa danh mục thành công!');
     } catch (err) {
-      setCategories(prev => prev.filter(c => c.categoryId !== id));
-      toast.success('Đã xóa danh mục!');
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Có lỗi xảy ra khi xóa danh mục!');
     }
   };
 
@@ -208,6 +215,7 @@ export default function ManageCategories() {
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
               required
+              maxLength={100}
               placeholder="ví dụ: Áo Sơ Mi..."
             />
           </div>
@@ -245,6 +253,7 @@ export default function ManageCategories() {
               className="input-control"
               value={formData.season}
               onChange={e => setFormData({ ...formData, season: e.target.value })}
+              maxLength={50}
               placeholder="Xuân Hè, Thu Đông, Tất cả..."
             />
           </div>

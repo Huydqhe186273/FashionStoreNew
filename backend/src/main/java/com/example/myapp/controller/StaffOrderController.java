@@ -1,5 +1,6 @@
 package com.example.myapp.controller;
 
+import com.example.myapp.model.StaffCreateReturnDTO;
 import com.example.myapp.model.StaffOrderDetailDTO;
 import com.example.myapp.model.StaffOrderListItemDTO;
 import com.example.myapp.model.UpdateOrderStatusRequestDTO;
@@ -9,9 +10,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping({"/api/staff/orders", "/api/admin/orders"})
+@RequestMapping({ "/api/staff/orders", "/api/admin/orders" })
 @CrossOrigin(origins = "*")
 @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
 public class StaffOrderController {
@@ -39,5 +41,20 @@ public class StaffOrderController {
             @PathVariable("id") Integer id,
             @RequestBody UpdateOrderStatusRequestDTO dto) {
         return ResponseEntity.ok(staffOrderService.updateOrderStatus(id, dto.getStatus()));
+    }
+
+    @PostMapping("/{id}/create-return")
+    public ResponseEntity<StaffOrderDetailDTO> createStaffReturn(
+            @PathVariable("id") Integer id,
+            @RequestBody StaffCreateReturnDTO dto) {
+        return ResponseEntity.ok(staffOrderService.createStaffReturn(id, dto));
+    }
+
+    @PostMapping("/{id}/rto")
+    public ResponseEntity<StaffOrderDetailDTO> markOrderRTO(
+            @PathVariable("id") Integer id,
+            @RequestBody(required = false) Map<String, String> body) {
+        String note = body != null ? body.get("note") : null;
+        return ResponseEntity.ok(staffOrderService.markOrderRTO(id, note));
     }
 }

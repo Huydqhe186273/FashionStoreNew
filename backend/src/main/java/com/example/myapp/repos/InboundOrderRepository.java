@@ -16,7 +16,10 @@ public interface InboundOrderRepository extends JpaRepository<InboundOrder, Inte
 
     Optional<InboundOrder> findByBatchCode(String batchCode);
 
-    @Query("SELECT DISTINCT o FROM InboundOrder o LEFT JOIN FETCH o.batches b LEFT JOIN FETCH b.variant v LEFT JOIN FETCH v.Product p LEFT JOIN FETCH o.category c WHERE " +
+    @Query("SELECT o FROM InboundOrder o " +
+           "LEFT JOIN FETCH o.category c " +
+           "LEFT JOIN FETCH o.createdBy u " +
+           "WHERE " +
            "(:keyword IS NULL OR LOWER(o.batchCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(o.supplierName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:categoryId IS NULL OR o.category.CategoryId = :categoryId) AND " +
            "(:status IS NULL OR LOWER(o.status) = LOWER(:status)) " +
@@ -25,6 +28,13 @@ public interface InboundOrderRepository extends JpaRepository<InboundOrder, Inte
                                            @Param("categoryId") Integer categoryId,
                                            @Param("status") String status);
 
-    @Query("SELECT o FROM InboundOrder o LEFT JOIN FETCH o.batches b LEFT JOIN FETCH b.variant v LEFT JOIN FETCH v.Product p LEFT JOIN FETCH o.category c WHERE o.inboundOrderId = :id")
+    @Query("SELECT o FROM InboundOrder o " +
+           "LEFT JOIN FETCH o.batches b " +
+           "LEFT JOIN FETCH b.variant v " +
+           "LEFT JOIN FETCH v.Product p " +
+           "LEFT JOIN FETCH p.Category pc " +
+           "LEFT JOIN FETCH o.category c " +
+           "LEFT JOIN FETCH o.createdBy u " +
+           "WHERE o.inboundOrderId = :id")
     Optional<InboundOrder> findByIdWithBatches(@Param("id") Integer id);
 }

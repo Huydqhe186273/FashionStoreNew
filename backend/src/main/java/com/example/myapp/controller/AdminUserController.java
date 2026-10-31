@@ -14,6 +14,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.example.myapp.model.CreateStaffRequestDTO;
 import com.example.myapp.model.StaffDTO;
 import com.example.myapp.model.UpdateUserRequestDTO;
@@ -48,7 +50,7 @@ public class AdminUserController {
 
     @PostMapping("/users")
     // Xử lý POST /api/admin/users để tạo tài khoản người dùng mới.
-    public ResponseEntity<UserDTO> createUser(@RequestBody UpdateUserRequestDTO dto) {
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UpdateUserRequestDTO dto) {
         return ResponseEntity.ok(userService.createUser(dto));
     }
 
@@ -56,7 +58,7 @@ public class AdminUserController {
     // Xử lý PUT /api/admin/users/{id} để cập nhật tài khoản khách hàng.
     public ResponseEntity<UserDTO> updateUser(
             @PathVariable("id") Integer id,
-            @RequestBody UpdateUserRequestDTO dto) {
+            @Valid @RequestBody UpdateUserRequestDTO dto) {
         return ResponseEntity.ok(userService.updateUser(id, dto));
     }
 
@@ -78,7 +80,7 @@ public class AdminUserController {
 
     @PostMapping("/staff")
     // Xử lý POST /api/admin/staff để tạo tài khoản nhân viên.
-    public ResponseEntity<StaffDTO> createStaff(@RequestBody CreateStaffRequestDTO dto) {
+    public ResponseEntity<StaffDTO> createStaff(@Valid @RequestBody CreateStaffRequestDTO dto) {
         return ResponseEntity.ok(adminUserService.createStaff(dto));
     }
 
@@ -86,7 +88,7 @@ public class AdminUserController {
     // Xử lý PUT /api/admin/staff/{id} để cập nhật thông tin nhân viên.
     public ResponseEntity<StaffDTO> updateStaff(
             @PathVariable("id") Integer id,
-            @RequestBody CreateStaffRequestDTO dto) {
+            @Valid @RequestBody CreateStaffRequestDTO dto) {
         return ResponseEntity.ok(adminUserService.updateStaff(id, dto));
     }
 

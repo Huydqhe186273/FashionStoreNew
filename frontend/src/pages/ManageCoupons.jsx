@@ -110,8 +110,17 @@ export default function ManageCoupons() {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!formData.code || !formData.code.trim()) {
+    const cleanCode = formData.code.trim().toUpperCase();
+    if (!cleanCode) {
       setErrorMsg('Vui lòng nhập mã giảm giá!');
+      return;
+    }
+    if (cleanCode.length > 50) {
+      setErrorMsg('Mã giảm giá không được vượt quá 50 ký tự!');
+      return;
+    }
+    if (!/^[A-Z0-9_-]+$/.test(cleanCode)) {
+      setErrorMsg('Mã giảm giá chỉ được chứa chữ cái, chữ số, gạch ngang (-) hoặc gạch dưới (_) !');
       return;
     }
 
@@ -121,11 +130,26 @@ export default function ManageCoupons() {
     }
 
     const valNum = Number(formData.value);
+    const minOrderVal = formData.minOrderValue ? Number(formData.minOrderValue) : 0;
     if (formData.discountType === 'percent') {
       if (valNum < 1 || valNum > 100) {
         setErrorMsg('Với loại phần trăm, giá trị giảm giá phải từ 1 đến 100%!');
         return;
       }
+    } else {
+      if (valNum <= 0) {
+        setErrorMsg('Giá trị giảm giá cố định phải lớn hơn 0đ!');
+        return;
+      }
+      if (minOrderVal > 0 && valNum > minOrderVal) {
+        setErrorMsg(`Số tiền giảm giá (${valNum.toLocaleString('vi-VN')} đ) không được lớn hơn giá trị đơn hàng tối thiểu (${minOrderVal.toLocaleString('vi-VN')} đ)!`);
+        return;
+      }
+    }
+
+    if (formData.usageLimit !== '' && (Number(formData.usageLimit) <= 0 || !Number.isInteger(Number(formData.usageLimit)))) {
+      setErrorMsg('Giới hạn lượt sử dụng phải là số nguyên lớn hơn 0!');
+      return;
     }
 
     if (formData.startDate && formData.endDate && new Date(formData.endDate) < new Date(formData.startDate)) {
@@ -134,10 +158,10 @@ export default function ManageCoupons() {
     }
 
     const payload = {
-      code: formData.code.trim().toUpperCase(),
+      code: cleanCode,
       discountType: formData.discountType,
       value: valNum,
-      minOrderValue: formData.minOrderValue ? Number(formData.minOrderValue) : 0,
+      minOrderValue: minOrderVal,
       startDate: formData.startDate ? formData.startDate : null,
       endDate: formData.endDate ? formData.endDate : null,
       usageLimit: formData.usageLimit !== '' ? Number(formData.usageLimit) : null

@@ -1,0 +1,22 @@
+package com.example.myapp.repos;
+
+import com.example.myapp.entity.ReturnRequest;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ReturnRequestRepository extends JpaRepository<ReturnRequest, Integer> {
+
+    @Query("SELECT r FROM ReturnRequest r WHERE r.Order.OrderId = :orderId ORDER BY r.CreatedAt DESC")
+    List<ReturnRequest> findByOrderIdOrderByCreatedAtDesc(@Param("orderId") Integer orderId);
+
+    default Optional<ReturnRequest> findLatestByOrderId(Integer orderId) {
+        List<ReturnRequest> list = findByOrderIdOrderByCreatedAtDesc(orderId);
+        return (list != null && !list.isEmpty()) ? Optional.of(list.get(0)) : Optional.empty();
+    }
+}

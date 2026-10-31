@@ -42,7 +42,7 @@ export default function ProductDetailPage() {
     let cancelled = false;
     setLoading(true);
     setProduct(null);
-    
+
     // Ghi nhận hành vi xem sản phẩm (Tracking)
     trackView(id);
 
@@ -61,7 +61,7 @@ export default function ProductDetailPage() {
                 setRelatedProducts(res.content.filter((p) => p.productId !== data.productId).slice(0, 4));
               }
             })
-            .catch(() => {});
+            .catch(() => { });
         }
       })
       .catch((err) => {
@@ -131,11 +131,11 @@ export default function ProductDetailPage() {
       toast.info('Sản phẩm đang hiển thị ở chế độ Demo (không kết nối được backend). Không thể thêm vào giỏ hàng thật!');
       return;
     }
-    
+
     try {
       setIsAdding(true);
       await addToCart(userId, variant.variantId, quantity);
-      
+
       // Ghi nhận hành vi thêm vào giỏ hàng
       trackAddToCart(product.productId);
 

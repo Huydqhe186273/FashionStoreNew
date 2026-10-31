@@ -15,6 +15,16 @@ export const updateOrderStatus = async (orderId, status) => {
   return response.data;
 };
 
+export const createStaffReturn = async (orderId, returnData) => {
+  const response = await api.post(`/staff/orders/${orderId}/create-return`, returnData);
+  return response.data;
+};
+
+export const markOrderRTO = async (orderId, note) => {
+  const response = await api.post(`/staff/orders/${orderId}/rto`, { note });
+  return response.data;
+};
+
 export const getUserOrders = async (userId) => {
   const response = await api.get('/orders', { params: { userId } });
   return response.data;

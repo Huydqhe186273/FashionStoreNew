@@ -15,6 +15,16 @@ export const createVariant = async (data) => {
   return response.data;
 };
 
+export const generateMatrixVariants = async (matrixData) => {
+  const response = await api.post('/admin/variants/matrix', matrixData);
+  return response.data;
+};
+
+export const createBatchVariants = async (variantsList) => {
+  const response = await api.post('/admin/variants/batch', variantsList);
+  return response.data;
+};
+
 export const updateVariant = async (id, data) => {
   const response = await api.put(`/admin/variants/${id}`, data);
   return response.data;

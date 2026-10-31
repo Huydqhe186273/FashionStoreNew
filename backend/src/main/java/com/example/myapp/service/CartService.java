@@ -4,8 +4,10 @@ import com.example.myapp.entity.*;
 import com.example.myapp.model.*;
 import com.example.myapp.repos.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -37,22 +39,27 @@ public class CartService {
         
         // Lấy thông tin phân loại sản phẩm (variant) từ DB
         ProductVariant variant = productVariantRepository.findById(request.getVariantId())
-                .orElseThrow(() -> new RuntimeException("Variant not found"));
-
-        // Kiểm tra số lượng tồn kho có đủ không
-        if (variant.getStockQuantity() < request.getQuantity()) {
-            throw new RuntimeException("Not enough stock");
-        }
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy phân loại sản phẩm"));
 
         // Kiểm tra xem sản phẩm này đã có trong giỏ hàng chưa
         Optional<CartItem> existingItemOpt = cart.getCartItems().stream()
                 .filter(item -> item.getVariant().getVariantId().equals(variant.getVariantId()))
                 .findFirst();
 
+        int existingQty = existingItemOpt.map(CartItem::getQuantity).orElse(0);
+        int newTotal = existingQty + request.getQuantity();
+
+        // Kiểm tra số lượng tồn kho cộng dồn
+        int availableStock = variant.getStockQuantity() != null ? variant.getStockQuantity() : 0;
+        if (availableStock < newTotal) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Số lượng tồn kho không đủ (Hiện còn: " + availableStock + " sản phẩm, trong giỏ bạn đã có: " + existingQty + ")");
+        }
+
         if (existingItemOpt.isPresent()) {
             // Nếu có rồi thì cộng dồn số lượng
             CartItem existingItem = existingItemOpt.get();
-            existingItem.setQuantity(existingItem.getQuantity() + request.getQuantity());
+            existingItem.setQuantity(newTotal);
             cartItemRepository.save(existingItem);
         } else {
             // Nếu chưa có thì thêm mới vào giỏ hàng
@@ -105,8 +112,10 @@ public class CartService {
                 return mapToDTO(cart);
             }
             // Kiểm tra số lượng tồn kho có đủ đáp ứng không
-            if (item.getVariant().getStockQuantity() < quantity) {
-                throw new RuntimeException("Not enough stock");
+            int availableStock = item.getVariant().getStockQuantity() != null ? item.getVariant().getStockQuantity() : 0;
+            if (availableStock < quantity) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Số lượng tồn kho không đủ đáp ứng (Hiện còn: " + availableStock + " sản phẩm)");
             }
             item.setQuantity(quantity);
         }
