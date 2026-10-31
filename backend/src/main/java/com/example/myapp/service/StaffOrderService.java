@@ -20,14 +20,20 @@ public class StaffOrderService {
     private final OrderRepository orderRepository;
     private final ProductVariantRepository productVariantRepository;
     private final InboundBatchRepository inboundBatchRepository;
+    private final com.example.myapp.repos.ReturnRequestRepository returnRequestRepository;
+    private final NotificationService notificationService;
 
     public StaffOrderService(
             OrderRepository orderRepository,
             ProductVariantRepository productVariantRepository,
-            InboundBatchRepository inboundBatchRepository) {
+            InboundBatchRepository inboundBatchRepository,
+            com.example.myapp.repos.ReturnRequestRepository returnRequestRepository,
+            NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.productVariantRepository = productVariantRepository;
         this.inboundBatchRepository = inboundBatchRepository;
+        this.returnRequestRepository = returnRequestRepository;
+        this.notificationService = notificationService;
     }
 
     public static String normalizeStatus(String status) {
@@ -44,10 +50,19 @@ public class StaffOrderService {
         List<Order> orders = orderRepository.findAllByOrderByCreatedAtDesc();
 
         if (statusFilter != null && !statusFilter.trim().isEmpty()) {
-            String normFilter = normalizeStatus(statusFilter);
-            orders = orders.stream()
-                    .filter(o -> normalizeStatus(o.getOrderStatus()).equalsIgnoreCase(normFilter))
-                    .collect(Collectors.toList());
+            if ("RETURN_PENDING".equalsIgnoreCase(statusFilter.trim())) {
+                orders = orders.stream()
+                        .filter(o -> {
+                            java.util.Optional<com.example.myapp.entity.ReturnRequest> rr = returnRequestRepository.findLatestByOrderId(o.getOrderId());
+                            return rr.isPresent() && "pending".equalsIgnoreCase(rr.get().getStatus());
+                        })
+                        .collect(Collectors.toList());
+            } else {
+                String normFilter = normalizeStatus(statusFilter);
+                orders = orders.stream()
+                        .filter(o -> normalizeStatus(o.getOrderStatus()).equalsIgnoreCase(normFilter))
+                        .collect(Collectors.toList());
+            }
         }
 
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -172,6 +187,12 @@ public class StaffOrderService {
                 throw new IllegalArgumentException("Chỉ có thể hủy đơn hàng khi ở trạng thái PENDING hoặc PROCESSING! Đơn hàng hiện tại đang là " + current + ", không thể hủy.");
             }
 
+            // Không được hủy đơn đang có yêu cầu hoàn tiền chờ duyệt
+            java.util.Optional<com.example.myapp.entity.ReturnRequest> pendingRR = returnRequestRepository.findLatestByOrderId(orderId);
+            if (pendingRR.isPresent() && "pending".equalsIgnoreCase(pendingRR.get().getStatus())) {
+                throw new IllegalArgumentException("Không thể hủy đơn hàng này vì đang có yêu cầu trả hàng & hoàn tiền chờ duyệt! Vui lòng xử lý yêu cầu hoàn tiền trước.");
+            }
+
             // Hủy đơn đã xác nhận (PROCESSING) thì cộng lại tồn kho cho lô hàng
             if ("PROCESSING".equals(current)) {
                 for (OrderItem item : order.getOrderItems()) {
@@ -204,6 +225,82 @@ public class StaffOrderService {
         return toDetailDTO(order);
     }
 
+    public StaffOrderDetailDTO approveReturn(Integer orderId) {
+        Order order = orderRepository.findByIdWithItems(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId));
+
+        java.util.Optional<com.example.myapp.entity.ReturnRequest> rrOpt = returnRequestRepository.findLatestByOrderId(orderId);
+        if (rrOpt.isEmpty() || !"pending".equalsIgnoreCase(rrOpt.get().getStatus())) {
+            throw new IllegalArgumentException("Đơn hàng này không có yêu cầu hoàn tiền nào đang chờ duyệt!");
+        }
+
+        com.example.myapp.entity.ReturnRequest rr = rrOpt.get();
+        rr.setStatus("approved");
+        returnRequestRepository.save(rr);
+
+        // Hoàn lại tồn kho cho sản phẩm
+        for (OrderItem item : order.getOrderItems()) {
+            ProductVariant variant = item.getVariant();
+            if (variant != null) {
+                int refundQty = item.getQuantity() != null ? item.getQuantity() : 0;
+                List<InboundBatch> batches = inboundBatchRepository
+                        .findActiveBatchesByVariantFifo(variant.getVariantId(), 0);
+                if (!batches.isEmpty()) {
+                    InboundBatch targetBatch = batches.get(0);
+                    targetBatch.setRemainingQuantity(targetBatch.getRemainingQuantity() + refundQty);
+                    targetBatch.setStatus("ACTIVE");
+                    inboundBatchRepository.save(targetBatch);
+                }
+                int currentStock = variant.getStockQuantity() != null ? variant.getStockQuantity() : 0;
+                variant.setStockQuantity(currentStock + refundQty);
+                productVariantRepository.save(variant);
+            }
+        }
+
+        order.setOrderStatus("RETURNED");
+        order.setPaymentStatus("refunded");
+        order = orderRepository.save(order);
+
+        try {
+            notificationService.createNotification(
+                    order.getUser().getUserId(),
+                    "order",
+                    "Yêu cầu trả hàng & hoàn tiền cho đơn hàng #" + orderId + " đã được phê duyệt thành công. Tiền sẽ được hoàn lại cho bạn."
+            );
+        } catch (Exception ignored) {}
+
+        return toDetailDTO(order);
+    }
+
+    public StaffOrderDetailDTO rejectReturn(Integer orderId, String rejectReason) {
+        Order order = orderRepository.findByIdWithItems(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId));
+
+        java.util.Optional<com.example.myapp.entity.ReturnRequest> rrOpt = returnRequestRepository.findLatestByOrderId(orderId);
+        if (rrOpt.isEmpty() || !"pending".equalsIgnoreCase(rrOpt.get().getStatus())) {
+            throw new IllegalArgumentException("Đơn hàng này không có yêu cầu hoàn tiền nào đang chờ duyệt!");
+        }
+
+        com.example.myapp.entity.ReturnRequest rr = rrOpt.get();
+        rr.setStatus("rejected");
+        String finalReason = rr.getReason() != null ? rr.getReason() : "";
+        if (rejectReason != null && !rejectReason.trim().isEmpty()) {
+            finalReason += " (Từ chối: " + rejectReason.trim() + ")";
+        }
+        rr.setReason(finalReason);
+        returnRequestRepository.save(rr);
+
+        try {
+            notificationService.createNotification(
+                    order.getUser().getUserId(),
+                    "order",
+                    "Yêu cầu trả hàng & hoàn tiền cho đơn hàng #" + orderId + " đã bị từ chối." + (rejectReason != null && !rejectReason.trim().isEmpty() ? " Lý do: " + rejectReason.trim() : "")
+            );
+        } catch (Exception ignored) {}
+
+        return toDetailDTO(order);
+    }
+
     private StaffOrderListItemDTO toListItemDTO(Order o) {
         String customerName = o.getUser() != null ? o.getUser().getFullName() : "N/A";
         String customerEmail = o.getUser() != null ? o.getUser().getEmail() : "N/A";
@@ -218,6 +315,16 @@ public class StaffOrderService {
 
         int count = o.getOrderItems() != null ? o.getOrderItems().size() : 0;
 
+        String returnStatus = null;
+        String returnReason = null;
+        BigDecimal refundAmount = null;
+        java.util.Optional<com.example.myapp.entity.ReturnRequest> rr = returnRequestRepository.findLatestByOrderId(o.getOrderId());
+        if (rr.isPresent()) {
+            returnStatus = rr.get().getStatus();
+            returnReason = rr.get().getReason();
+            refundAmount = rr.get().getRefundAmount();
+        }
+
         return StaffOrderListItemDTO.builder()
                 .orderId(o.getOrderId())
                 .customerName(customerName)
@@ -229,6 +336,9 @@ public class StaffOrderService {
                 .itemCount(count)
                 .createdAt(o.getCreatedAt())
                 .shippingAddress(addressStr)
+                .returnStatus(returnStatus)
+                .returnReason(returnReason)
+                .refundAmount(refundAmount)
                 .build();
     }
 
@@ -289,6 +399,16 @@ public class StaffOrderService {
             }
         }
 
+        String returnStatus = null;
+        String returnReason = null;
+        BigDecimal refundAmount = null;
+        java.util.Optional<com.example.myapp.entity.ReturnRequest> rr = returnRequestRepository.findLatestByOrderId(o.getOrderId());
+        if (rr.isPresent()) {
+            returnStatus = rr.get().getStatus();
+            returnReason = rr.get().getReason();
+            refundAmount = rr.get().getRefundAmount();
+        }
+
         return StaffOrderDetailDTO.builder()
                 .orderId(o.getOrderId())
                 .customerName(customerName)
@@ -301,6 +421,9 @@ public class StaffOrderService {
                 .paymentStatus(o.getPaymentStatus() != null ? o.getPaymentStatus() : "unpaid")
                 .totalAmount(o.getTotalAmount() != null ? o.getTotalAmount() : BigDecimal.ZERO)
                 .createdAt(o.getCreatedAt())
+                .returnStatus(returnStatus)
+                .returnReason(returnReason)
+                .refundAmount(refundAmount)
                 .items(items)
                 .build();
     }
