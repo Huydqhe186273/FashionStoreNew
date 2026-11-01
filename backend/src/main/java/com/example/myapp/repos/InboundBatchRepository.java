@@ -60,4 +60,46 @@ public interface InboundBatchRepository extends JpaRepository<InboundBatch, Inte
 
     @Query("SELECT b.inboundOrder.inboundOrderId, COUNT(b), COALESCE(SUM(b.initialQuantity), 0) FROM InboundBatch b GROUP BY b.inboundOrder.inboundOrderId")
     List<Object[]> countBatchesAndQuantityPerOrder();
+
+    // Phân trang danh sách lô hàng (Lazy loading / Pagination)
+    @Query(value = "SELECT b FROM InboundBatch b " +
+           "JOIN FETCH b.variant v " +
+           "JOIN FETCH v.Product p " +
+           "LEFT JOIN FETCH p.Category c " +
+           "JOIN FETCH b.inboundOrder o " +
+           "ORDER BY b.importDate DESC, b.batchId DESC",
+           countQuery = "SELECT COUNT(b) FROM InboundBatch b")
+    org.springframework.data.domain.Page<InboundBatch> findAllBatchesPaged(org.springframework.data.domain.Pageable pageable);
+
+    // Tìm kiếm phân trang danh sách lô hàng
+    @Query(value = "SELECT b FROM InboundBatch b " +
+           "JOIN FETCH b.variant v " +
+           "JOIN FETCH v.Product p " +
+           "LEFT JOIN FETCH p.Category c " +
+           "JOIN FETCH b.inboundOrder o " +
+           "WHERE (:variantId IS NULL OR v.VariantId = :variantId) AND " +
+           "(:categoryId IS NULL OR c.CategoryId = :categoryId) AND " +
+           "(:status IS NULL OR LOWER(b.status) = LOWER(:status)) AND " +
+           "(:keyword IS NULL OR LOWER(o.batchCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.Name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(v.Sku) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "ORDER BY b.importDate DESC, b.batchId DESC",
+           countQuery = "SELECT COUNT(b) FROM InboundBatch b " +
+           "JOIN b.variant v " +
+           "JOIN v.Product p " +
+           "LEFT JOIN p.Category c " +
+           "JOIN b.inboundOrder o " +
+           "WHERE (:variantId IS NULL OR v.VariantId = :variantId) AND " +
+           "(:categoryId IS NULL OR c.CategoryId = :categoryId) AND " +
+           "(:status IS NULL OR LOWER(b.status) = LOWER(:status)) AND " +
+           "(:keyword IS NULL OR LOWER(o.batchCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.Name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(v.Sku) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    org.springframework.data.domain.Page<InboundBatch> searchBatchesPaged(@Param("variantId") Integer variantId,
+                                                                         @Param("categoryId") Integer categoryId,
+                                                                         @Param("status") String status,
+                                                                         @Param("keyword") String keyword,
+                                                                         org.springframework.data.domain.Pageable pageable);
+
+    // Lấy danh sách các lô ACTIVE của danh sách variantIds để đánh dấu FIFO cực nhanh
+    @Query("SELECT b.variant.VariantId, b.batchId FROM InboundBatch b " +
+           "WHERE b.status = 'ACTIVE' AND b.remainingQuantity > 0 AND b.variant.VariantId IN :variantIds " +
+           "ORDER BY b.importDate ASC, b.batchId ASC")
+    List<Object[]> findActiveBatchesForVariantIds(@Param("variantIds") java.util.Collection<Integer> variantIds);
 }

@@ -129,6 +129,60 @@ public class InboundOrderService {
         }).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public PageResponseDTO<InboundBatchItemDTO> getBatchesPaged(Integer variantId, Integer categoryId, String status, String keyword, int page, int size) {
+        String kw = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
+        String st = (status != null && !status.trim().isEmpty()) ? status.trim() : null;
+
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, Math.min(100, size));
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(safePage, safeSize);
+
+        org.springframework.data.domain.Page<InboundBatch> pageResult;
+        if (variantId == null && categoryId == null && st == null && kw == null) {
+            pageResult = inboundBatchRepository.findAllBatchesPaged(pageable);
+        } else {
+            pageResult = inboundBatchRepository.searchBatchesPaged(variantId, categoryId, st, kw, pageable);
+        }
+
+        List<InboundBatch> batches = pageResult.getContent();
+
+        // Thu thập các variantId xuất hiện trong trang này để tìm lô ưu tiên FIFO cực nhanh
+        Set<Integer> variantIds = batches.stream()
+                .filter(b -> b.getVariant() != null)
+                .map(b -> b.getVariant().getVariantId())
+                .collect(Collectors.toSet());
+
+        Map<Integer, Integer> oldestActiveBatchPerVariant = new HashMap<>();
+        if (!variantIds.isEmpty()) {
+            List<Object[]> activeRows = inboundBatchRepository.findActiveBatchesForVariantIds(variantIds);
+            for (Object[] row : activeRows) {
+                Integer vId = (Integer) row[0];
+                Integer bId = (Integer) row[1];
+                if (!oldestActiveBatchPerVariant.containsKey(vId)) {
+                    oldestActiveBatchPerVariant.put(vId, bId);
+                }
+            }
+        }
+
+        List<InboundBatchItemDTO> dtos = batches.stream().map(b -> {
+            InboundBatchItemDTO dto = toBatchDTO(b);
+            Integer vId = b.getVariant() != null ? b.getVariant().getVariantId() : null;
+            dto.setIsCurrentFifoActive(vId != null && oldestActiveBatchPerVariant.containsKey(vId) && oldestActiveBatchPerVariant.get(vId).equals(b.getBatchId()));
+            return dto;
+        }).collect(Collectors.toList());
+
+        return PageResponseDTO.<InboundBatchItemDTO>builder()
+                .content(dtos)
+                .page(safePage + 1)
+                .size(safeSize)
+                .totalElements(pageResult.getTotalElements())
+                .totalPages(pageResult.getTotalPages())
+                .first(pageResult.isFirst())
+                .last(pageResult.isLast())
+                .build();
+    }
+
     @Transactional
     public InboundOrderDTO createInboundOrder(CreateInboundOrderRequestDTO dto, Integer userId) {
         if (dto.getItems() == null || dto.getItems().isEmpty()) {

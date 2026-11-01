@@ -41,9 +41,11 @@ export default function ManageInbound() {
   const [modalDataLoading, setModalDataLoading] = useState(false);
   const [stats, setStats] = useState({ totalOrders: 0, totalBatches: 0, activeBatches: 0, depletedBatches: 0, totalRemainingStock: 0 });
 
-  // Pagination for Batches tab
+  // Pagination for Batches tab (Server-side Lazy loading)
   const [batchPage, setBatchPage] = useState(1);
   const [batchPageSize, setBatchPageSize] = useState(25);
+  const [totalBatches, setTotalBatches] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Filters for Orders tab
   const [orderSearch, setOrderSearch] = useState('');
@@ -74,27 +76,33 @@ export default function ManageInbound() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  // Load Categories, stats, products & variants on mount
+  // Tối ưu lazyload: Chỉ tải danh mục & stats khi vào trang; sản phẩm & biến thể chỉ tải khi mở modal tạo phiếu nhập
   useEffect(() => {
     loadCategories();
     loadStats();
-    loadProducts();
-    loadVariants();
   }, []);
 
-  // Reset pagination when Batches filters change
+  // Reload orders when switching to orders tab or orders filters change
+  useEffect(() => {
+    if (activeTab === 'orders') {
+      loadInboundOrders();
+    }
+  }, [activeTab, orderSearch, orderCategoryFilter]);
+
+  // Reset to page 1 when Batches filters change
   useEffect(() => {
     setBatchPage(1);
   }, [batchSearch, batchStatusFilter, batchCategoryFilter]);
 
-  // Reload data when switching tabs or filter changes
+  // Reload batches when activeTab is batches, or page/pageSize/filters change (debounced 200ms)
   useEffect(() => {
-    if (activeTab === 'orders') {
-      loadInboundOrders();
-    } else {
-      loadInboundBatches(false);
+    if (activeTab === 'batches') {
+      const timer = setTimeout(() => {
+        loadInboundBatches(false, batchPage, batchPageSize);
+      }, 200);
+      return () => clearTimeout(timer);
     }
-  }, [activeTab, orderSearch, orderCategoryFilter, batchSearch, batchStatusFilter, batchCategoryFilter]);
+  }, [activeTab, batchSearch, batchStatusFilter, batchCategoryFilter, batchPage, batchPageSize]);
 
   const loadCategories = async () => {
     try {
@@ -149,15 +157,31 @@ export default function ManageInbound() {
     }
   };
 
-  const loadInboundBatches = async (silent = false) => {
+  const loadInboundBatches = async (silent = false, targetPage = batchPage, targetSize = batchPageSize) => {
     if (!silent) setLoading(true);
     try {
-      const params = {};
-      if (batchSearch) params.keyword = batchSearch;
+      const params = {
+        page: targetPage,
+        size: targetSize
+      };
+      if (batchSearch && batchSearch.trim()) params.keyword = batchSearch.trim();
       if (batchStatusFilter) params.status = batchStatusFilter;
       if (batchCategoryFilter) params.categoryId = batchCategoryFilter;
+
       const data = await getInboundBatches(params);
-      setBatches(Array.isArray(data) ? data : []);
+      if (data && Array.isArray(data.content)) {
+        setBatches(data.content);
+        setTotalBatches(data.totalElements || 0);
+        setTotalPages(data.totalPages || 1);
+      } else if (Array.isArray(data)) {
+        setBatches(data);
+        setTotalBatches(data.length);
+        setTotalPages(Math.max(1, Math.ceil(data.length / targetSize)));
+      } else {
+        setBatches([]);
+        setTotalBatches(0);
+        setTotalPages(1);
+      }
     } catch (err) {
       console.error('Error loading batches:', err);
     } finally {
@@ -658,7 +682,7 @@ export default function ManageInbound() {
                       </td>
                     </tr>
                   ) : (
-                    batches.slice((batchPage - 1) * batchPageSize, batchPage * batchPageSize).map(b => {
+                    batches.map(b => {
                       const isDepleted = b.status === 'DEPLETED' || b.remainingQuantity === 0;
                       return (
                         <tr key={b.batchId} style={{ opacity: isDepleted ? 0.65 : 1 }}>
@@ -727,7 +751,7 @@ export default function ManageInbound() {
             </div>
 
             {/* Batches Pagination Footer */}
-            {batches.length > 0 && (
+            {totalBatches > 0 && (
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -738,7 +762,7 @@ export default function ManageInbound() {
                 gap: '12px'
               }}>
                 <div style={{ fontSize: '0.88rem', color: '#6b7280' }}>
-                  Hiển thị <strong>{Math.min((batchPage - 1) * batchPageSize + 1, batches.length)}</strong> - <strong>{Math.min(batchPage * batchPageSize, batches.length)}</strong> trên tổng số <strong>{batches.length.toLocaleString('vi-VN')}</strong> lô hàng
+                  Hiển thị <strong>{Math.min((batchPage - 1) * batchPageSize + 1, totalBatches)}</strong> - <strong>{Math.min(batchPage * batchPageSize, totalBatches)}</strong> trên tổng số <strong>{totalBatches.toLocaleString('vi-VN')}</strong> lô hàng
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>Mỗi trang:</span>
@@ -764,14 +788,14 @@ export default function ManageInbound() {
                     ◀ Trước
                   </button>
                   <span style={{ fontSize: '0.88rem', fontWeight: '600', color: '#374151' }}>
-                    {batchPage} / {Math.max(1, Math.ceil(batches.length / batchPageSize))}
+                    {batchPage} / {Math.max(1, totalPages)}
                   </span>
                   <button
                     type="button"
                     className="btn-action"
-                    disabled={batchPage >= Math.ceil(batches.length / batchPageSize)}
-                    onClick={() => setBatchPage(p => Math.min(Math.ceil(batches.length / batchPageSize), p + 1))}
-                    style={{ padding: '6px 12px', fontSize: '0.85rem', cursor: batchPage >= Math.ceil(batches.length / batchPageSize) ? 'not-allowed' : 'pointer' }}
+                    disabled={batchPage >= totalPages}
+                    onClick={() => setBatchPage(p => Math.min(totalPages, p + 1))}
+                    style={{ padding: '6px 12px', fontSize: '0.85rem', cursor: batchPage >= totalPages ? 'not-allowed' : 'pointer' }}
                   >
                     Sau ▶
                   </button>

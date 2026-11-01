@@ -52,11 +52,18 @@ public class InboundOrderController {
     }
 
     @GetMapping("/batches")
-    public ResponseEntity<List<InboundBatchItemDTO>> getBatches(
+    public ResponseEntity<?> getBatches(
             @RequestParam(required = false) Integer variantId,
             @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String keyword) {
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        if (page != null) {
+            int p = page > 0 ? page - 1 : 0;
+            int s = (size != null && size > 0) ? size : 25;
+            return ResponseEntity.ok(inboundOrderService.getBatchesPaged(variantId, categoryId, status, keyword, p, s));
+        }
         return ResponseEntity.ok(inboundOrderService.getBatches(variantId, categoryId, status, keyword));
     }
 
