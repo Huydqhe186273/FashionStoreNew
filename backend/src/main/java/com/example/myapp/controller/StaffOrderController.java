@@ -57,4 +57,17 @@ public class StaffOrderController {
         String note = body != null ? body.get("note") : null;
         return ResponseEntity.ok(staffOrderService.markOrderRTO(id, note));
     }
+
+    @PutMapping("/{id}/approve-return")
+    public ResponseEntity<StaffOrderDetailDTO> approveReturn(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(staffOrderService.approveReturn(id));
+    }
+
+    @PutMapping("/{id}/reject-return")
+    public ResponseEntity<StaffOrderDetailDTO> rejectReturn(
+            @PathVariable("id") Integer id,
+            @RequestBody(required = false) Map<String, String> body) {
+        String reason = body != null ? body.get("reason") : "Không đủ điều kiện hoàn trả";
+        return ResponseEntity.ok(staffOrderService.rejectReturn(id, reason));
+    }
 }
