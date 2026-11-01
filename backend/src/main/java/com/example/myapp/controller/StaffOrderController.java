@@ -40,4 +40,17 @@ public class StaffOrderController {
             @RequestBody UpdateOrderStatusRequestDTO dto) {
         return ResponseEntity.ok(staffOrderService.updateOrderStatus(id, dto.getStatus()));
     }
+
+    @PutMapping("/{id}/approve-return")
+    public ResponseEntity<StaffOrderDetailDTO> approveReturn(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(staffOrderService.approveReturn(id));
+    }
+
+    @PutMapping("/{id}/reject-return")
+    public ResponseEntity<StaffOrderDetailDTO> rejectReturn(
+            @PathVariable("id") Integer id,
+            @RequestBody(required = false) java.util.Map<String, String> body) {
+        String reason = body != null ? body.get("reason") : "Không đủ điều kiện hoàn trả";
+        return ResponseEntity.ok(staffOrderService.rejectReturn(id, reason));
+    }
 }

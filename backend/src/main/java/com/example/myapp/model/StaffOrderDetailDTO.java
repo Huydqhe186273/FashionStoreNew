@@ -25,5 +25,8 @@ public class StaffOrderDetailDTO {
     private String paymentStatus;
     private BigDecimal totalAmount;
     private LocalDateTime createdAt;
+    private String returnStatus;
+    private String returnReason;
+    private BigDecimal refundAmount;
     private List<StaffOrderItemDTO> items;
 }

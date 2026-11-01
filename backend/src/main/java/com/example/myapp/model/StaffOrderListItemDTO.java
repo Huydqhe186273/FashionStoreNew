@@ -23,4 +23,7 @@ public class StaffOrderListItemDTO {
     private Integer itemCount;
     private LocalDateTime createdAt;
     private String shippingAddress;
+    private String returnStatus;
+    private String returnReason;
+    private BigDecimal refundAmount;
 }
