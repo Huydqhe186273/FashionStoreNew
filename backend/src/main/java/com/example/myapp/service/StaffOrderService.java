@@ -572,15 +572,10 @@ public class StaffOrderService {
                         .adminNote(rr.getAdminNote())
                         .build())
                 .orElse(null);
-        String returnStatus = null;
-        String returnReason = null;
-        BigDecimal refundAmount = null;
-        java.util.Optional<com.example.myapp.entity.ReturnRequest> rr = returnRequestRepository.findLatestByOrderId(o.getOrderId());
-        if (rr.isPresent()) {
-            returnStatus = rr.get().getStatus();
-            returnReason = rr.get().getReason();
-            refundAmount = rr.get().getRefundAmount();
-        }
+
+        String returnStatus = returnRequestDTO != null ? returnRequestDTO.getStatus() : null;
+        String returnReason = returnRequestDTO != null ? returnRequestDTO.getReason() : null;
+        BigDecimal refundAmount = returnRequestDTO != null ? returnRequestDTO.getRefundAmount() : null;
 
         return StaffOrderDetailDTO.builder()
                 .orderId(o.getOrderId())
