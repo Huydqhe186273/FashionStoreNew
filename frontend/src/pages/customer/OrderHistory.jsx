@@ -36,6 +36,7 @@ export default function OrderHistory() {
   const userId = user?.id;
 
   const [orders, setOrders] = useState([]);
+  const [ordersError, setOrdersError] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
 
@@ -51,27 +52,37 @@ export default function OrderHistory() {
   const [returnReasonDetail, setReturnReasonDetail] = useState('');
   const [submittingReturn, setSubmittingReturn] = useState(false);
 
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = useCallback(async (signal) => {
     if (!userId) {
       setLoading(false);
       return;
     }
     try {
       setLoading(true);
-      const data = await getUserOrders(userId);
-      setOrders(data || []);
+      setOrdersError('');
+      const data = await getUserOrders(userId, signal);
+      if (!signal?.aborted) setOrders(data || []);
     } catch (err) {
+      if (signal?.aborted) return;
       console.error('Lỗi khi tải lịch sử đơn hàng:', err);
-      toast.error('Không thể tải lịch sử đơn hàng.');
+      const status = err.response?.status;
+      const serverError = err.response?.data?.error || err.response?.data?.message;
+      const message = status
+        ? `Không thể tải lịch sử đơn hàng (HTTP ${status})${serverError ? `: ${serverError}` : '.'}`
+        : 'Không thể tải lịch sử đơn hàng. Vui lòng kiểm tra kết nối backend.';
+      setOrdersError(message);
+      toast.error(message, { duration: 10000 });
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [userId, toast]);
 
   useEffect(() => {
     if (authLoading) return;
     if (userId) {
-      fetchOrders();
+      const controller = new AbortController();
+      fetchOrders(controller.signal);
+      return () => controller.abort();
     } else {
       setLoading(false);
     }
@@ -228,7 +239,16 @@ export default function OrderHistory() {
       </div>
 
       {/* Danh sách đơn hàng */}
-      {filteredOrders.length === 0 ? (
+      {ordersError ? (
+        <div className="orders-empty-wrap" role="alert">
+          <div className="orders-empty-icon">⚠️</div>
+          <h2 className="orders-empty-title">Không thể tải lịch sử đơn hàng</h2>
+          <p className="orders-empty-desc orders-error-details">{ordersError}</p>
+          <button type="button" onClick={() => fetchOrders()} className="orders-empty-btn">
+            Thử tải lại
+          </button>
+        </div>
+      ) : filteredOrders.length === 0 ? (
         <div className="orders-empty-wrap">
           <div className="orders-empty-icon">📦</div>
           <h2 className="orders-empty-title">Không tìm thấy đơn hàng nào</h2>

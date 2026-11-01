@@ -197,6 +197,10 @@ CREATE TABLE ReturnRequests (
                     CHECK (Status IN ('pending','approved','rejected','refunded')),
     RefundAmount    DECIMAL(12,0) NULL,
     CreatedAt       DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    BankName        NVARCHAR(255) NULL,
+    BankAccount     NVARCHAR(255) NULL,
+    AccountHolder   NVARCHAR(255) NULL,
+    AdminNote       NVARCHAR(255) NULL,
     CONSTRAINT FK_Return_Orders FOREIGN KEY (OrderId) REFERENCES Orders(OrderId)
 );
 GO

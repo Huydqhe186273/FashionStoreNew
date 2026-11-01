@@ -25,8 +25,8 @@ export const markOrderRTO = async (orderId, note) => {
   return response.data;
 };
 
-export const getUserOrders = async (userId) => {
-  const response = await api.get('/orders', { params: { userId } });
+export const getUserOrders = async (userId, signal) => {
+  const response = await api.get('/orders', { params: { userId }, signal });
   return response.data;
 };
 

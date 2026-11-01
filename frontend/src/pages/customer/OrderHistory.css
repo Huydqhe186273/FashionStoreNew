@@ -443,6 +443,10 @@
   margin-bottom: 24px;
 }
 
+.orders-error-details {
+  overflow-wrap: anywhere;
+}
+
 .orders-empty-btn {
   padding: 10px 20px;
   background-color: #0f172a;

@@ -34,6 +34,7 @@ Sau đó mở thư mục `FashionStoreNew` bằng VS Code.
 1. Mở **SQL Server Management Studio (SSMS)** và đăng nhập bằng tài khoản (thường là `sa`).
 2. Trong dự án, mở file **`database/DB`** (bạn có thể mở bằng Notepad/VS Code, copy toàn bộ nội dung, dán vào New Query trong SSMS).
 3. Ấn **Execute** (hoặc F5) để chạy lệnh. Code sẽ tự động tạo Database tên là `FashionStoreDB`, tạo tất cả các bảng và chèn sẵn dữ liệu mẫu.
+4. Nếu database `FashionStoreDB` đã được tạo từ trước, chạy file **`database/migrations/V009__add_return_request_bank_details.sql`** trong SSMS để bổ sung các cột thông tin hoàn tiền còn thiếu.
 
 ### Bước 3: Cấu hình kết nối Backend - Database
 1. Trong VS Code, mở file: `backend/.env`
