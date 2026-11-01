@@ -32,4 +32,9 @@ public class DiscountCode {
     private User CreatedBy;
     @OneToMany(mappedBy = "DiscountCode")
     private List<Order> Orders = new ArrayList<>();
+
+    public LocalDateTime getEndDate() { return EndDate; }
+    public void setEndDate(LocalDateTime endDate) { this.EndDate = endDate; }
+    public LocalDateTime getStartDate() { return StartDate; }
+    public void setStartDate(LocalDateTime startDate) { this.StartDate = startDate; }
 }

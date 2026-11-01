@@ -25,19 +25,20 @@ public class StaffOrderService {
     private final InboundBatchRepository inboundBatchRepository;
     private final ProductRepository productRepository;
     private final ReturnRequestRepository returnRequestRepository;
-    private final com.example.myapp.repos.ReturnRequestRepository returnRequestRepository;
     private final NotificationService notificationService;
 
     public StaffOrderService(
             OrderRepository orderRepository,
             ProductVariantRepository productVariantRepository,
             InboundBatchRepository inboundBatchRepository,
-            NotificationService notificationService,ProductRepository productRepository) {
+            ProductRepository productRepository,
+            ReturnRequestRepository returnRequestRepository,
+            NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.productVariantRepository = productVariantRepository;
         this.inboundBatchRepository = inboundBatchRepository;
-        this.returnRequestRepository = returnRequestRepository;
         this.productRepository = productRepository;
+        this.returnRequestRepository = returnRequestRepository;
         this.notificationService = notificationService;
     }
 
@@ -269,20 +270,6 @@ public class StaffOrderService {
 
     private void restockOrderItems(Order order, boolean decrementSoldCount) {
         if (order.getOrderItems() == null) return;
-    public StaffOrderDetailDTO approveReturn(Integer orderId) {
-        Order order = orderRepository.findByIdWithItems(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId));
-
-        java.util.Optional<com.example.myapp.entity.ReturnRequest> rrOpt = returnRequestRepository.findLatestByOrderId(orderId);
-        if (rrOpt.isEmpty() || !"pending".equalsIgnoreCase(rrOpt.get().getStatus())) {
-            throw new IllegalArgumentException("Đơn hàng này không có yêu cầu hoàn tiền nào đang chờ duyệt!");
-        }
-
-        com.example.myapp.entity.ReturnRequest rr = rrOpt.get();
-        rr.setStatus("approved");
-        returnRequestRepository.save(rr);
-
-        // Hoàn lại tồn kho cho sản phẩm
         for (OrderItem item : order.getOrderItems()) {
             ProductVariant variant = item.getVariant();
             if (variant != null) {
@@ -321,6 +308,37 @@ public class StaffOrderService {
         }
     }
 
+    public StaffOrderDetailDTO approveReturn(Integer orderId) {
+        Order order = orderRepository.findByIdWithItems(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId));
+
+        java.util.Optional<com.example.myapp.entity.ReturnRequest> rrOpt = returnRequestRepository.findLatestByOrderId(orderId);
+        if (rrOpt.isEmpty() || !"pending".equalsIgnoreCase(rrOpt.get().getStatus())) {
+            throw new IllegalArgumentException("Đơn hàng này không có yêu cầu hoàn tiền nào đang chờ duyệt!");
+        }
+
+        com.example.myapp.entity.ReturnRequest rr = rrOpt.get();
+        rr.setStatus("approved");
+        returnRequestRepository.save(rr);
+
+        // Hoàn lại tồn kho cho sản phẩm
+        restockOrderItems(order, false);
+
+        order.setOrderStatus("RETURNED");
+        order.setPaymentStatus("refunded");
+        order = orderRepository.save(order);
+
+        try {
+            notificationService.createNotification(
+                    order.getUser().getUserId(),
+                    "order",
+                    "Yêu cầu trả hàng & hoàn tiền cho đơn hàng #" + orderId + " đã được phê duyệt thành công. Tiền sẽ được hoàn lại cho bạn."
+            );
+        } catch (Exception ignored) {}
+
+        return toDetailDTO(order);
+    }
+
     public StaffOrderDetailDTO markOrderRTO(Integer orderId, String note) {
         Order order = orderRepository.findByIdWithItems(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId));
@@ -352,24 +370,6 @@ public class StaffOrderService {
         rr.setCreatedAt(LocalDateTime.now());
         rr.setAdminNote(note != null && !note.trim().isEmpty() ? note.trim() : "Bưu tá đã trả lại kiện hàng nguyên vẹn về kho.");
         returnRequestRepository.save(rr);
-                }
-                int currentStock = variant.getStockQuantity() != null ? variant.getStockQuantity() : 0;
-                variant.setStockQuantity(currentStock + refundQty);
-                productVariantRepository.save(variant);
-            }
-        }
-
-        order.setOrderStatus("RETURNED");
-        order.setPaymentStatus("refunded");
-        order = orderRepository.save(order);
-
-        try {
-            notificationService.createNotification(
-                    order.getUser().getUserId(),
-                    "order",
-                    "Yêu cầu trả hàng & hoàn tiền cho đơn hàng #" + orderId + " đã được phê duyệt thành công. Tiền sẽ được hoàn lại cho bạn."
-            );
-        } catch (Exception ignored) {}
 
         return toDetailDTO(order);
     }
@@ -424,6 +424,9 @@ public class StaffOrderService {
         rr.setAdminNote(dto.getAdminNote() != null ? dto.getAdminNote().trim() : null);
         rr.setCreatedAt(LocalDateTime.now());
         returnRequestRepository.save(rr);
+
+        return toDetailDTO(order);
+    }
 
     public StaffOrderDetailDTO rejectReturn(Integer orderId, String rejectReason) {
         Order order = orderRepository.findByIdWithItems(orderId)
