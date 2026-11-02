@@ -44,7 +44,7 @@
   background: rgba(0, 0, 0, 0.4);
   padding: 8px 16px;
   border-radius: 20px;
-  backdrop-filter: blur(4px);
+  /* no blur */
   transition: background 0.2s ease, border-color 0.2s ease;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -77,7 +77,7 @@
   background: #ffffff;
   border-radius: 16px;
   padding: 30px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(229, 231, 235, 0.5);
   text-align: center;
   flex: 0 0 320px;
@@ -96,7 +96,7 @@
   background-color: #e5e7eb;
   background-image: url('https://ui-avatars.com/api/?name=User&background=111827&color=fff&size=200');
   background-size: cover;
-  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .profile-name {
@@ -126,14 +126,14 @@
   background: #ffffff;
   border-radius: 16px;
   padding: 35px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(229, 231, 235, 0.5);
   transition: box-shadow 0.25s ease;
   will-change: box-shadow;
 }
 
 .profile-card:hover {
-  box-shadow: 0 16px 28px -5px rgba(0, 0, 0, 0.09), 0 8px 12px -4px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .profile-card-title {
@@ -184,10 +184,9 @@
 }
 
 .profile-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(210, 159, 150, 0.2);
+  border-color: #b86a5d;
+  background: #fff;
+  box-shadow: 0 0 0 1px #b86a5d;
 }
 
 .profile-input:disabled {
@@ -205,23 +204,26 @@
 
 .profile-btn {
   width: 100%;
-  padding: 16px;
-  background: var(--primary-gradient);
+  padding: 12px 20px;
+  background: #b86a5d;
   color: white;
-  border: none;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 1rem;
+  border: 1px solid #b86a5d;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: opacity 0.2s, box-shadow 0.2s;
+  transition: background-color 0.15s ease;
   margin-top: 15px;
-  letter-spacing: 0.5px;
-  box-shadow: var(--shadow-glow);
+  letter-spacing: 0.3px;
+  box-shadow: none;
 }
 
 .profile-btn:hover {
-  opacity: 0.88;
-  box-shadow: 0 8px 16px rgba(210, 159, 150, 0.45);
+  background: #a4574a;
+  border-color: #a4574a;
+  box-shadow: none;
+  transform: none;
+  opacity: 1;
 }
 
 .profile-alert {
@@ -260,12 +262,13 @@
   margin-top: 10px;
 }
 .profile-sidebar-link:first-of-type { margin-top: 16px; }
-.profile-sidebar-link:hover { opacity: 0.85; transform: translateY(-1px); }
+.profile-sidebar-link:hover { opacity: 0.9; transform: none; }
 
 .profile-sidebar-link--primary {
-  background: var(--primary-gradient, linear-gradient(135deg, #e3b9b1, #c1887e));
+  background: #b86a5d;
   color: #fff;
-  box-shadow: var(--shadow-glow, 0 6px 20px -6px rgba(210,159,150,0.4));
+  border: 1px solid #b86a5d;
+  box-shadow: none;
 }
 .profile-sidebar-link--secondary {
   background: #ffffff;

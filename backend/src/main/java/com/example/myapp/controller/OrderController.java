@@ -20,12 +20,14 @@ public class OrderController {
     public ResponseEntity<?> createOrderFromCart(
             @RequestParam Integer userId,
             @RequestParam Integer addressId,
-            @RequestParam(required = false) String couponCode) {
+            @RequestParam(required = false) String couponCode,
+            @RequestParam(required = false, defaultValue = "PayOS") String paymentMethod) {
         try {
-            Order order = orderService.createOrderFromCart(userId, addressId, couponCode);
+            Order order = orderService.createOrderFromCart(userId, addressId, couponCode, paymentMethod);
             return ResponseEntity.ok(Map.of(
                     "orderId", order.getOrderId(),
                     "totalAmount", order.getTotalAmount(),
+                    "paymentMethod", paymentMethod,
                     "message", "Order created successfully"));
         } catch (Exception e) {
             e.printStackTrace();

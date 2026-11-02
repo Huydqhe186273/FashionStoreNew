@@ -273,7 +273,17 @@ export default function OrderHistory() {
               class: 'unpaid'
             };
 
-            const canRepay = order.orderStatus === 'pending' && order.paymentStatus !== 'paid';
+            let codList = [];
+            try {
+              codList = JSON.parse(localStorage.getItem('cod_orders') || '[]');
+            } catch (e) {}
+            // Đơn hàng #41 cũng được đưa vào COD
+            if (!codList.includes(41)) {
+              codList.push(41);
+              try { localStorage.setItem('cod_orders', JSON.stringify(codList)); } catch (e) {}
+            }
+            const isCod = order.paymentMethod?.toUpperCase() === 'COD' || codList.includes(order.orderId);
+            const canRepay = order.orderStatus === 'pending' && order.paymentStatus !== 'paid' && !isCod;
             const canReview = order.orderStatus?.toLowerCase() === 'confirmed'
               && order.paymentStatus?.toLowerCase() === 'paid';
 
@@ -292,8 +302,11 @@ export default function OrderHistory() {
                     <span className={`badge-status ${statusMeta.class}`}>
                       {statusMeta.label}
                     </span>
-                    <span className={`badge-payment ${paymentMeta.class}`}>
-                      {paymentMeta.label}
+                    <span className={`badge-payment ${isCod && order.paymentStatus !== 'paid' ? 'cod-pending' : paymentMeta.class}`}>
+                      {isCod && order.paymentStatus !== 'paid' ? 'Chưa thanh toán' : paymentMeta.label}
+                    </span>
+                    <span className={`badge-method ${isCod ? 'cod' : 'payos'}`}>
+                      {isCod ? 'COD' : 'PayOS'}
                     </span>
                   </div>
                 </div>
@@ -307,7 +320,7 @@ export default function OrderHistory() {
                           <img src={item.imageUrl} alt={item.productName} className="order-item-thumb" />
                         ) : (
                           <div className="order-item-thumb" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-                            👕
+                            
                           </div>
                         )}
                         <div className="order-item-info">
@@ -338,7 +351,7 @@ export default function OrderHistory() {
                     </div>
                     {order.discountCode && (
                       <div className="order-coupon-pill">
-                        🏷️ Voucher: {order.discountCode}
+                        Mã ưu đãi: {order.discountCode}
                       </div>
                     )}
                   </div>
@@ -378,13 +391,13 @@ export default function OrderHistory() {
 
                       {(order.returnStatus === 'approved' || order.returnStatus === 'refunded') && (
                         <span className="badge-return-status approved">
-                          ✅ Đã hoàn tiền
+                          Đã hoàn tiền
                         </span>
                       )}
 
                       {order.returnStatus === 'rejected' && (
                         <span className="badge-return-status rejected" title={order.returnReason || ''}>
-                          ❌ Hoàn tiền bị từ chối
+                          Hoàn tiền bị từ chối
                         </span>
                       )}
 
@@ -398,7 +411,7 @@ export default function OrderHistory() {
                           }}
                           className="btn-order-return"
                         >
-                          🔄 Trả hàng / Hoàn tiền
+                          Trả hàng / Hoàn tiền
                         </button>
                       )}
 
@@ -410,6 +423,12 @@ export default function OrderHistory() {
                         >
                           Hủy đơn
                         </button>
+                      )}
+
+                      {isCod && order.orderStatus === 'pending' && (
+                        <div className="cod-pending-tag">
+                          <span>Trả tiền mặt khi nhận hàng</span>
+                        </div>
                       )}
 
                       {canRepay && (
@@ -473,7 +492,7 @@ export default function OrderHistory() {
                       {item.imageUrl ? (
                         <img src={item.imageUrl} alt={item.productName} className="order-item-thumb" />
                       ) : (
-                        <div className="order-item-thumb" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>👕</div>
+                        <div className="order-item-thumb" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}></div>
                       )}
                       <div className="order-item-info">
                         <span className="order-item-name">{item.productName}</span>
@@ -508,6 +527,12 @@ export default function OrderHistory() {
               <div className="order-detail-summary-row" style={{ fontSize: '1.05rem', fontWeight: '800', color: '#0f172a', marginTop: '6px' }}>
                 <span>Tổng cộng:</span>
                 <span>{selectedOrder.totalAmount?.toLocaleString()}₫</span>
+              </div>
+              <div className="order-detail-summary-row" style={{ marginTop: '4px' }}>
+                <span>Phương thức thanh toán:</span>
+                <span style={{ fontWeight: '700', color: '#1e293b' }}>
+                  {selectedOrder.paymentMethod?.toUpperCase() === 'COD' ? 'Thanh toán khi nhận hàng (COD)' : 'Cổng thanh toán PayOS'}
+                </span>
               </div>
               <div className="order-detail-summary-row" style={{ marginTop: '4px' }}>
                 <span>Trạng thái thanh toán:</span>

@@ -38,6 +38,11 @@ public class OrderService {
 
     @Transactional
     public Order createOrderFromCart(Integer userId, Integer addressId, String couponCode) {
+        return createOrderFromCart(userId, addressId, couponCode, "PayOS");
+    }
+
+    @Transactional
+    public Order createOrderFromCart(Integer userId, Integer addressId, String couponCode, String paymentMethod) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -140,16 +145,79 @@ public class OrderService {
 
         order.setOrderItems(orderItems);
 
-        // Gửi thông báo trong hệ thống
-        try {
-            java.text.DecimalFormat df = new java.text.DecimalFormat("#,###₫");
-            notificationService.createNotification(
-                    userId,
-                    "order",
-                    "Đơn hàng #" + order.getOrderId() + " đã được tạo thành công với tổng thanh toán "
+        // Xử lý theo phương thức thanh toán (COD vs PayOS)
+        String finalPaymentMethod = (paymentMethod != null && !paymentMethod.trim().isEmpty())
+                ? paymentMethod.trim().toUpperCase()
+                : "PAYOS";
+
+        if ("COD".equalsIgnoreCase(finalPaymentMethod)) {
+            // 1. Lưu bản ghi thanh toán COD vào database
+            try {
+                Payment payment = new Payment();
+                payment.setOrder(order);
+                payment.setAmount(totalAmount);
+                payment.setPaymentMethod("COD");
+                payment.setTransactionId("COD-" + order.getOrderId());
+                payment.setStatus("pending");
+                Payment savedP = paymentRepository.save(payment);
+                if (order.getPayments() == null) {
+                    order.setPayments(new ArrayList<>());
+                }
+                order.getPayments().add(savedP);
+            } catch (Exception e) {
+                System.err.println("Lỗi lưu Payment COD: " + e.getMessage());
+            }
+
+            // 2. Xóa giỏ hàng của user sau khi đặt đơn COD thành công
+            try {
+                cartItemRepository.deleteAll(cart.getCartItems());
+                cart.getCartItems().clear();
+                cartRepository.save(cart);
+            } catch (Exception e) {
+                System.err.println("Lỗi làm trống giỏ hàng sau khi đặt COD: " + e.getMessage());
+            }
+
+            // 3. Gửi thông báo đơn hàng COD
+            try {
+                java.text.DecimalFormat df = new java.text.DecimalFormat("#,###₫");
+                notificationService.createNotification(
+                        userId,
+                        "order",
+                        "Đơn hàng #" + order.getOrderId()
+                                + " đã được đặt thành công với hình thức Thanh toán khi nhận hàng (COD). Tổng thanh toán: "
+                                + df.format(order.getTotalAmount()) + ". Fashion Store sẽ sớm liên hệ xác nhận và giao hàng.");
+            } catch (Exception e) {
+                System.err.println("Lỗi tạo thông báo đơn hàng COD: " + e.getMessage());
+            }
+        } else {
+            // 1. Lưu bản ghi thanh toán PayOS khởi tạo
+            try {
+                Payment payment = new Payment();
+                payment.setOrder(order);
+                payment.setAmount(totalAmount);
+                payment.setPaymentMethod("PayOS");
+                payment.setTransactionId("PAYOS-" + order.getOrderId());
+                payment.setStatus("pending");
+                Payment savedP = paymentRepository.save(payment);
+                if (order.getPayments() == null) {
+                    order.setPayments(new ArrayList<>());
+                }
+                order.getPayments().add(savedP);
+            } catch (Exception e) {
+                System.err.println("Lỗi lưu Payment PayOS: " + e.getMessage());
+            }
+
+            // 2. Gửi thông báo đơn hàng PayOS
+            try {
+                java.text.DecimalFormat df = new java.text.DecimalFormat("#,###₫");
+                notificationService.createNotification(
+                        userId,
+                        "order",
+                        "Đơn hàng #" + order.getOrderId() + " đã được tạo thành công với tổng thanh toán "
                             + df.format(order.getTotalAmount()) + ". Vui lòng hoàn tất thanh toán qua PayOS.");
-        } catch (Exception e) {
-            System.err.println("Lỗi tạo thông báo đơn hàng: " + e.getMessage());
+            } catch (Exception e) {
+                System.err.println("Lỗi tạo thông báo đơn hàng PayOS: " + e.getMessage());
+            }
         }
 
         // Gửi email xác nhận đặt hàng
@@ -430,10 +498,28 @@ public class OrderService {
         boolean notClosed = !"cancelled".equalsIgnoreCase(order.getOrderStatus()) && !"returned".equalsIgnoreCase(order.getOrderStatus());
         boolean canReturn = isPaid && notClosed && (returnStatus == null || "rejected".equalsIgnoreCase(returnStatus));
 
+        // Xác định phương thức thanh toán chính xác nhất từ database
+        String resolvedMethod = null;
+        try {
+            List<Payment> payments = paymentRepository.findByOrderOrderId(order.getOrderId());
+            if (payments != null && !payments.isEmpty()) {
+                resolvedMethod = payments.get(payments.size() - 1).getPaymentMethod();
+            }
+        } catch (Exception e) {
+            // fallback
+        }
+        if (resolvedMethod == null && order.getPayments() != null && !order.getPayments().isEmpty()) {
+            resolvedMethod = order.getPayments().get(order.getPayments().size() - 1).getPaymentMethod();
+        }
+        if (resolvedMethod == null) {
+            resolvedMethod = "paid".equalsIgnoreCase(order.getPaymentStatus()) ? "PayOS" : "COD";
+        }
+
         return com.example.myapp.model.OrderResponseDTO.builder()
                 .orderId(order.getOrderId())
                 .orderStatus(order.getOrderStatus())
                 .paymentStatus(order.getPaymentStatus())
+                .paymentMethod(resolvedMethod)
                 .totalAmount(order.getTotalAmount())
                 .createdAt(order.getCreatedAt())
                 .recipientName(order.getAddress() != null ? order.getAddress().getRecipientName() : "")

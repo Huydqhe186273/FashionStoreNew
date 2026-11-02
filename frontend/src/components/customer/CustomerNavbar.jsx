@@ -146,7 +146,9 @@ export default function CustomerNavbar() {
             onChange={(e) => setKeyword(e.target.value)}
             className="customer-search-input"
           />
-          <button type="submit" className="customer-search-btn" aria-label="Search">🔍</button>
+          <button type="submit" className="customer-search-btn" aria-label="Search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    </button>
         </form>
 
         <div className="customer-nav-actions">
@@ -158,7 +160,7 @@ export default function CustomerNavbar() {
               title="Thông báo"
               style={{ background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}
             >
-              🔔
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
               {unreadCount > 0 && (
                 <span style={{
                   position: 'absolute', top: '-4px', right: '-4px',
@@ -239,11 +241,15 @@ export default function CustomerNavbar() {
             )}
           </div>
 
-          <Link to="/shop/orders" className="customer-icon-btn" title="Đơn mua / Lịch sử đơn hàng" aria-label="Đơn mua">📦</Link>
+          <Link to="/shop/orders" className="customer-icon-btn" title="Đơn mua / Lịch sử đơn hàng" aria-label="Đơn mua">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    </Link>
           <Link to="/shop/wishlist" className="customer-icon-btn" title="Yêu thích" aria-label="Yêu thích">♡</Link>
-          <Link to="/profile" className="customer-icon-btn" title="Tài khoản" aria-label="Tài khoản">👤</Link>
+          <Link to="/profile" className="customer-icon-btn" title="Tài khoản" aria-label="Tài khoản">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </Link>
           <Link to="/shop/cart" className="customer-icon-btn" title="Giỏ hàng" aria-label="Giỏ hàng">
-            🛒 <span className="cart-badge">0</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> <span className="cart-badge">0</span>
           </Link>
         </div>
       </div>

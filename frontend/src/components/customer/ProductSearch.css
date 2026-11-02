@@ -29,8 +29,8 @@
   border-color: #94a3b8;
 }
 .ps-search:focus-within {
-  border-color: #d29f96;
-  box-shadow: 0 0 0 3px rgba(210, 159, 150, 0.2);
+  border-color: #b86a5d;
+  box-shadow: 0 0 0 1px #b86a5d;
 }
 
 .ps-search-icon {
@@ -45,7 +45,7 @@
   transition: color 0.2s ease;
 }
 .ps-search:focus-within .ps-search-icon {
-  color: #d29f96;
+  color: #b86a5d;
 }
 
 .ps-search-input {
@@ -91,21 +91,23 @@
   height: 38px;
   padding: 0 22px;
   margin-right: 2px;
-  border: 0;
+  border: 1px solid #b86a5d;
   border-radius: 999px;
-  background: #d29f96;
+  background: #b86a5d;
   color: #ffffff;
   font-family: var(--font-sans);
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: all 0.2s ease;
+  box-shadow: none;
+  transition: background-color 0.15s ease;
 }
 .ps-search-submit:hover {
-  background: #be867d;
-  box-shadow: 0 2px 6px rgba(210, 159, 150, 0.4);
+  background: #a4574a;
+  border-color: #a4574a;
+  box-shadow: none;
+  transform: none;
 }
 .ps-search-submit:active {
   transform: translateY(0);

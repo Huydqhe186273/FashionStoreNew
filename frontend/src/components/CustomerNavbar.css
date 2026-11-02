@@ -52,7 +52,7 @@
 }
 
 .customer-navbar-title span {
-  color: #d29f96 !important;
+  color: #b86a5d !important;
 }
 
 /* Navigation Links (Tabs) */
@@ -74,11 +74,11 @@
 }
 
 .customer-navbar-link:hover {
-  color: #d29f96 !important;
+  color: #b86a5d !important;
 }
 
 .customer-navbar-link.active {
-  color: #d29f96 !important;
+  color: #b86a5d !important;
   font-weight: 700;
 }
 
@@ -89,7 +89,7 @@
   left: 0;
   right: 0;
   height: 2.5px;
-  background: #d29f96;
+  background: #b86a5d;
   border-radius: 2px;
 }
 
@@ -122,11 +122,11 @@
 }
 
 .navbar-action-pill:hover {
-  border-color: #d29f96 !important;
-  color: #d29f96 !important;
+  border-color: #b86a5d !important;
+  color: #9c4c3f !important;
   background-color: #fdfaf9 !important;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(210, 159, 150, 0.15);
+  transform: none;
+  box-shadow: none;
 }
 
 .navbar-action-pill svg {
@@ -170,10 +170,11 @@
 }
 
 .logout-pill:hover {
-  background-color: #fff1f2 !important;
-  border-color: #fecdd3 !important;
-  color: #e11d48 !important;
-  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.12);
+  background-color: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #dc2626 !important;
+  box-shadow: none;
+  transform: none;
 }
 
 .logout-pill:hover svg {
@@ -187,19 +188,21 @@
 }
 
 .login-pill:hover {
-  border-color: #d29f96 !important;
-  color: #d29f96 !important;
+  border-color: #b86a5d !important;
+  color: #9c4c3f !important;
+  background-color: #fdfaf9 !important;
+  box-shadow: none;
 }
 
 .register-pill {
-  background: #d29f96 !important;
-  border-color: #d29f96 !important;
+  background: #b86a5d !important;
+  border-color: #b86a5d !important;
   color: #ffffff !important;
 }
 
 .register-pill:hover {
-  background: #be867d !important;
-  border-color: #be867d !important;
+  background: #a4574a !important;
+  border-color: #a4574a !important;
   color: #ffffff !important;
 }
 

@@ -18,7 +18,7 @@
   color: #fff;
   font-size: 0.9rem;
   font-weight: 500;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   animation: am-slideIn 0.3s ease;
 }
 .am-toast--success { background: #10b981; }
@@ -56,20 +56,20 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 9px 16px;
-  background: var(--primary-gradient, linear-gradient(135deg, #e3b9b1 0%, #c1887e 100%));
+  padding: 8px 16px;
+  background: #b86a5d;
   color: #fff;
-  border: none;
+  border: 1px solid #b86a5d;
   border-radius: 8px;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
-  box-shadow: var(--shadow-glow, 0 6px 20px -6px rgba(210,159,150,0.4));
+  transition: background-color 0.15s ease;
+  box-shadow: none;
   letter-spacing: 0.2px;
   white-space: nowrap;
 }
-.am-btn-add:hover { opacity: 0.88; }
+.am-btn-add:hover { background: #a4574a; border-color: #a4574a; }
 
 /* ---- Loading ---- */
 .am-loading {
@@ -99,18 +99,18 @@
   font-size: 0.95rem;
 }
 .am-btn-add-inline {
-  padding: 9px 20px;
-  background: var(--primary-gradient, linear-gradient(135deg, #e3b9b1 0%, #c1887e 100%));
+  padding: 8px 18px;
+  background: #b86a5d;
   color: #fff;
-  border: none;
+  border: 1px solid #b86a5d;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.875rem;
-  box-shadow: var(--shadow-glow, 0 6px 20px -6px rgba(210,159,150,0.4));
-  transition: opacity 0.2s;
+  box-shadow: none;
+  transition: background-color 0.15s ease;
 }
-.am-btn-add-inline:hover { opacity: 0.88; }
+.am-btn-add-inline:hover { background: #a4574a; border-color: #a4574a; }
 
 /* ---- Grid ---- */
 .am-grid {
@@ -133,13 +133,13 @@
   box-shadow: var(--shadow-card, 0 1px 3px rgba(0,0,0,0.05));
 }
 .am-card:hover {
-  border-color: var(--primary, #d29f96);
-  box-shadow: 0 4px 12px -2px rgba(210, 159, 150, 0.18);
+  border-color: #b86a5d;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 .am-card--selected {
-  border-color: var(--primary, #d29f96) !important;
-  background: #fdf6f5;
-  box-shadow: 0 4px 10px -2px rgba(210, 159, 150, 0.25) !important;
+  border: 1.5px solid #b86a5d !important;
+  background: #fbf3f2 !important;
+  box-shadow: none !important;
   cursor: pointer;
 }
 
@@ -160,7 +160,7 @@
   cursor: pointer;
   width: 16px;
   height: 16px;
-  accent-color: var(--primary, #d29f96);
+  accent-color: var(--primary, #b86a5d);
 }
 .am-card__name {
   font-weight: 700;
@@ -180,7 +180,7 @@
 }
 .am-badge--default {
   background: #fce7e3;
-  color: #c1887e;
+  color: #a4574a;
 }
 
 .am-card__line {
@@ -216,7 +216,7 @@
   transition: all 0.15s;
 }
 .am-action-btn--set-default {
-  color: var(--primary, #d29f96);
+  color: var(--primary, #b86a5d);
   border: none;
 }
 .am-action-btn--set-default:hover { text-decoration: underline; }
@@ -259,7 +259,7 @@
   max-width: 520px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   animation: am-popIn 0.25s ease;
 }
 .am-modal--sm { max-width: 420px; }
@@ -337,9 +337,9 @@
 }
 .am-input:focus,
 .am-textarea:focus {
-  border-color: var(--primary, #d29f96);
+  border-color: #b86a5d;
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(210, 159, 150, 0.2);
+  box-shadow: 0 0 0 1px #b86a5d;
 }
 .am-input--error {
   border-color: #ef4444 !important;
@@ -363,7 +363,7 @@
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: var(--primary, #d29f96);
+  accent-color: var(--primary, #b86a5d);
 }
 .am-checkbox-label {
   font-size: 0.875rem;
@@ -387,17 +387,17 @@
 
 .am-btn-submit {
   padding: 9px 22px;
-  background: var(--primary-gradient, linear-gradient(135deg, #e3b9b1 0%, #c1887e 100%));
+  background: #b86a5d;
   color: #fff;
-  border: none;
+  border: 1px solid #b86a5d;
   border-radius: 8px;
-  font-weight: 700;
+  font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
-  font-size: 0.875rem;
-  box-shadow: var(--shadow-glow, 0 6px 20px -6px rgba(210,159,150,0.4));
-  transition: opacity 0.2s;
+  box-shadow: none;
+  transition: background-color 0.15s ease;
 }
-.am-btn-submit:hover { opacity: 0.88; }
+.am-btn-submit:hover { background: #a4574a; border-color: #a4574a; }
 
 .am-btn-danger {
   padding: 9px 20px;

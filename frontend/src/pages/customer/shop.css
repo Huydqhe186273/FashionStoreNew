@@ -63,7 +63,7 @@
 }
 
 .shop-hero-sort-hint {
-  color: #d29f96;
+  color: #b86a5d;
   font-weight: 600;
 }
 
@@ -147,9 +147,8 @@
   min-height: 110px;
 }
 .product-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--border-color-glow);
-  box-shadow: var(--shadow-glow);
+  border-color: #b86a5d;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 .product-card-image {
   position: relative;

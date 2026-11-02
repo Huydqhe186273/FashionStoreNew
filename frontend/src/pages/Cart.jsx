@@ -62,6 +62,9 @@ export default function Cart() {
   const [variantLoading, setVariantLoading] = useState(false);
   const [updatingVariant, setUpdatingVariant] = useState(false);
 
+  // --- Phương thức thanh toán (PayOS hoặc COD) ---
+  const [paymentMethod, setPaymentMethod] = useState('PAYOS'); // 'PAYOS' hoặc 'COD'
+
   // Tải thông tin giỏ hàng
   const loadCart = useCallback(async () => {
     if (!userId) {
@@ -362,7 +365,7 @@ export default function Cart() {
     }
   };
 
-  // --- Tiến hành Thanh toán PayOS ---
+  // --- Tiến hành Đặt hàng / Thanh toán (PayOS hoặc COD) ---
   const handleCheckout = async () => {
     if (!cartData || !cartData.items || cartData.items.length === 0) {
       toast.error("Giỏ hàng của bạn đang trống!");
@@ -390,12 +393,30 @@ export default function Cart() {
 
     try {
       setLoading(true);
-      const orderResponse = await createOrder(userId, finalAddressId, appliedCoupon?.code);
-      const data = await createPaymentLink(orderResponse.orderId);
-      if (data && data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+      if (paymentMethod === 'COD') {
+        const orderResponse = await createOrder(userId, finalAddressId, appliedCoupon?.code, 'COD');
+        try {
+          const codOrders = JSON.parse(localStorage.getItem('cod_orders') || '[]');
+          if (orderResponse.orderId && !codOrders.includes(orderResponse.orderId)) {
+            codOrders.push(orderResponse.orderId);
+            localStorage.setItem('cod_orders', JSON.stringify(codOrders));
+          }
+        } catch (e) {
+          console.error("Lưu cod_orders local:", e);
+        }
+        toast.success(`Đặt hàng thành công! Đơn hàng #${orderResponse.orderId} sẽ được thanh toán khi nhận hàng.`);
+        await loadCart();
+        setTimeout(() => {
+          navigate('/shop/orders');
+        }, 1200);
       } else {
-        toast.error("Lỗi: Không nhận được URL thanh toán từ server.");
+        const orderResponse = await createOrder(userId, finalAddressId, appliedCoupon?.code, 'PayOS');
+        const data = await createPaymentLink(orderResponse.orderId);
+        if (data && data.checkoutUrl) {
+          window.location.href = data.checkoutUrl;
+        } else {
+          toast.error("Lỗi: Không nhận được URL thanh toán từ server.");
+        }
       }
     } catch (error) {
       console.error("Lỗi thanh toán:", error);
@@ -566,7 +587,7 @@ export default function Cart() {
                                   className="cart-change-size-link"
                                   title="Đổi size hoặc màu sắc trực tiếp"
                                 >
-                                  ✏️ Đổi size / màu khác
+                                  Đổi size / màu khác
                                 </button>
                               )}
                             </div>
@@ -675,9 +696,9 @@ export default function Cart() {
                               <span className="cart-address-default-pill">Mặc định</span>
                             )}
                           </div>
-                          <span className="cart-address-card-phone">📞 {addr.phone}</span>
+                          <span className="cart-address-card-phone">{addr.phone}</span>
                           <span className="cart-address-card-text">
-                            📍 {addr.addressLine}, {addr.city}
+                            {addr.addressLine}, {addr.city}
                           </span>
                         </div>
                       ))}
@@ -769,7 +790,7 @@ export default function Cart() {
                 <div className="cart-coupon-box">
                   <div className="cart-coupon-box-header">
                     <span className="cart-coupon-box-title">
-                      🏷️ Mã giảm giá / Voucher
+                      Mã giảm giá / Voucher
                     </span>
                     <button
                       type="button"
@@ -851,17 +872,70 @@ export default function Cart() {
                   (Đã bao gồm VAT & Miễn phí ship toàn quốc)
                 </div>
 
+                {/* Chọn phương thức thanh toán */}
+                <div className="cart-payment-method-box">
+                  <div className="cart-payment-method-header">
+                    <span className="cart-payment-method-title">Phương thức thanh toán</span>
+                  </div>
+                  <div className="cart-payment-options">
+                    <div
+                      className={`cart-payment-option ${paymentMethod === 'PAYOS' ? 'selected' : ''}`}
+                      onClick={() => setPaymentMethod('PAYOS')}
+                    >
+                      <div className="cart-payment-radio">
+                        <span className={`custom-radio ${paymentMethod === 'PAYOS' ? 'checked' : ''}`} />
+                      </div>
+                      <div className="cart-payment-info">
+                        <div className="cart-payment-name">
+                          <span>Chuyển khoản VietQR / PayOS</span>
+                          <span className="cart-payment-badge-online">Online</span>
+                        </div>
+                        <div className="cart-payment-desc">Quét mã QR tiện lợi, xác nhận tự động</div>
+                      </div>
+                                          </div>
+
+                    <div
+                      className={`cart-payment-option ${paymentMethod === 'COD' ? 'selected' : ''}`}
+                      onClick={() => setPaymentMethod('COD')}
+                    >
+                      <div className="cart-payment-radio">
+                        <span className={`custom-radio ${paymentMethod === 'COD' ? 'checked' : ''}`} />
+                      </div>
+                      <div className="cart-payment-info">
+                        <div className="cart-payment-name">
+                          <span>Thanh toán khi nhận hàng (COD)</span>
+                          <span className="cart-payment-badge-cod">Tiền mặt</span>
+                        </div>
+                        <div className="cart-payment-desc">Kiểm tra hàng thoải mái trước khi thanh toán</div>
+                      </div>
+                                          </div>
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   onClick={handleCheckout}
                   disabled={loading}
-                  className="cart-checkout-btn"
+                  className={`cart-checkout-btn ${paymentMethod === 'COD' ? 'cod' : 'payos'}`}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                    <line x1="1" y1="10" x2="23" y2="10" />
-                  </svg>
-                  <span>{loading ? 'Đang kết nối PayOS...' : 'Tiến hành thanh toán PayOS'}</span>
+                  {paymentMethod === 'COD' ? (
+                    <>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                        <line x1="12" y1="22.08" x2="12" y2="12" />
+                      </svg>
+                      <span>{loading ? 'Đang tạo đơn hàng...' : 'Đặt hàng (Thanh toán khi nhận hàng)'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                      </svg>
+                      <span>{loading ? 'Đang kết nối PayOS...' : 'Tiến hành thanh toán PayOS'}</span>
+                    </>
+                  )}
                 </button>
               </div>
 
@@ -871,7 +945,11 @@ export default function Cart() {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
-                  <span>Thanh toán bảo mật chuẩn quốc tế qua cổng PayOS</span>
+                  <span>
+                    {paymentMethod === 'COD'
+                      ? 'Thanh toán tiền mặt an toàn trực tiếp cho shipper khi nhận hàng'
+                      : 'Thanh toán bảo mật chuẩn quốc tế qua cổng PayOS'}
+                  </span>
                 </div>
                 <div className="trust-item">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

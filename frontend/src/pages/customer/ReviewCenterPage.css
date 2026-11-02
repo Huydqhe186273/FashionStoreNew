@@ -23,12 +23,12 @@
 .review-center-back:hover,
 .review-center-product-name:hover,
 .review-center-detail-link:hover {
-  color: #a15f43;
+  color: #9c4c3f;
 }
 
 .review-center-eyebrow {
   margin: 0 0 8px;
-  color: #a15f43;
+  color: #9c4c3f;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -177,7 +177,7 @@
 
 .review-center-review .star-rating .star.filled { color: #c47d3b; }
 .review-center-review .star-rating .star:hover { background: #f5e9dc; transform: translateY(-1px); }
-.review-center-review .star-rating .star:focus-visible { outline: 2px solid #a15f43; outline-offset: 2px; }
+.review-center-review .star-rating .star:focus-visible { outline: 2px solid #9c4c3f; outline-offset: 2px; }
 
 .review-center-rating-value {
   min-width: 34px;
@@ -210,9 +210,9 @@
 .review-center-review .review-form-textarea::placeholder { color: #9aa094; }
 
 .review-center-review .review-form-textarea:focus {
-  border-color: #a15f43;
+  border-color: #9c4c3f;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(161, 95, 67, 0.12);
+  box-shadow: 0 0 0 1px #9c4c3f;
 }
 
 .review-center-review .review-form-error {
@@ -225,10 +225,14 @@
   min-height: 42px;
   margin-top: 12px;
   padding: 0 18px;
-  border: 0;
-  border-radius: 5px;
+  border: 1px solid #b86a5d;
+  border-radius: 6px;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 600;
+  background: #b86a5d;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
 .review-center-review .review-form button[type='submit']:disabled {
