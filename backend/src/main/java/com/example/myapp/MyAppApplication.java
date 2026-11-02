@@ -17,7 +17,7 @@ public class MyAppApplication {
 			String dbUrl = getProperty("DB_URL",
 				"jdbc:sqlserver://localhost:1433;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;");
 			String dbUser = getProperty("DB_USERNAME", "sa");
-			String dbPass = getProperty("DB_PASSWORD", "123456");
+			String dbPass = getProperty("DB_PASSWORD", "sa");
 			DatabaseInitializer.initialize(dbUrl, dbUser, dbPass);
 		} catch (Exception exception) {
 			throw new IllegalStateException("Unable to create or verify FashionStoreDB", exception);
