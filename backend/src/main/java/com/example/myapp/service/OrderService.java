@@ -262,7 +262,12 @@ public class OrderService {
         @Transactional
         public void markOrderAsPaid(Integer orderId, String transactionId, Long amount,
             String payerBankName, String payerBankAccount, String payerAccountHolder) {
-        Order order = orderRepository.findById(orderId).orElse(null);
+        Order order = orderRepository.findByIdWithDetails(orderId)
+                .orElseGet(() -> orderRepository.findById(orderId).orElse(null));
+        if (order != null && "paid".equalsIgnoreCase(order.getPaymentStatus())) {
+            System.out.println("ℹ️ Đơn hàng #" + orderId + " đã ở trạng thái đã thanh toán (paid), bỏ qua xử lý lặp.");
+            return;
+        }
         if (order != null) {
             order.setPaymentStatus("paid");
             if ("pending".equalsIgnoreCase(order.getOrderStatus())) {
@@ -325,7 +330,7 @@ public class OrderService {
 
             // Gửi email biên nhận thanh toán PayOS
             try {
-                emailService.sendPaymentConfirmationEmail(order, txId, paidAmount);
+                emailService.sendPaymentConfirmationEmail(order, txId, paidAmount, payerBankName, payerBankAccount, payerAccountHolder);
             } catch (Exception e) {
                 System.err.println("Lỗi gửi email biên nhận thanh toán: " + e.getMessage());
             }

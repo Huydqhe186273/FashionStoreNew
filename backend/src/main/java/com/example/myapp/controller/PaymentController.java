@@ -159,6 +159,48 @@ public class PaymentController {
         }
     }
 
+    /**
+     * API Giả lập thanh toán thành công (Hỗ trợ phát triển và kiểm thử gửi email thông báo thanh toán)
+     */
+    @PostMapping("/simulate-success/{orderId}")
+    public ResponseEntity<?> simulatePaymentSuccess(@PathVariable Integer orderId) {
+        try {
+            Order order = orderRepository.findById(orderId).orElse(null);
+            if (order == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Không tìm thấy đơn hàng #" + orderId));
+            }
+
+            String pBankName = "MBBank (PayOS Sandbox)";
+            String pBankAccount = "VQRQANIYS7948";
+            String pAccountHolder = (order.getAddress() != null && order.getAddress().getRecipientName() != null && !order.getAddress().getRecipientName().isBlank())
+                    ? order.getAddress().getRecipientName().toUpperCase()
+                    : (order.getUser() != null && order.getUser().getFullName() != null ? order.getUser().getFullName().toUpperCase() : "DAO QUANG HUY");
+
+            long amount = order.getTotalAmount() != null ? order.getTotalAmount().longValue() : 499000L;
+            String txId = "PAYOS-SIM-" + System.currentTimeMillis();
+
+            orderService.markOrderAsPaid(
+                    orderId,
+                    txId,
+                    amount,
+                    pBankName,
+                    pBankAccount,
+                    pAccountHolder
+            );
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", "Đã xác nhận thanh toán thành công và gửi email biên nhận tới " + (order.getUser() != null ? order.getUser().getEmail() : "khách hàng"),
+                    "orderId", orderId,
+                    "transactionId", txId,
+                    "userEmail", order.getUser() != null ? order.getUser().getEmail() : ""
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/order/{orderId}")
     public ResponseEntity<?> getPaymentStatusByOrderId(@PathVariable Integer orderId) {
         return ResponseEntity.ok(paymentRepository.findByOrderOrderId(orderId));
