@@ -185,6 +185,9 @@ CREATE TABLE Payments (
     Status          NVARCHAR(20) NOT NULL DEFAULT 'pending'
                     CHECK (Status IN ('pending','success','failed','refunded')),
     PaidAt          DATETIME2 NULL,
+    PayerBankName   NVARCHAR(255) NULL,
+    PayerBankAccount NVARCHAR(255) NULL,
+    PayerAccountHolder NVARCHAR(255) NULL,
     CONSTRAINT FK_Payments_Orders FOREIGN KEY (OrderId) REFERENCES Orders(OrderId)
 );
 GO
