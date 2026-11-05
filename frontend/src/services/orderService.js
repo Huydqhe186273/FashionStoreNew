@@ -40,8 +40,11 @@ export const cancelOrder = async (orderId, userId) => {
   return response.data;
 };
 
-export const createReturnRequest = async (orderId, userId, reason) => {
-  const response = await api.post(`/orders/${orderId}/return-request`, { reason }, { params: { userId } });
+export const createReturnRequest = async (orderId, userId, payloadOrReason) => {
+  const body = typeof payloadOrReason === 'string'
+    ? { reason: payloadOrReason }
+    : (payloadOrReason || {});
+  const response = await api.post(`/orders/${orderId}/return-request`, body, { params: { userId } });
   return response.data;
 };
 

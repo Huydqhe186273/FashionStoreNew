@@ -1,3 +1,24 @@
+
+// Helper chuẩn hóa mã ngân hàng VietQR
+const getVietQrBankCode = (bankName) => {
+  if (!bankName) return 'MB';
+  const b = bankName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (b.includes('mbbank') || b.includes('quan doi') || b === 'mb') return 'MB';
+  if (b.includes('vietcombank') || b.includes('vcb') || b.includes('ngoai thuong')) return 'VCB';
+  if (b.includes('techcombank') || b.includes('tcb')) return 'TCB';
+  if (b.includes('vietinbank') || b.includes('icb') || b.includes('cong thuong')) return 'ICB';
+  if (b.includes('bidv') || b.includes('dau tu')) return 'BIDV';
+  if (b.includes('tpbank') || b.includes('tpb') || b.includes('tien phong')) return 'TPB';
+  if (b.includes('vpbank') || b.includes('vpb')) return 'VPB';
+  if (b.includes('acb') || b.includes('a chau')) return 'ACB';
+  if (b.includes('sacombank') || b.includes('stb')) return 'STB';
+  if (b.includes('hdbank') || b.includes('hdb')) return 'HDB';
+  if (b.includes('ocb')) return 'OCB';
+  if (b.includes('shb')) return 'SHB';
+  if (b.includes('msb') || b.includes('hang hai')) return 'MSB';
+  if (b.includes('vib')) return 'VIB';
+  return bankName.trim().split(' ')[0].toUpperCase();
+};
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
@@ -102,6 +123,9 @@ export default function ManageOrders() {
 
   // Return Request modal state
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [isApproveRefundModalOpen, setIsApproveRefundModalOpen] = useState(false);
+  const [refundModalOrder, setRefundModalOrder] = useState(null);
+  const [approvingRefund, setApprovingRefund] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [returningOrderId, setReturningOrderId] = useState(null);
 
@@ -291,14 +315,15 @@ export default function ManageOrders() {
   };
 
   // Handler: Mở modal hoàn hàng cho đơn DELIVERED
-  const handleOpenReturnModal = (order) => {
+  const handleOpenReturnModal = async (order) => {
+    const paymentDetails = await getStaffOrderDetail(order.orderId).catch(() => null);
     setReturnOrder(order);
     setReturnReason('Khách thử không vừa size / chật rộng');
     setCustomReason('');
     setRefundAmount(order.totalAmount || 0);
-    setBankName('');
-    setBankAccount('');
-    setAccountHolder(order.recipientName || order.customerName || '');
+    setBankName(paymentDetails?.payerBankName || '');
+    setBankAccount(paymentDetails?.payerBankAccount || '');
+    setAccountHolder(paymentDetails?.payerAccountHolder || order.recipientName || order.customerName || '');
     setAdminNote('Kiểm tra hàng nguyên tem mác, bao bì còn tốt.');
     setRestock(true);
     setIsReturnModalOpen(true);
@@ -1180,6 +1205,9 @@ export default function ManageOrders() {
               <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
                 🏦 Thông Tin Ngân Hàng Hoàn Tiền (Chuyển khoản)
               </div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '8px' }}>
+                Tài khoản được lấy từ giao dịch PayOS nếu có; nhân viên có thể kiểm tra và chỉnh sửa.
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '8px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px' }}>Tên Ngân Hàng</label>
@@ -1301,6 +1329,131 @@ export default function ManageOrders() {
           </div>
         </div>
       )}
+
+      {/* Modal Xác Nhận Hoàn Tiền Bằng Phương Thức Chuyển Khoản */}
+      {isApproveRefundModalOpen && refundModalOrder && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999, padding: '20px' }}>
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '540px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>
+                  🏦 Hoàn Tiền Chuyển Khoản
+                </h3>
+                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                  Đơn hàng #ORD-{refundModalOrder.orderId}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsApproveRefundModalOpen(false)}
+                style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#94a3b8' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Thông tin số tiền hoàn */}
+            <div style={{ backgroundColor: '#f8fafc', padding: '14px 18px', borderRadius: '10px', marginBottom: '16px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Số tiền cần hoàn lại:</div>
+                <div style={{ fontSize: '1.35rem', fontWeight: '800', color: '#dc2626' }}>
+                  {formatCurrency(refundModalOrder.returnRequest?.refundAmount != null ? refundModalOrder.returnRequest.refundAmount : refundModalOrder.refundAmount || refundModalOrder.totalAmount)}
+                </div>
+              </div>
+              <div style={{ textAlign: 'right', fontSize: '0.8rem', color: '#475569' }}>
+                <div>Khách hàng: <strong>{refundModalOrder.recipientName || refundModalOrder.customerName}</strong></div>
+                <div>SĐT: <strong>{refundModalOrder.phone || refundModalOrder.customerPhone || 'N/A'}</strong></div>
+              </div>
+            </div>
+
+            {/* Thông tin tài khoản người đã chuyển */}
+            {(() => {
+              const bName = refundModalOrder.returnRequest?.bankName || refundModalOrder.payerBankName || '';
+              const bAcc = refundModalOrder.returnRequest?.bankAccount || refundModalOrder.payerBankAccount || '';
+              const bHolder = refundModalOrder.returnRequest?.accountHolder || refundModalOrder.payerAccountHolder || refundModalOrder.recipientName || '';
+              const refundAmt = Number(refundModalOrder.returnRequest?.refundAmount != null ? refundModalOrder.returnRequest.refundAmount : refundModalOrder.totalAmount) || 0;
+              const hasPayer = Boolean(refundModalOrder.payerBankAccount);
+
+              return (
+                <div style={{ backgroundColor: '#f0fdf4', padding: '16px', borderRadius: '10px', border: '1px solid #bbf7d0', marginBottom: '18px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <div style={{ fontWeight: 700, color: '#166534', fontSize: '0.9rem' }}>
+                      💳 Tài Khoản Nhận Tiền Hoàn
+                    </div>
+                    {hasPayer && (
+                      <span style={{ fontSize: '0.72rem', backgroundColor: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                        Đã chuyển lúc thanh toán
+                      </span>
+                    )}
+                  </div>
+
+                  {bAcc ? (
+                    <div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 14px', fontSize: '0.875rem', marginBottom: '12px' }}>
+                        <span style={{ color: '#4b5563' }}>Ngân hàng:</span>
+                        <strong style={{ color: '#111827' }}>{bName || 'N/A'}</strong>
+
+                        <span style={{ color: '#4b5563' }}>Số tài khoản:</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <strong style={{ color: '#2563eb', fontSize: '1rem', fontFamily: 'monospace' }}>{bAcc}</strong>
+                          <button
+                            type="button"
+                            onClick={() => { navigator.clipboard.writeText(bAcc); alert('Đã sao chép số tài khoản: ' + bAcc); }}
+                            style={{ padding: '2px 6px', fontSize: '0.72rem', borderRadius: '4px', border: '1px solid #93c5fd', backgroundColor: '#eff6ff', color: '#1d4ed8', cursor: 'pointer' }}
+                          >
+                            Sao chép
+                          </button>
+                        </div>
+
+                        <span style={{ color: '#4b5563' }}>Chủ tài khoản:</span>
+                        <strong style={{ color: '#111827' }}>{bHolder || 'N/A'}</strong>
+                      </div>
+
+                      {/* Mã VietQR chuyển khoản */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', backgroundColor: '#ffffff', padding: '10px 14px', borderRadius: '8px', border: '1px dashed #86efac' }}>
+                        <img
+                          src={`https://img.vietqr.io/image/${getVietQrBankCode(bName)}-${bAcc.replace(/\s+/g, '')}-compact2.png?amount=${refundAmt}&addInfo=Hoan tien don ORD ${refundModalOrder.orderId}&accountName=${encodeURIComponent(bHolder)}`}
+                          alt="VietQR Chuyển Khoản"
+                          style={{ width: '100px', height: '100px', objectFit: 'contain', borderRadius: '6px', border: '1px solid #e2e8f0' }}
+                        />
+                        <div style={{ fontSize: '0.8rem', color: '#166534', lineHeight: 1.4 }}>
+                          <strong style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>📲 Quét mã để hoàn tiền trong 3 giây</strong>
+                          Mở ứng dụng ngân hàng quét mã QR trên. Hệ thống tự động điền đúng Số tài khoản, Ngân hàng và Số tiền cần hoàn ({formatCurrency(refundAmt)}).
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ color: '#dc2626', fontSize: '0.85rem' }}>
+                      ⚠️ Chưa có thông tin tài khoản ngân hàng của người chuyển tiền. Vui lòng liên hệ khách hàng để lấy STK trước khi duyệt.
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => setIsApproveRefundModalOpen(false)}
+                disabled={approvingRefund}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                style={{ backgroundColor: '#10b981', borderColor: '#10b981', padding: '9px 20px', fontWeight: 700 }}
+                onClick={handleConfirmApproveRefund}
+                disabled={approvingRefund}
+              >
+                {approvingRefund ? 'Đang hoàn tất...' : '✅ Đã Chuyển Khoản & Duyệt Hoàn Tiền'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }

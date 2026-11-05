@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUserOrders, cancelOrder, createReturnRequest } from '../../services/orderService';
-import { createPaymentLink } from '../../services/cartService';
+import { createPaymentLink, verifyPayment } from '../../services/cartService';
 import { AuthContext } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import './OrderHistory.css';
@@ -51,6 +51,9 @@ export default function OrderHistory() {
   const [returnReasonType, setReturnReasonType] = useState('Hàng bị lỗi hoặc hư hại do vận chuyển');
   const [returnReasonDetail, setReturnReasonDetail] = useState('');
   const [submittingReturn, setSubmittingReturn] = useState(false);
+  const [returnBankName, setReturnBankName] = useState('');
+  const [returnBankAccount, setReturnBankAccount] = useState('');
+  const [returnAccountHolder, setReturnAccountHolder] = useState('');
 
   const fetchOrders = useCallback(async (signal) => {
     if (!userId) {
@@ -95,6 +98,31 @@ export default function OrderHistory() {
     return orders.filter((o) => o.orderStatus === activeTab);
   }, [orders, activeTab]);
 
+  // Tự động kiểm tra kết quả thanh toán từ PayOS redirect về
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderCode = urlParams.get('orderCode');
+    const status = urlParams.get('status');
+    const cancel = urlParams.get('cancel');
+
+    if (orderCode && (status === 'PAID' || urlParams.get('code') === '00' || cancel === 'false')) {
+      verifyPayment(orderCode)
+        .then((res) => {
+          toast.success(res.message || 'Thanh toán đơn hàng thành công và đã lưu thông tin tài khoản chuyển tiền!');
+          window.history.replaceState({}, document.title, window.location.pathname);
+          fetchOrders();
+        })
+        .catch((err) => {
+          console.error("Lỗi xác minh thanh toán:", err);
+          window.history.replaceState({}, document.title, window.location.pathname);
+          fetchOrders();
+        });
+    } else if (cancel === 'true') {
+      toast.warning('Bạn đã hủy giao dịch thanh toán.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [fetchOrders, toast]);
+
   // Hủy đơn hàng
   const handleConfirmCancel = async () => {
     if (!orderToCancel) return;
@@ -119,9 +147,16 @@ export default function OrderHistory() {
       ? `${returnReasonType}: ${returnReasonDetail.trim()}`
       : returnReasonType;
 
+    const payload = {
+      reason: fullReason,
+      bankName: returnBankName.trim(),
+      bankAccount: returnBankAccount.trim(),
+      accountHolder: returnAccountHolder.trim().toUpperCase()
+    };
+
     try {
       setSubmittingReturn(true);
-      await createReturnRequest(orderToReturn.orderId, userId, fullReason);
+      await createReturnRequest(orderToReturn.orderId, userId, payload);
       toast.success(`Đã gửi yêu cầu trả hàng & hoàn tiền cho đơn #${orderToReturn.orderId}`);
       setOrderToReturn(null);
       setReturnReasonDetail('');
@@ -408,6 +443,9 @@ export default function OrderHistory() {
                             setOrderToReturn(order);
                             setReturnReasonType('Hàng bị lỗi hoặc hư hại do vận chuyển');
                             setReturnReasonDetail('');
+                            setReturnBankName(order.payerBankName || order.returnBankName || '');
+                            setReturnBankAccount(order.payerBankAccount || order.returnBankAccount || '');
+                            setReturnAccountHolder(order.payerAccountHolder || order.returnAccountHolder || order.recipientName || '');
                           }}
                           className="btn-order-return"
                         >
@@ -540,6 +578,16 @@ export default function OrderHistory() {
                   {PAYMENT_STATUS_MAP[selectedOrder.paymentStatus?.toLowerCase()]?.label || selectedOrder.paymentStatus}
                 </span>
               </div>
+              {(selectedOrder.returnBankAccount || selectedOrder.payerBankAccount) && (
+                <div style={{ marginTop: '12px', padding: '10px 12px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0', fontSize: '0.85rem' }}>
+                  <div style={{ fontWeight: '700', color: '#166534', marginBottom: '4px' }}>🏦 Tài khoản hoàn tiền:</div>
+                  <div style={{ color: '#14532d' }}>
+                    Ngân hàng: <strong>{selectedOrder.returnBankName || selectedOrder.payerBankName || 'N/A'}</strong> | 
+                    STK: <strong style={{ color: '#2563eb' }}>{selectedOrder.returnBankAccount || selectedOrder.payerBankAccount}</strong> | 
+                    Chủ TK: <strong>{selectedOrder.returnAccountHolder || selectedOrder.payerAccountHolder || 'N/A'}</strong>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
@@ -618,6 +666,54 @@ export default function OrderHistory() {
               </div>
               <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
                 * Số tiền sẽ được hoàn lại sau khi yêu cầu được nhân viên cửa hàng xác nhận.
+              </div>
+            </div>
+
+            {/* Thông tin tài khoản nhận hoàn tiền */}
+            <div style={{ backgroundColor: '#f0fdf4', padding: '14px 16px', borderRadius: '10px', marginBottom: '16px', border: '1px solid #bbf7d0' }}>
+              <div style={{ fontSize: '0.875rem', fontWeight: '700', color: '#166534', marginBottom: '4px' }}>
+                🏦 Tài khoản nhận tiền hoàn (Chuyển khoản)
+              </div>
+              {orderToReturn.payerBankAccount ? (
+                <div style={{ fontSize: '0.78rem', color: '#15803d', marginBottom: '10px' }}>
+                  ✅ Hệ thống đã tự động lấy tài khoản người đã chuyển tiền thanh toán đơn hàng này. Bạn có thể kiểm tra hoặc điều chỉnh nếu cần.
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.78rem', color: '#64748b', marginBottom: '10px' }}>
+                  Vui lòng cung cấp thông tin tài khoản ngân hàng để nhận tiền hoàn qua chuyển khoản.
+                </div>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '8px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '600', color: '#334155', marginBottom: '4px' }}>Tên Ngân Hàng</label>
+                  <input
+                    type="text"
+                    placeholder="VD: MBBank, Vietcombank..."
+                    value={returnBankName}
+                    onChange={(e) => setReturnBankName(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '600', color: '#334155', marginBottom: '4px' }}>Số Tài Khoản</label>
+                  <input
+                    type="text"
+                    placeholder="VD: 0987654321"
+                    value={returnBankAccount}
+                    onChange={(e) => setReturnBankAccount(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '600', color: '#334155', marginBottom: '4px' }}>Tên Chủ Tài Khoản</label>
+                <input
+                  type="text"
+                  placeholder="VD: NGUYEN VAN A"
+                  value={returnAccountHolder}
+                  onChange={(e) => setReturnAccountHolder(e.target.value.toUpperCase())}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', boxSizing: 'border-box' }}
+                />
               </div>
             </div>
 

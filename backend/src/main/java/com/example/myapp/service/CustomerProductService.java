@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.text.Normalizer;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -103,9 +104,7 @@ public class CustomerProductService {
                         || (p.getSoldCount() != null && p.getSoldCount() >= 50))
                 .filter(p -> !"newest".equalsIgnoreCase(sortBy)
                         || (p.getCreatedAt() != null && !p.getCreatedAt().isBefore(recentCutoff)))
-                .filter(p -> keyword == null || keyword.isBlank()
-                        || (p.getName() != null && p.getName().toLowerCase().contains(keyword.toLowerCase()))
-                        || (p.getDescription() != null && p.getDescription().toLowerCase().contains(keyword.toLowerCase())))
+                .filter(p -> matchesKeyword(p, keyword))
                 .filter(p -> {
                     if (categoryId == null) return true;
                     if (p.getCategory() == null) return false;
@@ -774,5 +773,66 @@ public class CustomerProductService {
                 .limit(safeLimit)
                 .map(p -> mapToDTO(p, false))
                 .collect(Collectors.toList());
+    }
+
+    private boolean matchesKeyword(Product p, String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return true;
+        }
+        String kw = keyword.trim().toLowerCase();
+        String kwUnaccent = removeAccents(kw);
+        boolean hasDiacritics = !kw.equals(kwUnaccent);
+
+        // 1. Kiểm tra Tên sản phẩm
+        if (p.getName() != null) {
+            String nameLower = p.getName().toLowerCase();
+            if (nameLower.contains(kw)) {
+                return true;
+            }
+            if (!hasDiacritics && !kwUnaccent.isEmpty()) {
+                String nameUnaccent = removeAccents(nameLower);
+                if (nameUnaccent.contains(kwUnaccent)) {
+                    return true;
+                }
+            }
+        }
+
+        // 2. Kiểm tra Thể loại / Danh mục sản phẩm (bao gồm cả danh mục con và danh mục cha)
+        if (p.getCategory() != null) {
+            if (p.getCategory().getName() != null) {
+                String catLower = p.getCategory().getName().toLowerCase();
+                if (catLower.contains(kw)) {
+                    return true;
+                }
+                if (!hasDiacritics && !kwUnaccent.isEmpty()) {
+                    String catUnaccent = removeAccents(catLower);
+                    if (catUnaccent.contains(kwUnaccent)) {
+                        return true;
+                    }
+                }
+            }
+            if (p.getCategory().getParent() != null && p.getCategory().getParent().getName() != null) {
+                String parentLower = p.getCategory().getParent().getName().toLowerCase();
+                if (parentLower.contains(kw)) {
+                    return true;
+                }
+                if (!hasDiacritics && !kwUnaccent.isEmpty()) {
+                    String parentUnaccent = removeAccents(parentLower);
+                    if (parentUnaccent.contains(kwUnaccent)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private String removeAccents(String text) {
+        if (text == null) return "";
+        String normalized = Normalizer.normalize(text.trim(), Normalizer.Form.NFD);
+        return normalized.replaceAll("\\p{M}", "")
+                .replace("đ", "d").replace("Đ", "D")
+                .toLowerCase();
     }
 }
