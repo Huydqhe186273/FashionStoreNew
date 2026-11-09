@@ -90,12 +90,18 @@ public class OrderController {
             @RequestBody(required = false) Map<String, String> body) {
         try {
             String reason = body != null && body.containsKey("reason") ? body.get("reason") : "Yêu cầu trả hàng & hoàn tiền";
-            com.example.myapp.entity.ReturnRequest request = orderService.createReturnRequest(orderId, userId, reason);
+            String bankName = body != null ? body.get("bankName") : null;
+            String bankAccount = body != null ? body.get("bankAccount") : null;
+            String accountHolder = body != null ? body.get("accountHolder") : null;
+            com.example.myapp.entity.ReturnRequest request = orderService.createReturnRequest(orderId, userId, reason, bankName, bankAccount, accountHolder);
             return ResponseEntity.ok(Map.of(
                     "message", "Đã gửi yêu cầu trả hàng & hoàn tiền thành công!",
                     "returnId", request.getReturnId(),
                     "status", request.getStatus(),
-                    "refundAmount", request.getRefundAmount() != null ? request.getRefundAmount() : 0
+                    "refundAmount", request.getRefundAmount() != null ? request.getRefundAmount() : 0,
+                    "bankName", request.getBankName() != null ? request.getBankName() : "",
+                    "bankAccount", request.getBankAccount() != null ? request.getBankAccount() : "",
+                    "accountHolder", request.getAccountHolder() != null ? request.getAccountHolder() : ""
             ));
         } catch (Exception e) {
             e.printStackTrace();

@@ -256,7 +256,18 @@ public class OrderService {
 
     @Transactional
     public void markOrderAsPaid(Integer orderId, String transactionId, Long amount) {
-        Order order = orderRepository.findById(orderId).orElse(null);
+        markOrderAsPaid(orderId, transactionId, amount, null, null, null);
+        }
+
+        @Transactional
+        public void markOrderAsPaid(Integer orderId, String transactionId, Long amount,
+            String payerBankName, String payerBankAccount, String payerAccountHolder) {
+        Order order = orderRepository.findByIdWithDetails(orderId)
+                .orElseGet(() -> orderRepository.findById(orderId).orElse(null));
+        if (order != null && "paid".equalsIgnoreCase(order.getPaymentStatus())) {
+            System.out.println("ℹ️ Đơn hàng #" + orderId + " đã ở trạng thái đã thanh toán (paid), bỏ qua xử lý lặp.");
+            return;
+        }
         if (order != null) {
             order.setPaymentStatus("paid");
             if ("pending".equalsIgnoreCase(order.getOrderStatus())) {
@@ -297,6 +308,9 @@ public class OrderService {
                 payment.setTransactionId(txId);
                 payment.setStatus("success");
                 payment.setPaidAt(LocalDateTime.now());
+                payment.setPayerBankName(payerBankName);
+                payment.setPayerBankAccount(payerBankAccount);
+                payment.setPayerAccountHolder(payerAccountHolder);
                 paymentRepository.save(payment);
             } catch (Exception e) {
                 System.err.println("Lỗi lưu lịch sử thanh toán vào bảng Payments: " + e.getMessage());
@@ -316,7 +330,7 @@ public class OrderService {
 
             // Gửi email biên nhận thanh toán PayOS
             try {
-                emailService.sendPaymentConfirmationEmail(order, txId, paidAmount);
+                emailService.sendPaymentConfirmationEmail(order, txId, paidAmount, payerBankName, payerBankAccount, payerAccountHolder);
             } catch (Exception e) {
                 System.err.println("Lỗi gửi email biên nhận thanh toán: " + e.getMessage());
             }
@@ -354,15 +368,34 @@ public class OrderService {
             throw new RuntimeException("Chỉ có thể hủy đơn hàng khi đơn đang ở trạng thái 'Chờ xử lý' (pending).");
         }
 
+        boolean wasPaid = "paid".equalsIgnoreCase(order.getPaymentStatus());
         order.setOrderStatus("cancelled");
+        if (wasPaid) {
+            order.setPaymentStatus("refunded");
+            ReturnRequest rr = new ReturnRequest();
+            rr.setOrder(order);
+            rr.setReason("Khách hủy đơn hàng đã thanh toán online - Hoàn tiền về tài khoản");
+            rr.setStatus("pending");
+            rr.setRefundAmount(order.getTotalAmount());
+            rr.setCreatedAt(LocalDateTime.now());
+            paymentRepository.findSuccessfulPaymentsWithPayerAccount(orderId).stream().findFirst().ifPresent(payment -> {
+                rr.setBankName(payment.getPayerBankName());
+                rr.setBankAccount(payment.getPayerBankAccount());
+                rr.setAccountHolder(payment.getPayerAccountHolder());
+            });
+            returnRequestRepository.save(rr);
+        }
         orderRepository.save(order);
 
         // Gửi thông báo hủy đơn
         try {
+            String msg = wasPaid
+                    ? "Đơn hàng #" + order.getOrderId() + " đã được hủy. Số tiền đã thanh toán sẽ được hoàn về tài khoản chuyển tiền của bạn."
+                    : "Đơn hàng #" + order.getOrderId() + " đã được hủy thành công theo yêu cầu của bạn.";
             notificationService.createNotification(
                     userId,
                     "order",
-                    "Đơn hàng #" + order.getOrderId() + " đã được hủy thành công theo yêu cầu của bạn.");
+                    msg);
         } catch (Exception e) {
             System.err.println("Lỗi tạo thông báo hủy đơn: " + e.getMessage());
         }
@@ -397,6 +430,12 @@ public class OrderService {
 
     @Transactional
     public ReturnRequest createReturnRequest(Integer orderId, Integer userId, String reason) {
+        return createReturnRequest(orderId, userId, reason, null, null, null);
+    }
+
+    @Transactional
+    public ReturnRequest createReturnRequest(Integer orderId, Integer userId, String reason,
+                                             String bankName, String bankAccount, String accountHolder) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Đơn hàng #" + orderId + " không tồn tại."));
 
@@ -422,12 +461,24 @@ public class OrderService {
             }
         }
 
+        Payment payerPayment = paymentRepository.findSuccessfulPaymentsWithPayerAccount(orderId).stream().findFirst().orElse(null);
+
         ReturnRequest request = new ReturnRequest();
         request.setOrder(order);
         request.setReason(reason != null && !reason.trim().isEmpty() ? reason.trim() : "Khách hàng yêu cầu trả hàng hoàn tiền");
         request.setStatus("pending");
         request.setRefundAmount(order.getTotalAmount());
         request.setCreatedAt(LocalDateTime.now());
+        request.setBankName(bankName != null && !bankName.trim().isEmpty()
+                ? bankName.trim()
+                : (payerPayment != null ? payerPayment.getPayerBankName() : null));
+        request.setBankAccount(bankAccount != null && !bankAccount.trim().isEmpty()
+                ? bankAccount.trim()
+                : (payerPayment != null ? payerPayment.getPayerBankAccount() : null));
+        request.setAccountHolder(accountHolder != null && !accountHolder.trim().isEmpty()
+                ? accountHolder.trim().toUpperCase()
+                : (payerPayment != null ? payerPayment.getPayerAccountHolder() : null));
+
         ReturnRequest saved = returnRequestRepository.save(request);
 
         // Gửi thông báo cho khách hàng
@@ -488,10 +539,26 @@ public class OrderService {
 
         String returnStatus = null;
         String returnReason = null;
+        BigDecimal refundAmount = null;
+        String returnBankName = null;
+        String returnBankAccount = null;
+        String returnAccountHolder = null;
         java.util.Optional<ReturnRequest> returnOpt = returnRequestRepository.findLatestByOrderId(order.getOrderId());
         if (returnOpt.isPresent()) {
-            returnStatus = returnOpt.get().getStatus();
-            returnReason = returnOpt.get().getReason();
+            ReturnRequest rr = returnOpt.get();
+            returnStatus = rr.getStatus();
+            returnReason = rr.getReason();
+            refundAmount = rr.getRefundAmount();
+            returnBankName = rr.getBankName();
+            returnBankAccount = rr.getBankAccount();
+            returnAccountHolder = rr.getAccountHolder();
+        }
+
+        Payment payerPayment = paymentRepository.findSuccessfulPaymentsWithPayerAccount(order.getOrderId()).stream().findFirst().orElse(null);
+        if (payerPayment == null) {
+            payerPayment = paymentRepository.findByOrderOrderIdDesc(order.getOrderId()).stream()
+                    .filter(p -> p.getPayerBankAccount() != null && !p.getPayerBankAccount().isEmpty())
+                    .findFirst().orElse(null);
         }
 
         boolean isPaid = "paid".equalsIgnoreCase(order.getPaymentStatus());
@@ -534,6 +601,13 @@ public class OrderService {
                 .canReturn(canReturn)
                 .returnStatus(returnStatus)
                 .returnReason(returnReason)
+                .refundAmount(refundAmount)
+                .returnBankName(returnBankName)
+                .returnBankAccount(returnBankAccount)
+                .returnAccountHolder(returnAccountHolder)
+                .payerBankName(payerPayment != null ? payerPayment.getPayerBankName() : null)
+                .payerBankAccount(payerPayment != null ? payerPayment.getPayerBankAccount() : null)
+                .payerAccountHolder(payerPayment != null ? payerPayment.getPayerAccountHolder() : null)
                 .items(itemDTOs)
                 .build();
     }

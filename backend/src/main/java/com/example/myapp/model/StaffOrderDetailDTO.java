@@ -28,6 +28,9 @@ public class StaffOrderDetailDTO {
     private String returnStatus;
     private String returnReason;
     private BigDecimal refundAmount;
+    private String payerBankName;
+    private String payerBankAccount;
+    private String payerAccountHolder;
     private List<StaffOrderItemDTO> items;
     private ReturnRequestDTO returnRequest;
 }

@@ -4,6 +4,7 @@ import com.example.myapp.entity.*;
 import com.example.myapp.model.*;
 import com.example.myapp.repos.InboundBatchRepository;
 import com.example.myapp.repos.OrderRepository;
+import com.example.myapp.repos.PaymentRepository;
 import com.example.myapp.repos.ProductRepository;
 import com.example.myapp.repos.ProductVariantRepository;
 import com.example.myapp.repos.ReturnRequestRepository;
@@ -25,6 +26,7 @@ public class StaffOrderService {
     private final InboundBatchRepository inboundBatchRepository;
     private final ProductRepository productRepository;
     private final ReturnRequestRepository returnRequestRepository;
+    private final PaymentRepository paymentRepository;
     private final NotificationService notificationService;
 
     public StaffOrderService(
@@ -33,12 +35,14 @@ public class StaffOrderService {
             InboundBatchRepository inboundBatchRepository,
             ProductRepository productRepository,
             ReturnRequestRepository returnRequestRepository,
+            PaymentRepository paymentRepository,
             NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.productVariantRepository = productVariantRepository;
         this.inboundBatchRepository = inboundBatchRepository;
         this.productRepository = productRepository;
         this.returnRequestRepository = returnRequestRepository;
+        this.paymentRepository = paymentRepository;
         this.notificationService = notificationService;
     }
 
@@ -418,9 +422,17 @@ public class StaffOrderService {
                 : "Khách hàng gửi trả lại hàng về kho shop");
         rr.setStatus("COMPLETED");
         rr.setRefundAmount(refundAmount);
-        rr.setBankName(dto.getBankName() != null ? dto.getBankName().trim() : null);
-        rr.setBankAccount(dto.getBankAccount() != null ? dto.getBankAccount().trim() : null);
-        rr.setAccountHolder(dto.getAccountHolder() != null ? dto.getAccountHolder().trim().toUpperCase() : null);
+        Payment payerPayment = paymentRepository.findSuccessfulPaymentsWithPayerAccount(orderId).stream()
+            .findFirst().orElse(null);
+        rr.setBankName(dto.getBankName() != null && !dto.getBankName().trim().isEmpty()
+            ? dto.getBankName().trim()
+            : payerPayment != null ? payerPayment.getPayerBankName() : null);
+        rr.setBankAccount(dto.getBankAccount() != null && !dto.getBankAccount().trim().isEmpty()
+            ? dto.getBankAccount().trim()
+            : payerPayment != null ? payerPayment.getPayerBankAccount() : null);
+        rr.setAccountHolder(dto.getAccountHolder() != null && !dto.getAccountHolder().trim().isEmpty()
+            ? dto.getAccountHolder().trim().toUpperCase()
+            : payerPayment != null ? payerPayment.getPayerAccountHolder() : null);
         rr.setAdminNote(dto.getAdminNote() != null ? dto.getAdminNote().trim() : null);
         rr.setCreatedAt(LocalDateTime.now());
         returnRequestRepository.save(rr);
@@ -558,6 +570,9 @@ public class StaffOrderService {
             }
         }
 
+        Payment payerPayment = paymentRepository.findSuccessfulPaymentsWithPayerAccount(o.getOrderId()).stream()
+            .findFirst().orElse(null);
+
         ReturnRequestDTO returnRequestDTO = returnRequestRepository.findLatestByOrderId(o.getOrderId())
                 .map(rr -> ReturnRequestDTO.builder()
                         .returnId(rr.getReturnId())
@@ -592,6 +607,9 @@ public class StaffOrderService {
                 .returnStatus(returnStatus)
                 .returnReason(returnReason)
                 .refundAmount(refundAmount)
+                .payerBankName(payerPayment != null ? payerPayment.getPayerBankName() : null)
+                .payerBankAccount(payerPayment != null ? payerPayment.getPayerBankAccount() : null)
+                .payerAccountHolder(payerPayment != null ? payerPayment.getPayerAccountHolder() : null)
                 .items(items)
                 .returnRequest(returnRequestDTO)
                 .build();
