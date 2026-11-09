@@ -433,15 +433,21 @@ public class StaffOrderService {
         rr.setRefundAmount(refundAmount);
         Payment payerPayment = paymentRepository.findSuccessfulPaymentsWithPayerAccount(orderId).stream()
             .findFirst().orElse(null);
-        rr.setBankName(dto.getBankName() != null && !dto.getBankName().trim().isEmpty()
-            ? dto.getBankName().trim()
-            : payerPayment != null ? payerPayment.getPayerBankName() : null);
-        rr.setBankAccount(dto.getBankAccount() != null && !dto.getBankAccount().trim().isEmpty()
+        String pAcc = dto.getBankAccount() != null && !dto.getBankAccount().trim().isEmpty()
             ? dto.getBankAccount().trim()
-            : payerPayment != null ? payerPayment.getPayerBankAccount() : null);
-        rr.setAccountHolder(dto.getAccountHolder() != null && !dto.getAccountHolder().trim().isEmpty()
+            : payerPayment != null ? payerPayment.getPayerBankAccount() : null;
+        String pBank = dto.getBankName() != null && !dto.getBankName().trim().isEmpty()
+            ? dto.getBankName().trim()
+            : (payerPayment != null && payerPayment.getPayerBankName() != null && !payerPayment.getPayerBankName().trim().isEmpty()
+                ? payerPayment.getPayerBankName()
+                : (pAcc != null ? "MBBank" : null));
+        String pHolder = dto.getAccountHolder() != null && !dto.getAccountHolder().trim().isEmpty()
             ? dto.getAccountHolder().trim().toUpperCase()
-            : payerPayment != null ? payerPayment.getPayerAccountHolder() : null);
+            : payerPayment != null ? payerPayment.getPayerAccountHolder() : null;
+
+        rr.setBankName(pBank);
+        rr.setBankAccount(pAcc);
+        rr.setAccountHolder(pHolder);
         rr.setAdminNote(dto.getAdminNote() != null ? dto.getAdminNote().trim() : null);
         rr.setCreatedAt(LocalDateTime.now());
 
@@ -623,6 +629,13 @@ public class StaffOrderService {
 
         String paymentMethod = payOSRefundService.resolvePaymentMethod(o);
 
+        String resolvedPayerBankName = payerPayment != null ? payerPayment.getPayerBankName() : null;
+        String resolvedPayerBankAccount = payerPayment != null ? payerPayment.getPayerBankAccount() : null;
+        String resolvedPayerAccountHolder = payerPayment != null ? payerPayment.getPayerAccountHolder() : null;
+        if ((resolvedPayerBankName == null || resolvedPayerBankName.trim().isEmpty()) && resolvedPayerBankAccount != null && !resolvedPayerBankAccount.trim().isEmpty()) {
+            resolvedPayerBankName = "MBBank";
+        }
+
         return StaffOrderDetailDTO.builder()
                 .orderId(o.getOrderId())
                 .customerName(customerName)
@@ -639,9 +652,9 @@ public class StaffOrderService {
                 .returnStatus(returnStatus)
                 .returnReason(returnReason)
                 .refundAmount(refundAmount)
-                .payerBankName(payerPayment != null ? payerPayment.getPayerBankName() : null)
-                .payerBankAccount(payerPayment != null ? payerPayment.getPayerBankAccount() : null)
-                .payerAccountHolder(payerPayment != null ? payerPayment.getPayerAccountHolder() : null)
+                .payerBankName(resolvedPayerBankName)
+                .payerBankAccount(resolvedPayerBankAccount)
+                .payerAccountHolder(resolvedPayerAccountHolder)
                 .items(items)
                 .returnRequest(returnRequestDTO)
                 .build();

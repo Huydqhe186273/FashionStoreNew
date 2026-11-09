@@ -443,7 +443,7 @@ export default function OrderHistory() {
                             setOrderToReturn(order);
                             setReturnReasonType('Hàng bị lỗi hoặc hư hại do vận chuyển');
                             setReturnReasonDetail('');
-                            setReturnBankName(order.payerBankName || order.returnBankName || '');
+                            setReturnBankName(order.payerBankName || order.returnBankName || (order.payerBankAccount ? 'MBBank' : ''));
                             setReturnBankAccount(order.payerBankAccount || order.returnBankAccount || '');
                             setReturnAccountHolder(order.payerAccountHolder || order.returnAccountHolder || order.recipientName || '');
                           }}

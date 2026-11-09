@@ -4,6 +4,7 @@ import com.example.myapp.entity.Order;
 import com.example.myapp.entity.OrderItem;
 import com.example.myapp.repos.OrderRepository;
 import com.example.myapp.service.OrderService;
+import com.example.myapp.util.VietQRBankHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -81,9 +82,20 @@ public class PaymentController {
                     ? transactions.get(transactions.size() - 1)
                     : null;
 
+                String pBankId = payerTransaction != null ? payerTransaction.getCounterAccountBankId() : null;
                 String pBankName = payerTransaction != null ? payerTransaction.getCounterAccountBankName() : null;
                 String pBankAccount = payerTransaction != null ? payerTransaction.getCounterAccountNumber() : null;
                 String pAccountHolder = payerTransaction != null ? payerTransaction.getCounterAccountName() : null;
+
+                // Chuẩn hóa tên ngân hàng nếu PayOS chỉ trả về BankId (BIN) hoặc để trống
+                if (pBankName == null || pBankName.trim().isEmpty()) {
+                    if (pBankId != null && !pBankId.trim().isEmpty()) {
+                        pBankName = VietQRBankHelper.getBankDisplayName(pBankId);
+                    }
+                }
+                if (pBankName == null || pBankName.trim().isEmpty()) {
+                    pBankName = "MBBank";
+                }
 
                 // Nếu PayOS Sandbox không trả về tài khoản ngân hàng thật, fallback dữ liệu hợp lệ để hỗ trợ kiểm thử hoàn tiền
                 if (pBankAccount == null || pBankAccount.trim().isEmpty()) {
@@ -130,9 +142,20 @@ public class PaymentController {
                         ? webhookData.getReference()
                         : ("PAYOS-" + oc);
 
+                String pBankId = webhookData.getCounterAccountBankId();
                 String pBankName = webhookData.getCounterAccountBankName();
                 String pBankAccount = webhookData.getCounterAccountNumber();
                 String pAccountHolder = webhookData.getCounterAccountName();
+
+                // Chuẩn hóa tên ngân hàng nếu PayOS chỉ trả về BankId (BIN) hoặc để trống
+                if (pBankName == null || pBankName.trim().isEmpty()) {
+                    if (pBankId != null && !pBankId.trim().isEmpty()) {
+                        pBankName = VietQRBankHelper.getBankDisplayName(pBankId);
+                    }
+                }
+                if (pBankName == null || pBankName.trim().isEmpty()) {
+                    pBankName = "MBBank";
+                }
 
                 if (pBankAccount == null || pBankAccount.trim().isEmpty()) {
                     Order ord = orderRepository.findById(realOrderId).orElse(null);

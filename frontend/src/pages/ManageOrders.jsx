@@ -233,7 +233,7 @@ export default function ManageOrders() {
     setActionSuccess('');
     const isPayOS = selectedOrder?.paymentMethod === 'PayOS';
     const targetAcc = selectedOrder?.returnRequest?.bankAccount || selectedOrder?.payerBankAccount || '';
-    const targetBank = selectedOrder?.returnRequest?.bankName || selectedOrder?.payerBankName || '';
+    const targetBank = selectedOrder?.returnRequest?.bankName || selectedOrder?.payerBankName || (targetAcc ? 'MBBank' : '');
     const refundAmt = formatCurrency(selectedOrder?.refundAmount || selectedOrder?.totalAmount);
 
     const promptText = isPayOS
@@ -331,7 +331,7 @@ export default function ManageOrders() {
     setReturnReason('Khách thử không vừa size / chật rộng');
     setCustomReason('');
     setRefundAmount(order.totalAmount || 0);
-    setBankName(paymentDetails?.payerBankName || '');
+    setBankName(paymentDetails?.payerBankName || (paymentDetails?.payerBankAccount ? 'MBBank' : ''));
     setBankAccount(paymentDetails?.payerBankAccount || '');
     setAccountHolder(paymentDetails?.payerAccountHolder || order.recipientName || order.customerName || '');
     setAdminNote('Kiểm tra hàng nguyên tem mác, bao bì còn tốt.');

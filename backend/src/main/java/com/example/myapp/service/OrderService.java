@@ -561,6 +561,18 @@ public class OrderService {
                     .findFirst().orElse(null);
         }
 
+        String resolvedPayerBankName = null;
+        String resolvedPayerBankAccount = null;
+        String resolvedPayerAccountHolder = null;
+        if (payerPayment != null) {
+            resolvedPayerBankAccount = payerPayment.getPayerBankAccount();
+            resolvedPayerAccountHolder = payerPayment.getPayerAccountHolder();
+            resolvedPayerBankName = payerPayment.getPayerBankName();
+            if ((resolvedPayerBankName == null || resolvedPayerBankName.trim().isEmpty()) && resolvedPayerBankAccount != null && !resolvedPayerBankAccount.trim().isEmpty()) {
+                resolvedPayerBankName = "MBBank";
+            }
+        }
+
         boolean isPaid = "paid".equalsIgnoreCase(order.getPaymentStatus());
         boolean notClosed = !"cancelled".equalsIgnoreCase(order.getOrderStatus()) && !"returned".equalsIgnoreCase(order.getOrderStatus());
         boolean canReturn = isPaid && notClosed && (returnStatus == null || "rejected".equalsIgnoreCase(returnStatus));
@@ -605,9 +617,9 @@ public class OrderService {
                 .returnBankName(returnBankName)
                 .returnBankAccount(returnBankAccount)
                 .returnAccountHolder(returnAccountHolder)
-                .payerBankName(payerPayment != null ? payerPayment.getPayerBankName() : null)
-                .payerBankAccount(payerPayment != null ? payerPayment.getPayerBankAccount() : null)
-                .payerAccountHolder(payerPayment != null ? payerPayment.getPayerAccountHolder() : null)
+                .payerBankName(resolvedPayerBankName)
+                .payerBankAccount(resolvedPayerBankAccount)
+                .payerAccountHolder(resolvedPayerAccountHolder)
                 .items(itemDTOs)
                 .build();
     }
