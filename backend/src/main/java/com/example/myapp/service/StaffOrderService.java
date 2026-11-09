@@ -415,9 +415,9 @@ public class StaffOrderService {
 
         order.setOrderStatus("RETURNED");
         order.setPaymentStatus("REFUNDED");
-        order = orderRepository.save(order);
+        final Order savedOrder = orderRepository.save(order);
 
-        BigDecimal maxRefund = order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO;
+        BigDecimal maxRefund = savedOrder.getTotalAmount() != null ? savedOrder.getTotalAmount() : BigDecimal.ZERO;
         BigDecimal refundAmount = dto.getRefundAmount() != null ? dto.getRefundAmount() : maxRefund;
         if (refundAmount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Số tiền hoàn trả không được âm!");
@@ -433,32 +433,42 @@ public class StaffOrderService {
             }
         }
 
-        ReturnRequest rr = new ReturnRequest();
-        rr.setOrder(order);
+        ReturnRequest rr = returnRequestRepository.findLatestByOrderId(orderId)
+                .filter(r -> "pending".equalsIgnoreCase(r.getStatus()))
+                .orElseGet(() -> {
+                    ReturnRequest newRr = new ReturnRequest();
+                    newRr.setOrder(savedOrder);
+                    return newRr;
+                });
+        rr.setOrder(savedOrder);
         rr.setReason(dto.getReason() != null && !dto.getReason().trim().isEmpty()
                 ? dto.getReason().trim()
-                : "Khách hàng gửi trả lại hàng về kho shop");
+                : (rr.getReason() != null ? rr.getReason() : "Khách hàng gửi trả lại hàng về kho shop"));
         rr.setStatus("COMPLETED");
         rr.setRefundAmount(refundAmount);
         Payment payerPayment = paymentRepository.findSuccessfulPaymentsWithPayerAccount(orderId).stream()
             .findFirst().orElse(null);
         String pAcc = dto.getBankAccount() != null && !dto.getBankAccount().trim().isEmpty()
             ? dto.getBankAccount().trim()
-            : payerPayment != null ? payerPayment.getPayerBankAccount() : null;
+            : (rr.getBankAccount() != null ? rr.getBankAccount() : (payerPayment != null ? payerPayment.getPayerBankAccount() : null));
         String pBank = dto.getBankName() != null && !dto.getBankName().trim().isEmpty()
             ? dto.getBankName().trim()
-            : (payerPayment != null && payerPayment.getPayerBankName() != null && !payerPayment.getPayerBankName().trim().isEmpty()
+            : (rr.getBankName() != null ? rr.getBankName() : (payerPayment != null && payerPayment.getPayerBankName() != null && !payerPayment.getPayerBankName().trim().isEmpty()
                 ? payerPayment.getPayerBankName()
-                : (pAcc != null ? "MBBank" : null));
+                : (pAcc != null ? "MBBank" : null)));
         String pHolder = dto.getAccountHolder() != null && !dto.getAccountHolder().trim().isEmpty()
             ? dto.getAccountHolder().trim().toUpperCase()
-            : payerPayment != null ? payerPayment.getPayerAccountHolder() : null;
+            : (rr.getAccountHolder() != null ? rr.getAccountHolder() : (payerPayment != null ? payerPayment.getPayerAccountHolder() : null));
 
         rr.setBankName(pBank);
         rr.setBankAccount(pAcc);
         rr.setAccountHolder(pHolder);
-        rr.setAdminNote(dto.getAdminNote() != null ? dto.getAdminNote().trim() : null);
-        rr.setCreatedAt(LocalDateTime.now());
+        if (dto.getAdminNote() != null && !dto.getAdminNote().trim().isEmpty()) {
+            rr.setAdminNote(dto.getAdminNote().trim());
+        }
+        if (rr.getCreatedAt() == null) {
+            rr.setCreatedAt(LocalDateTime.now());
+        }
 
         // Kích hoạt hoàn tiền qua cổng thanh toán (nếu thanh toán qua ngân hàng/PayOS)
         PayOSRefundService.RefundExecutionResult refundResult = payOSRefundService.processRefund(
