@@ -38,5 +38,15 @@ public class OrderResponseDTO {
     private boolean canReturn;
     private String returnStatus;
     private String returnReason;
+    private BigDecimal refundAmount;
+    private String returnBankName;
+    private String returnBankAccount;
+    private String returnAccountHolder;
+
+    // Thông tin tài khoản người đã chuyển tiền thanh toán
+    private String payerBankName;
+    private String payerBankAccount;
+    private String payerAccountHolder;
+
     private List<OrderItemDetailDTO> items;
 }

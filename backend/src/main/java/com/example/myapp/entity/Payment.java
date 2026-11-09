@@ -22,6 +22,9 @@ public class Payment {
     private String TransactionId;
     private String Status = "pending";
     private LocalDateTime PaidAt;
+    private String PayerBankName;
+    private String PayerBankAccount;
+    private String PayerAccountHolder;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "OrderId", nullable = false, foreignKey = @ForeignKey(name = "FK_Payments_Orders"))
