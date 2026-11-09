@@ -211,7 +211,7 @@ public class StaffOrderService {
                                 + current);
             }
             order.setOrderStatus("DELIVERED");
-            if ("unpaid".equalsIgnoreCase(order.getPaymentStatus())) {
+            if (!"PAID".equalsIgnoreCase(order.getPaymentStatus())) {
                 order.setPaymentStatus("PAID");
                 // Đơn COD giao thành công -> Tăng số lượng đã bán (soldCount)
                 if (order.getOrderItems() != null) {

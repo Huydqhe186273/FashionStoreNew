@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUserOrders, cancelOrder, createReturnRequest } from '../../services/orderService';
+import { getUserOrders, cancelOrder, createReturnRequest, confirmOrderReceived } from '../../services/orderService';
 import { createPaymentLink, verifyPayment } from '../../services/cartService';
 import { AuthContext } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -72,6 +72,31 @@ const getLatestOrderStatus = (order) => {
   }
 
   return { label: order.orderStatus || 'Đang xử lý', class: 'pending', color: '#ffffff', bg: '#475569' };
+};
+
+// Hàm xác định trạng thái thanh toán chính xác
+const getPaymentStatusDisplay = (order) => {
+  if (!order) return { label: 'Chưa thanh toán', color: '#e11d48' };
+  const pStatus = (order.paymentStatus || '').toLowerCase();
+  const oStatus = (order.orderStatus || '').toLowerCase();
+  const rStatus = (order.returnStatus || '').toLowerCase();
+
+  // Đơn đã hoàn tiền hoặc đã hoàn hàng
+  if (pStatus === 'refunded' || oStatus === 'returned' || rStatus === 'refunded' || rStatus === 'approved') {
+    return { label: '↩️ Đã hoàn tiền', color: '#059669' };
+  }
+
+  // Đơn đã thanh toán, hoặc đã nhận hàng (delivered), hoặc đang có yêu cầu hoàn tiền (đã nhận hàng và thanh toán tiền mặt)
+  if (pStatus === 'paid' || oStatus === 'delivered' || Boolean(order.returnStatus)) {
+    return { label: '✅ Đã thanh toán', color: '#059669' };
+  }
+
+  // Đơn COD chưa nhận hàng
+  if (order.paymentMethod?.toUpperCase() === 'COD') {
+    return { label: '⏳ Thanh toán khi nhận hàng (Chưa thanh toán)', color: '#d97706' };
+  }
+
+  return { label: 'Chưa thanh toán', color: '#e11d48' };
 };
 
 const PAYMENT_STATUS_MAP = {
@@ -245,6 +270,22 @@ export default function OrderHistory() {
       toast.error(err.response?.data?.error || err.message || 'Gửi yêu cầu hoàn tiền thất bại.');
     } finally {
       setSubmittingReturn(false);
+    }
+  };
+
+  // Xác nhận đã nhận hàng (Chuyển sang DELIVERED & PAID)
+  const handleConfirmReceived = async (orderId) => {
+    if (!window.confirm(`Xác nhận bạn đã nhận được hàng và thanh toán đầy đủ cho đơn hàng #${orderId}?`)) return;
+    try {
+      await confirmOrderReceived(orderId);
+      toast.success(`Đã xác nhận nhận hàng và thanh toán thành công cho đơn #${orderId}!`);
+      fetchOrders();
+      if (selectedOrder && selectedOrder.orderId === orderId) {
+        setSelectedOrder((prev) => prev ? { ...prev, orderStatus: 'delivered', paymentStatus: 'paid' } : null);
+      }
+    } catch (err) {
+      console.error('Lỗi xác nhận nhận hàng:', err);
+      toast.error(err.response?.data?.error || err.response?.data?.message || err.message || 'Lỗi khi xác nhận nhận hàng!');
     }
   };
 
@@ -496,6 +537,29 @@ export default function OrderHistory() {
                         Chi tiết
                       </button>
 
+                      {(order.orderStatus?.toLowerCase() === 'shipping' || order.orderStatus?.toLowerCase() === 'shipped') && (
+                        <button
+                          type="button"
+                          onClick={() => handleConfirmReceived(order.orderId)}
+                          className="btn-order-received"
+                          style={{
+                            backgroundColor: '#059669',
+                            color: '#ffffff',
+                            fontWeight: 600,
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '0.85rem'
+                          }}
+                        >
+                          📦 Đã nhận hàng
+                        </button>
+                      )}
+
 
                       {order.canReturn && order.returnStatus !== 'rejected' && (
                         <button
@@ -635,14 +699,14 @@ export default function OrderHistory() {
               </div>
               <div className="order-detail-summary-row" style={{ marginTop: '4px' }}>
                 <span>Trạng thái đơn hàng:</span>
-                <span style={{ fontWeight: '700', color: getLatestOrderStatus(selectedOrder).color }}>
+                <span style={{ fontWeight: '700', color: getLatestOrderStatus(selectedOrder).bg }}>
                   {getLatestOrderStatus(selectedOrder).label}
                 </span>
               </div>
               <div className="order-detail-summary-row" style={{ marginTop: '4px' }}>
                 <span>Trạng thái thanh toán:</span>
-                <span style={{ fontWeight: '700', color: (selectedOrder.orderStatus?.toLowerCase() === 'delivered' || selectedOrder.paymentStatus?.toLowerCase() === 'paid') ? '#059669' : '#e11d48' }}>
-                  {(selectedOrder.orderStatus?.toLowerCase() === 'delivered' || selectedOrder.paymentStatus?.toLowerCase() === 'paid') ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                <span style={{ fontWeight: '700', color: getPaymentStatusDisplay(selectedOrder).color }}>
+                  {getPaymentStatusDisplay(selectedOrder).label}
                 </span>
               </div>
               {(selectedOrder.returnBankAccount || selectedOrder.payerBankAccount) && (

@@ -729,8 +729,8 @@ export default function ManageOrders() {
                   </strong>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  Thanh toán: <strong style={{ color: selectedOrder.paymentStatus === 'PAID' ? '#10b981' : selectedOrder.paymentStatus === 'REFUNDED' ? '#c2410c' : '#f59e0b' }}>
-                    {selectedOrder.paymentStatus === 'PAID' ? '✅ Đã thanh toán' : selectedOrder.paymentStatus === 'REFUNDED' ? '↩️ Đã hoàn tiền' : '⏳ Chưa thanh toán (COD)'}
+                  Thanh toán: <strong style={{ color: (selectedOrder.paymentStatus?.toUpperCase() === 'PAID' || selectedOrder.orderStatus?.toUpperCase() === 'DELIVERED') ? '#10b981' : (selectedOrder.paymentStatus?.toUpperCase() === 'REFUNDED' || selectedOrder.orderStatus?.toUpperCase() === 'RETURNED') ? '#c2410c' : '#f59e0b' }}>
+                    {(selectedOrder.paymentStatus?.toUpperCase() === 'PAID' || selectedOrder.orderStatus?.toUpperCase() === 'DELIVERED') ? '✅ Đã thanh toán' : (selectedOrder.paymentStatus?.toUpperCase() === 'REFUNDED' || selectedOrder.orderStatus?.toUpperCase() === 'RETURNED') ? '↩️ Đã hoàn tiền' : '⏳ Chưa thanh toán (COD)'}
                   </strong>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px' }}>

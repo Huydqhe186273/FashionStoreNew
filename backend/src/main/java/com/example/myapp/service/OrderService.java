@@ -407,6 +407,21 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Đơn hàng #" + orderId + " không tồn tại."));
 
         order.setOrderStatus(newStatus);
+        if ("delivered".equalsIgnoreCase(newStatus)) {
+            order.setPaymentStatus("PAID");
+            // Giao thành công / xác nhận nhận hàng -> Tăng soldCount nếu chưa tính
+            if (order.getOrderItems() != null) {
+                for (OrderItem oi : order.getOrderItems()) {
+                    if (oi.getVariant() != null && oi.getVariant().getProduct() != null) {
+                        Product p = oi.getVariant().getProduct();
+                        int currentSold = p.getSoldCount() != null ? p.getSoldCount() : 0;
+                        int buyQty = oi.getQuantity() != null ? oi.getQuantity() : 1;
+                        p.setSoldCount(currentSold + buyQty);
+                        productRepository.save(p);
+                    }
+                }
+            }
+        }
         orderRepository.save(order);
 
         String statusDesc = switch (newStatus.toLowerCase()) {
@@ -443,8 +458,13 @@ public class OrderService {
             throw new RuntimeException("Bạn không có quyền gửi yêu cầu trả hàng cho đơn này.");
         }
 
-        if (!"paid".equalsIgnoreCase(order.getPaymentStatus())) {
-            throw new RuntimeException("Chỉ có thể yêu cầu trả hàng / hoàn tiền cho đơn đã thanh toán.");
+        boolean isPaidOrder = "paid".equalsIgnoreCase(order.getPaymentStatus()) || "delivered".equalsIgnoreCase(order.getOrderStatus());
+        if (!isPaidOrder) {
+            throw new RuntimeException("Chỉ có thể yêu cầu trả hàng / hoàn tiền cho đơn đã thanh toán hoặc đã nhận hàng.");
+        }
+        if ("unpaid".equalsIgnoreCase(order.getPaymentStatus()) && "delivered".equalsIgnoreCase(order.getOrderStatus())) {
+            order.setPaymentStatus("PAID");
+            orderRepository.save(order);
         }
 
         if ("cancelled".equalsIgnoreCase(order.getOrderStatus()) || "returned".equalsIgnoreCase(order.getOrderStatus())) {
@@ -461,6 +481,7 @@ public class OrderService {
             } else if ("rejected".equalsIgnoreCase(currStatus)) {
                 throw new RuntimeException("Đơn hàng này đã bị từ chối hoàn tiền trước đó. Không thể gửi lại yêu cầu hoàn tiền!");
             }
+            
         }
 
         Payment payerPayment = paymentRepository.findSuccessfulPaymentsWithPayerAccount(orderId).stream().findFirst().orElse(null);
@@ -593,7 +614,8 @@ public class OrderService {
             }
         }
 
-        boolean isPaid = "paid".equalsIgnoreCase(order.getPaymentStatus());
+        boolean isDelivered = "delivered".equalsIgnoreCase(order.getOrderStatus());
+        boolean isPaid = "paid".equalsIgnoreCase(order.getPaymentStatus()) || isDelivered;
         boolean notClosed = !"cancelled".equalsIgnoreCase(order.getOrderStatus()) && !"returned".equalsIgnoreCase(order.getOrderStatus());
         boolean canReturn = isPaid && notClosed && returnStatus == null;
 
@@ -622,6 +644,12 @@ public class OrderService {
         String resolvedPaymentStatus = order.getPaymentStatus() != null ? order.getPaymentStatus().toLowerCase() : "unpaid";
         // Đối với đơn hàng đã giao (nhận hàng), nếu là COD thì mặc định là đã thanh toán
         if ("delivered".equalsIgnoreCase(order.getOrderStatus()) && "unpaid".equalsIgnoreCase(resolvedPaymentStatus)) {
+            resolvedPaymentStatus = "paid";
+        }
+        if ("returned".equalsIgnoreCase(order.getOrderStatus()) && ("unpaid".equalsIgnoreCase(resolvedPaymentStatus) || "paid".equalsIgnoreCase(resolvedPaymentStatus))) {
+            resolvedPaymentStatus = "refunded";
+        }
+        if (returnStatus != null && "unpaid".equalsIgnoreCase(resolvedPaymentStatus)) {
             resolvedPaymentStatus = "paid";
         }
 

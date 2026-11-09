@@ -40,6 +40,11 @@ export const cancelOrder = async (orderId, userId) => {
   return response.data;
 };
 
+export const confirmOrderReceived = async (orderId) => {
+  const response = await api.put(`/orders/${orderId}/status`, null, { params: { status: 'delivered' } });
+  return response.data;
+};
+
 export const createReturnRequest = async (orderId, userId, payloadOrReason) => {
   const body = typeof payloadOrReason === 'string'
     ? { reason: payloadOrReason }
