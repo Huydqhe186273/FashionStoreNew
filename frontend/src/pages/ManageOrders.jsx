@@ -231,10 +231,20 @@ export default function ManageOrders() {
   const handleApproveReturn = async (orderId) => {
     setActionError('');
     setActionSuccess('');
-    if (!window.confirm(`Bạn có chắc muốn DUYỆT yêu cầu trả hàng & hoàn tiền cho đơn #${orderId}?`)) return;
+    const isPayOS = selectedOrder?.paymentMethod === 'PayOS';
+    const targetAcc = selectedOrder?.returnRequest?.bankAccount || selectedOrder?.payerBankAccount || '';
+    const targetBank = selectedOrder?.returnRequest?.bankName || selectedOrder?.payerBankName || '';
+    const refundAmt = formatCurrency(selectedOrder?.refundAmount || selectedOrder?.totalAmount);
+
+    const promptText = isPayOS
+      ? `Xác nhận DUYỆT hoàn tiền cho đơn #ORD-${orderId}?\n\n⚡ Hình thức: Thẻ / Ngân hàng (PayOS)\nSố tiền: ${refundAmt}\n\nHệ thống sẽ tự động gọi cổng PayOS để chuyển hoàn tiền trực tiếp về STK ${targetAcc} (${targetBank}) của khách hàng.`
+      : `Xác nhận DUYỆT hoàn tiền cho đơn #ORD-${orderId}?\n\n💵 Hình thức: COD (Tiền mặt)\nSố tiền: ${refundAmt}\n\nVui lòng hoàn tiền mặt hoặc chuyển khoản nội bộ trực tiếp cho khách hàng.`;
+
+    if (!window.confirm(promptText)) return;
     try {
       const updated = await approveReturn(orderId);
-      setActionSuccess(`✅ Đã duyệt hoàn tiền cho đơn #${orderId} thành công!`);
+      const note = updated.returnRequest?.adminNote ? ` (${updated.returnRequest.adminNote})` : '';
+      setActionSuccess(`✅ Đã duyệt hoàn tiền cho đơn #ORD-${orderId} thành công!${note}`);
       setSelectedOrder(updated);
       loadOrders();
     } catch (err) {
@@ -584,6 +594,17 @@ export default function ManageOrders() {
                         }}>
                           #ORD-{o.orderId}
                         </span>
+                        <div>
+                          {o.paymentMethod === 'PayOS' ? (
+                            <span style={{ display: 'inline-block', marginTop: '3px', fontSize: '0.68rem', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', backgroundColor: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0' }}>
+                              💳 PayOS
+                            </span>
+                          ) : (
+                            <span style={{ display: 'inline-block', marginTop: '3px', fontSize: '0.68rem', fontWeight: 600, padding: '1px 6px', borderRadius: '4px', backgroundColor: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}>
+                              💵 COD
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td style={{ padding: '10px 8px' }}>
                         <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-main, #111827)', whiteSpace: 'nowrap' }}>
@@ -862,6 +883,11 @@ export default function ManageOrders() {
                   <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Trạng thái đơn:</span> {getStatusBadge(selectedOrder.orderStatus)}
                 </div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                  Hình thức: <strong style={{ color: selectedOrder.paymentMethod === 'PayOS' ? '#2563eb' : '#b45309' }}>
+                    {selectedOrder.paymentMethod === 'PayOS' ? '💳 Thẻ / Ngân Hàng (PayOS)' : '💵 Tiền Mặt Khi Nhận (COD)'}
+                  </strong>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
                   Thanh toán: <strong style={{ color: selectedOrder.paymentStatus === 'PAID' ? '#10b981' : selectedOrder.paymentStatus === 'REFUNDED' ? '#c2410c' : '#f59e0b' }}>
                     {selectedOrder.paymentStatus === 'PAID' ? '✅ Đã thanh toán' : selectedOrder.paymentStatus === 'REFUNDED' ? '↩️ Đã hoàn tiền' : '⏳ Chưa thanh toán (COD)'}
                   </strong>
@@ -992,13 +1018,26 @@ export default function ManageOrders() {
             {/* Return Request Info & Actions */}
             {selectedOrder.returnStatus && (
               <div style={{ marginBottom: '20px', padding: '14px 18px', borderRadius: '10px', border: '1.5px solid #fde68a', backgroundColor: '#fffbeb' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#92400e', marginBottom: '8px' }}>
-                  🔄 Yêu cầu trả hàng & hoàn tiền
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#92400e' }}>
+                    🔄 Yêu cầu trả hàng & hoàn tiền
+                  </div>
+                  <div>
+                    {selectedOrder.paymentMethod === 'PayOS' ? (
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 8px', borderRadius: '12px', backgroundColor: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0' }}>
+                        💳 Thanh toán qua Thẻ/Ngân Hàng (PayOS)
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 8px', borderRadius: '12px', backgroundColor: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}>
+                        💵 Thanh toán khi nhận hàng (COD)
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#78350f', marginBottom: '4px' }}>
                   <strong>Trạng thái:</strong>{' '}
                   {selectedOrder.returnStatus === 'pending' && <span style={{ color: '#b45309', fontWeight: 700 }}>⏳ Đang chờ duyệt</span>}
-                  {selectedOrder.returnStatus === 'approved' && <span style={{ color: '#047857', fontWeight: 700 }}>✅ Đã duyệt</span>}
+                  {selectedOrder.returnStatus === 'approved' && <span style={{ color: '#047857', fontWeight: 700 }}>✅ Đã duyệt hoàn tiền</span>}
                   {selectedOrder.returnStatus === 'rejected' && <span style={{ color: '#b91c1c', fontWeight: 700 }}>❌ Đã từ chối</span>}
                 </div>
                 {selectedOrder.returnReason && (
@@ -1008,18 +1047,49 @@ export default function ManageOrders() {
                 )}
                 {selectedOrder.refundAmount != null && (
                   <div style={{ fontSize: '0.85rem', color: '#78350f', marginBottom: '8px' }}>
-                    <strong>Số tiền hoàn:</strong> {formatCurrency(selectedOrder.refundAmount)}
+                    <strong>Số tiền hoàn:</strong> <strong style={{ color: '#b45309', fontSize: '0.95rem' }}>{formatCurrency(selectedOrder.refundAmount)}</strong>
                   </div>
                 )}
+
+                {/* Chi tiết tài khoản ngân hàng chuyển hoàn */}
+                {(() => {
+                  const bName = selectedOrder.returnRequest?.bankName || selectedOrder.payerBankName || '';
+                  const bAcc = selectedOrder.returnRequest?.bankAccount || selectedOrder.payerBankAccount || '';
+                  const bHolder = selectedOrder.returnRequest?.accountHolder || selectedOrder.payerAccountHolder || selectedOrder.recipientName || '';
+                  const isPayOS = selectedOrder.paymentMethod === 'PayOS';
+
+                  return (
+                    <div style={{ marginTop: '8px', marginBottom: '10px', padding: '10px 14px', borderRadius: '8px', backgroundColor: isPayOS ? '#ecfdf5' : '#f8fafc', border: `1px solid ${isPayOS ? '#a7f3d0' : '#e2e8f0'}` }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.82rem', color: isPayOS ? '#065f46' : '#334155', marginBottom: '4px' }}>
+                        {isPayOS ? '⚡ Chuyển hoàn tự động qua cổng PayOS:' : '🏦 Thông tin tài khoản nhận tiền:'}
+                      </div>
+                      <div style={{ fontSize: '0.82rem', color: isPayOS ? '#047857' : '#475569', lineHeight: 1.5 }}>
+                        Ngân hàng: <strong>{bName || 'MBBank'}</strong> | STK: <strong style={{ color: '#2563eb' }}>{bAcc || 'Chưa cung cấp'}</strong> | Chủ TK: <strong>{bHolder}</strong>
+                      </div>
+                      {isPayOS && (
+                        <div style={{ fontSize: '0.75rem', color: '#059669', marginTop: '4px', fontStyle: 'italic' }}>
+                          Dựa vào hóa đơn #{selectedOrder.orderId}, hệ thống sẽ tự động chuyển hoàn {formatCurrency(selectedOrder.refundAmount || selectedOrder.totalAmount)} về tài khoản trên khi bấm "Duyệt hoàn tiền".
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {selectedOrder.returnRequest?.adminNote && (
+                  <div style={{ marginTop: '6px', marginBottom: '8px', padding: '8px 12px', backgroundColor: '#f0fdf4', borderRadius: '6px', border: '1px dashed #86efac', fontSize: '0.82rem', color: '#166534' }}>
+                    <strong>Kết quả xử lý:</strong> {selectedOrder.returnRequest.adminNote}
+                  </div>
+                )}
+
                 {selectedOrder.returnStatus === 'pending' && (
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                     <button
                       type="button"
                       className="btn-primary"
                       style={{ backgroundColor: '#10b981', borderColor: '#10b981', padding: '8px 18px', fontWeight: 700 }}
                       onClick={() => handleApproveReturn(selectedOrder.orderId)}
                     >
-                      ✅ Duyệt hoàn tiền
+                      {selectedOrder.paymentMethod === 'PayOS' ? '⚡ Duyệt & Chuyển Hoàn Tiền PayOS' : '✅ Duyệt hoàn tiền COD'}
                     </button>
                     <button
                       type="button"

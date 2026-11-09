@@ -23,6 +23,7 @@ public class StaffOrderDetailDTO {
     private String shippingAddress;
     private String orderStatus;
     private String paymentStatus;
+    private String paymentMethod;
     private BigDecimal totalAmount;
     private LocalDateTime createdAt;
     private String returnStatus;

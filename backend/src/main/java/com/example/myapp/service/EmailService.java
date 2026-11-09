@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -468,6 +469,127 @@ public class EmailService {
             } catch (Exception e) {
                 System.err.println("⚠️ Lỗi gửi email biên nhận thanh toán đơn #" + orderId + " tới " + toEmail + ": " + e.getMessage());
                 e.printStackTrace();
+            }
+        });
+    }
+
+    /**
+     * Gửi email thông báo hoàn tiền đơn hàng (PayOS / COD)
+     */
+    public void sendRefundConfirmationEmail(Order order, BigDecimal refundAmount, String bankName,
+                                            String bankAccount, String accountHolder, String referenceId,
+                                            String paymentMethod) {
+        if (mailUsername == null || mailUsername.isBlank() || mailUsername.contains("your-email") || order == null || order.getUser() == null) {
+            System.out.println("⚠️ Bỏ qua gửi email hoàn tiền: MAIL_USERNAME chưa được cấu hình hoặc user rỗng.");
+            return;
+        }
+
+        String toEmail = order.getUser().getEmail();
+        if (toEmail == null || toEmail.isBlank()) {
+            return;
+        }
+
+        DecimalFormat df = new DecimalFormat("#,###₫");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        final Integer orderId = order.getOrderId();
+        final String customerName = order.getUser().getFullName() != null && !order.getUser().getFullName().isBlank()
+                ? order.getUser().getFullName() : "Quý khách";
+        final BigDecimal finalRefund = refundAmount != null ? refundAmount : (order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+        final String ref = referenceId != null ? referenceId : ("REFUND-" + orderId);
+        final String refundTime = dtf.format(java.time.LocalDateTime.now());
+        final boolean isPayOS = "PayOS".equalsIgnoreCase(paymentMethod);
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                MimeMessage mimeMessage = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+                helper.setFrom(mailUsername, "Fashion Store Support");
+                helper.setTo(toEmail);
+                helper.setSubject("Fashion Store - Thông Báo Hoàn Tiền Thành Công Cho Đơn Hàng #" + orderId);
+
+                String bankDetailHtml = "";
+                if (bankAccount != null && !bankAccount.isBlank()) {
+                    bankDetailHtml = """
+                      <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin: 16px 0;">
+                        <div style="font-weight: 700; color: #166534; font-size: 13px; text-transform: uppercase; margin-bottom: 6px;">🏦 Tài khoản nhận tiền hoàn:</div>
+                        <div style="font-size: 14px; color: #1e293b; line-height: 1.6;">
+                          Ngân hàng: <strong>%s</strong><br/>
+                          Số tài khoản: <strong style="color: #2563eb;">%s</strong><br/>
+                          Chủ tài khoản: <strong>%s</strong>
+                        </div>
+                      </div>
+                    """.formatted(
+                            bankName != null ? bankName : "Ngân hàng liên kết",
+                            bankAccount,
+                            accountHolder != null ? accountHolder : customerName
+                    );
+                }
+
+                String methodDesc = isPayOS
+                        ? "Hệ thống đã tự động chuyển hoàn tiền qua cổng thanh toán <strong>PayOS</strong> 24/7."
+                        : "Số tiền được hoàn trả qua phương thức đối soát / tiền mặt trực tiếp.";
+
+                String htmlContent = """
+                    <!DOCTYPE html>
+                    <html lang="vi">
+                    <head><meta charset="UTF-8"></head>
+                    <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px;">
+                      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                        <div style="background: linear-gradient(135deg, #10b981 0%%, #059669 100%%); padding: 24px; text-align: center; color: #ffffff;">
+                          <h2 style="margin: 0; font-size: 20px;">Hoàn Tiền Thành Công</h2>
+                          <p style="margin: 6px 0 0; opacity: 0.9; font-size: 14px;">Yêu cầu hoàn trả cho đơn hàng #%d đã được duyệt</p>
+                        </div>
+                        <div style="padding: 24px;">
+                          <p style="font-size: 15px; color: #334155; margin-top: 0;">Xin chào <strong>%s</strong>,</p>
+                          <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+                            Fashion Store xin thông báo yêu cầu trả hàng & hoàn tiền cho đơn hàng <strong>#%d</strong> của bạn đã được phê duyệt thành công. %s
+                          </p>
+
+                          <div style="background-color: #f8fafc; border-radius: 8px; padding: 14px 18px; margin: 18px 0; border: 1px solid #e2e8f0; font-size: 14px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                              <span style="color: #64748b;">Số tiền hoàn lại:</span>
+                              <strong style="color: #059669; font-size: 16px;">%s</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                              <span style="color: #64748b;">Mã tham chiếu:</span>
+                              <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">%s</code>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                              <span style="color: #64748b;">Thời gian xử lý:</span>
+                              <span style="color: #334155;">%s</span>
+                            </div>
+                          </div>
+
+                          %s
+
+                          <p style="font-size: 13px; color: #64748b; line-height: 1.6;">
+                            Nếu bạn có bất kỳ thắc mắc nào về giao dịch hoàn tiền này, vui lòng liên hệ hotline <strong>1900 6868</strong> hoặc phản hồi trực tiếp email này để được hỗ trợ nhanh nhất.
+                          </p>
+                        </div>
+                        <div style="background-color: #f8fafc; padding: 16px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+                          &copy; 2026 Fashion Store. Uy tín - Tận tâm - Chất lượng.
+                        </div>
+                      </div>
+                    </body>
+                    </html>
+                    """.formatted(
+                            orderId,
+                            customerName,
+                            orderId,
+                            methodDesc,
+                            df.format(finalRefund),
+                            ref,
+                            refundTime,
+                            bankDetailHtml
+                );
+
+                helper.setText(htmlContent, true);
+                mailSender.send(mimeMessage);
+                System.out.println("✅ Email thông báo hoàn tiền đơn hàng #" + orderId + " đã được gửi tới " + toEmail);
+            } catch (Exception e) {
+                System.err.println("⚠️ Lỗi gửi email hoàn tiền đơn #" + orderId + ": " + e.getMessage());
             }
         });
     }

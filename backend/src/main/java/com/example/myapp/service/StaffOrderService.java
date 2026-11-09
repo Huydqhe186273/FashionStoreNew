@@ -28,6 +28,7 @@ public class StaffOrderService {
     private final ReturnRequestRepository returnRequestRepository;
     private final PaymentRepository paymentRepository;
     private final NotificationService notificationService;
+    private final PayOSRefundService payOSRefundService;
 
     public StaffOrderService(
             OrderRepository orderRepository,
@@ -36,7 +37,8 @@ public class StaffOrderService {
             ProductRepository productRepository,
             ReturnRequestRepository returnRequestRepository,
             PaymentRepository paymentRepository,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            PayOSRefundService payOSRefundService) {
         this.orderRepository = orderRepository;
         this.productVariantRepository = productVariantRepository;
         this.inboundBatchRepository = inboundBatchRepository;
@@ -44,6 +46,7 @@ public class StaffOrderService {
         this.returnRequestRepository = returnRequestRepository;
         this.paymentRepository = paymentRepository;
         this.notificationService = notificationService;
+        this.payOSRefundService = payOSRefundService;
     }
 
     public static String normalizeStatus(String status) {
@@ -323,22 +326,28 @@ public class StaffOrderService {
 
         com.example.myapp.entity.ReturnRequest rr = rrOpt.get();
         rr.setStatus("approved");
+
+        // Gọi dịch vụ hoàn tiền tự động dựa vào phương thức thanh toán (PayOS vs COD)
+        PayOSRefundService.RefundExecutionResult refundResult = payOSRefundService.processRefund(
+                order,
+                rr,
+                rr.getRefundAmount(),
+                rr.getBankName(),
+                rr.getBankAccount(),
+                rr.getAccountHolder()
+        );
+
+        if (refundResult != null && refundResult.getAdminNote() != null) {
+            rr.setAdminNote(refundResult.getAdminNote());
+        }
         returnRequestRepository.save(rr);
 
-        // Hoàn lại tồn kho cho sản phẩm
+        // Hoàn lại tồn kho cho sản phẩm (FIFO)
         restockOrderItems(order, false);
 
         order.setOrderStatus("RETURNED");
         order.setPaymentStatus("refunded");
         order = orderRepository.save(order);
-
-        try {
-            notificationService.createNotification(
-                    order.getUser().getUserId(),
-                    "order",
-                    "Yêu cầu trả hàng & hoàn tiền cho đơn hàng #" + orderId + " đã được phê duyệt thành công. Tiền sẽ được hoàn lại cho bạn."
-            );
-        } catch (Exception ignored) {}
 
         return toDetailDTO(order);
     }
@@ -435,6 +444,23 @@ public class StaffOrderService {
             : payerPayment != null ? payerPayment.getPayerAccountHolder() : null);
         rr.setAdminNote(dto.getAdminNote() != null ? dto.getAdminNote().trim() : null);
         rr.setCreatedAt(LocalDateTime.now());
+
+        // Kích hoạt hoàn tiền qua cổng thanh toán (nếu thanh toán qua ngân hàng/PayOS)
+        PayOSRefundService.RefundExecutionResult refundResult = payOSRefundService.processRefund(
+                order,
+                rr,
+                refundAmount,
+                rr.getBankName(),
+                rr.getBankAccount(),
+                rr.getAccountHolder()
+        );
+        if (refundResult != null && refundResult.getAdminNote() != null) {
+            String combinedNote = (rr.getAdminNote() != null && !rr.getAdminNote().isBlank())
+                    ? (rr.getAdminNote() + " | " + refundResult.getAdminNote())
+                    : refundResult.getAdminNote();
+            rr.setAdminNote(combinedNote);
+        }
+
         returnRequestRepository.save(rr);
 
         return toDetailDTO(order);
@@ -493,6 +519,8 @@ public class StaffOrderService {
             refundAmount = rr.get().getRefundAmount();
         }
 
+        String paymentMethod = payOSRefundService.resolvePaymentMethod(o);
+
         return StaffOrderListItemDTO.builder()
                 .orderId(o.getOrderId())
                 .customerName(customerName)
@@ -500,6 +528,7 @@ public class StaffOrderService {
                 .customerPhone(customerPhone)
                 .orderStatus(normalizeStatus(o.getOrderStatus()))
                 .paymentStatus(o.getPaymentStatus() != null ? o.getPaymentStatus() : "unpaid")
+                .paymentMethod(paymentMethod)
                 .totalAmount(o.getTotalAmount() != null ? o.getTotalAmount() : BigDecimal.ZERO)
                 .itemCount(count)
                 .createdAt(o.getCreatedAt())
@@ -592,6 +621,8 @@ public class StaffOrderService {
         String returnReason = returnRequestDTO != null ? returnRequestDTO.getReason() : null;
         BigDecimal refundAmount = returnRequestDTO != null ? returnRequestDTO.getRefundAmount() : null;
 
+        String paymentMethod = payOSRefundService.resolvePaymentMethod(o);
+
         return StaffOrderDetailDTO.builder()
                 .orderId(o.getOrderId())
                 .customerName(customerName)
@@ -602,6 +633,7 @@ public class StaffOrderService {
                 .shippingAddress(addressStr)
                 .orderStatus(normalizeStatus(o.getOrderStatus()))
                 .paymentStatus(o.getPaymentStatus() != null ? o.getPaymentStatus() : "unpaid")
+                .paymentMethod(paymentMethod)
                 .totalAmount(o.getTotalAmount() != null ? o.getTotalAmount() : BigDecimal.ZERO)
                 .createdAt(o.getCreatedAt())
                 .returnStatus(returnStatus)

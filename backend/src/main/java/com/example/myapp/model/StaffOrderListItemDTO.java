@@ -19,6 +19,7 @@ public class StaffOrderListItemDTO {
     private String customerPhone;
     private String orderStatus;
     private String paymentStatus;
+    private String paymentMethod;
     private BigDecimal totalAmount;
     private Integer itemCount;
     private LocalDateTime createdAt;
