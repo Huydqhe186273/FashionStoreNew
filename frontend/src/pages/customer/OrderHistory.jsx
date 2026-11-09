@@ -200,6 +200,28 @@ export default function OrderHistory() {
   // Gửi yêu cầu trả hàng & hoàn tiền
   const handleConfirmReturn = async () => {
     if (!orderToReturn) return;
+
+    // Validate thông tin tài khoản nếu là đơn COD hoặc chưa có tài khoản thanh toán gốc
+    if (!orderToReturn.payerBankAccount) {
+      if (!returnBankName || !returnBankName.trim()) {
+        toast.error('Vui lòng nhập tên ngân hàng nhận tiền hoàn!');
+        return;
+      }
+      const cleanAcc = (returnBankAccount || '').trim();
+      if (!cleanAcc) {
+        toast.error('Vui lòng nhập số tài khoản ngân hàng nhận tiền hoàn!');
+        return;
+      }
+      if (!/^[0-9]{6,25}$/.test(cleanAcc)) {
+        toast.error('Số tài khoản ngân hàng phải gồm từ 6 đến 25 chữ số!');
+        return;
+      }
+      if (!returnAccountHolder || !returnAccountHolder.trim()) {
+        toast.error('Vui lòng nhập tên chủ tài khoản nhận tiền hoàn!');
+        return;
+      }
+    }
+
     const fullReason = returnReasonDetail.trim()
       ? `${returnReasonType}: ${returnReasonDetail.trim()}`
       : returnReasonType;
@@ -775,11 +797,13 @@ export default function OrderHistory() {
                   </label>
                   <input
                     type="text"
+                    inputMode="numeric"
+                    maxLength={25}
                     placeholder="VD: 0987654321"
                     value={returnBankAccount}
                     readOnly={Boolean(orderToReturn.payerBankAccount)}
                     disabled={Boolean(orderToReturn.payerBankAccount)}
-                    onChange={(e) => setReturnBankAccount(e.target.value)}
+                    onChange={(e) => setReturnBankAccount(e.target.value.replace(/[^0-9]/g, ''))}
                     style={{
                       width: '100%',
                       padding: '8px 10px',
@@ -794,6 +818,11 @@ export default function OrderHistory() {
                       letterSpacing: orderToReturn.payerBankAccount ? '0.5px' : 'normal'
                     }}
                   />
+                  {!orderToReturn.payerBankAccount && (
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '3px' }}>
+                      * Nhập từ 6 đến 25 chữ số
+                    </div>
+                  )}
                 </div>
               </div>
               <div>

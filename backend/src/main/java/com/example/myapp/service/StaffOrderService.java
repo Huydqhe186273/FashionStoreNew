@@ -428,8 +428,8 @@ public class StaffOrderService {
 
         if (dto.getBankAccount() != null && !dto.getBankAccount().trim().isEmpty()) {
             String cleanAcc = dto.getBankAccount().trim();
-            if (!cleanAcc.matches("^[0-9]{6,25}$")) {
-                throw new IllegalArgumentException("Số tài khoản ngân hàng phải gồm từ 6 đến 25 chữ số!");
+            if (!cleanAcc.matches("^[0-9]{4,25}$")) {
+                throw new IllegalArgumentException("Số tài khoản ngân hàng phải gồm từ 4 đến 25 chữ số!");
             }
         }
 

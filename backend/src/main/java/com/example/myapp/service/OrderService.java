@@ -480,9 +480,23 @@ public class OrderService {
                     ? payerPayment.getPayerAccountHolder().trim().toUpperCase()
                     : (accountHolder != null && !accountHolder.trim().isEmpty() ? accountHolder.trim().toUpperCase() : "KHACH HANG"));
         } else {
-            request.setBankName(bankName != null && !bankName.trim().isEmpty() ? bankName.trim() : "MBBank");
-            request.setBankAccount(bankAccount != null && !bankAccount.trim().isEmpty() ? bankAccount.trim() : null);
-            request.setAccountHolder(accountHolder != null && !accountHolder.trim().isEmpty() ? accountHolder.trim().toUpperCase() : null);
+            if (bankName == null || bankName.trim().isEmpty()) {
+                throw new RuntimeException("Vui lòng nhập tên ngân hàng nhận tiền hoàn!");
+            }
+            if (bankAccount == null || bankAccount.trim().isEmpty()) {
+                throw new RuntimeException("Vui lòng nhập số tài khoản ngân hàng nhận tiền hoàn!");
+            }
+            String cleanAcc = bankAccount.trim();
+            if (!cleanAcc.matches("^[0-9]{6,25}$")) {
+                throw new RuntimeException("Số tài khoản ngân hàng phải gồm từ 6 đến 25 chữ số!");
+            }
+            if (accountHolder == null || accountHolder.trim().isEmpty()) {
+                throw new RuntimeException("Vui lòng nhập tên chủ tài khoản nhận tiền hoàn!");
+            }
+
+            request.setBankName(bankName.trim());
+            request.setBankAccount(cleanAcc);
+            request.setAccountHolder(accountHolder.trim().toUpperCase());
         }
 
         ReturnRequest saved = returnRequestRepository.save(request);
