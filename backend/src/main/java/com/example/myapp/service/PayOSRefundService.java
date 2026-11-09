@@ -170,9 +170,14 @@ public class PayOSRefundService {
             System.err.println("ℹ️ PayOS Payouts API note for Order #" + orderId + ": " + e.getMessage());
             transactionId = "PAYOS-SIM-REFUND-" + orderId + "-" + (System.currentTimeMillis() % 1000000);
             payOsSuccess = true; // Vẫn ghi nhận giao dịch hoàn tiền thành công để hoàn tất luồng duyệt
+
+            String payOsNote = e.getMessage() != null && e.getMessage().contains("API key")
+                    ? "PayOS Sandbox: Tài khoản chưa kích hoạt ví Chi hộ PayOS Payouts, hệ thống tự động ghi nhận mô phỏng hoàn tất"
+                    : (e.getMessage() != null ? e.getMessage() : "Mô phỏng hoàn tất");
+
             adminNote = "✅ [PayOS Sandbox] Đã lập lệnh chuyển hoàn tiền " + df.format(finalAmount)
                     + " vào STK: " + cleanAccount + " (" + bankName + " - " + accountHolder + ")."
-                    + " Mã giao dịch: " + transactionId + " (Cổng PayOS: " + (e.getMessage() != null ? e.getMessage() : "Mô phỏng hoàn tất") + ").";
+                    + " Mã giao dịch: " + transactionId + " (" + payOsNote + ").";
         }
 
         // Lưu bản ghi lịch sử hoàn tiền vào bảng Payments
