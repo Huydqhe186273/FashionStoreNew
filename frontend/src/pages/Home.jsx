@@ -3,26 +3,45 @@ import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import CustomerNavbar from '../components/CustomerNavbar';
 import ProductCard from '../components/customer/ProductCard';
-import { getPersonalizedRecommendations, getColdStartRecommendations } from '../services/recommendationService';
+import { getPersonalizedRecommendations, getColdStartRecommendations, resetUserAIHistory } from '../services/recommendationService';
 import api from '../services/api';
 import './Home.css';
 
 export default function Home() {
   const { user } = useContext(AuthContext);
   const [recommendations, setRecommendations] = useState([]);
+  const [recSource, setRecSource] = useState('cold_start');
+  const [recCategories, setRecCategories] = useState([]);
   const [bestsellers, setBestsellers] = useState([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
   const [loadingBestsellers, setLoadingBestsellers] = useState(true);
+
+  const applyRecommendations = (data) => {
+    setRecommendations(data?.products || []);
+    setRecSource(data?.source || 'cold_start');
+    setRecCategories(data?.basedOnCategories || []);
+  };
+
+  const handleResetAI = async () => {
+    try {
+      setLoadingRecs(true);
+      await resetUserAIHistory();
+      applyRecommendations(await getPersonalizedRecommendations(8));
+      alert('Đã xóa sạch dữ liệu AI! Bạn có thể bắt đầu xem sản phẩm mới để AI học lại gu từ đầu.');
+    } catch (err) {
+      console.error('Lỗi reset AI:', err);
+    } finally {
+      setLoadingRecs(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
 
     // Load AI Personalized / Cold-start recommendations
-    getPersonalizedRecommendations(user?.id, 8)
+    getPersonalizedRecommendations(8)
       .then((data) => {
-        if (!cancelled && data && data.length > 0) {
-          setRecommendations(data);
-        }
+        if (!cancelled) applyRecommendations(data);
       })
       .catch((err) => console.warn('Lỗi tải gợi ý:', err))
       .finally(() => {
@@ -72,13 +91,41 @@ export default function Home() {
       <section id="ai-recommendations" className="home-recommendations-section">
         <div className="home-section-header">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span className="ai-pill">✨ AI PERSONALIZED</span>
-              {user && <span className="user-greeting-pill">Dành cho {user.fullName || 'bạn'}</span>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <span className="ai-pill">✨ AI CÁ NHÂN HÓA</span>
+              {user ? (
+                <span className="user-greeting-pill">Dành cho {user.fullName || 'bạn'}</span>
+              ) : (
+                <span className="user-greeting-pill">Theo phiên xem (Khách vãng lai)</span>
+              )}
+              <button
+                type="button"
+                onClick={handleResetAI}
+                title="Xóa dữ liệu để test lại AI từ đầu"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.75rem',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb',
+                  background: '#fff',
+                  color: '#dc2626',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                🔄 Reset AI
+              </button>
             </div>
             <h2 className="home-section-title">Gợi ý dành riêng cho bạn</h2>
             <p className="home-section-subtitle">
-              Sản phẩm được chọn lọc dựa trên phong cách, mức giá và hành vi yêu thích của bạn
+              {recSource === 'personalized' && recCategories.length > 0 ? (
+                <>Vì bạn quan tâm <strong>{recCategories.slice(0, 3).join(', ')}</strong></>
+              ) : (
+                'Xem thêm vài sản phẩm, chúng tôi sẽ gợi ý theo gu của bạn. Hiện đang hiển thị sản phẩm bán chạy và hàng mới.'
+              )}
             </p>
           </div>
           <Link to="/shop" className="view-more-link">

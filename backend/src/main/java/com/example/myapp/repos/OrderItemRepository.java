@@ -12,6 +12,11 @@ import java.util.Optional;
 @Repository
 public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
 
+    /** Recommendation: các sản phẩm user đã mua (bỏ qua đơn đã huỷ) để không gợi ý lại. */
+    @Query("SELECT DISTINCT oi.Variant.Product.ProductId FROM OrderItem oi " +
+           "WHERE oi.Order.User.UserId = :userId AND LOWER(oi.Order.OrderStatus) <> 'cancelled'")
+    List<Integer> findPurchasedProductIdsByUserId(@Param("userId") Integer userId);
+
     @Query("SELECT CASE WHEN COUNT(oi) > 0 THEN true ELSE false END FROM OrderItem oi WHERE oi.Variant.VariantId = :variantId")
     boolean existsByVariantId(@Param("variantId") Integer variantId);
 

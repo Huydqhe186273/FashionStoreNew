@@ -2,9 +2,11 @@ package com.example.myapp.repos;
 
 import com.example.myapp.entity.UserPreference;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -12,4 +14,9 @@ import java.util.Optional;
 public interface UserPreferenceRepository extends JpaRepository<UserPreference, Integer> {
     @Query("SELECT up FROM UserPreference up WHERE up.UserId = :userId")
     Optional<UserPreference> findByUserId(@Param("userId") Integer userId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM UserPreference up WHERE up.UserId = :userId")
+    void deleteByUserId(@Param("userId") Integer userId);
 }

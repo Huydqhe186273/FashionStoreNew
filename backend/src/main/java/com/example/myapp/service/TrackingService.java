@@ -22,7 +22,6 @@ public class TrackingService {
     private final UserBehaviorLogRepository userBehaviorLogRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
-    private final UserPreferenceService userPreferenceService;
 
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public UserBehaviorLog logBehavior(BehaviorLogRequestDTO req) {
@@ -60,15 +59,7 @@ public class TrackingService {
             productRepository.save(product);
         }
 
-        // If authenticated user, update preference profile
-        if (user != null) {
-            try {
-                userPreferenceService.updatePreferences(user.getUserId());
-            } catch (Exception e) {
-                log.warn("Failed to update user preference profile for userId {}: {}", user.getUserId(), e.getMessage());
-            }
-        }
-
+        // Hồ sơ sở thích được tính trực tiếp từ log khi gợi ý (UserPreferenceService), không cần cập nhật ở đây.
         return saved;
     }
 }

@@ -227,22 +227,24 @@ public class OrderService {
             System.err.println("Lỗi gửi email xác nhận đặt hàng: " + e.getMessage());
         }
 
-        // Tự động thu thập hành vi người dùng (Purchase behavior tracking)
+        // Tự động thu thập hành vi người dùng (Purchase behavior tracking) cho module gợi ý.
+        // Lấy productId ngay trong transaction hiện tại, luồng nền chỉ làm việc với ID.
+        List<Integer> purchasedProductIds = orderItems.stream()
+                .filter(item -> item.getVariant() != null && item.getVariant().getProduct() != null)
+                .map(item -> item.getVariant().getProduct().getProductId())
+                .distinct()
+                .toList();
         java.util.concurrent.CompletableFuture.runAsync(() -> {
-            try {
-                for (OrderItem item : orderItems) {
-                    if (item.getVariant() != null && item.getVariant().getProduct() != null) {
-                        com.example.myapp.model.BehaviorLogRequestDTO logReq = com.example.myapp.model.BehaviorLogRequestDTO
-                                .builder()
-                                .userId(userId)
-                                .productId(item.getVariant().getProduct().getProductId())
-                                .actionType("purchase")
-                                .build();
-                        trackingService.logBehavior(logReq);
-                    }
+            for (Integer productId : purchasedProductIds) {
+                try {
+                    trackingService.logBehavior(com.example.myapp.model.BehaviorLogRequestDTO.builder()
+                            .userId(userId)
+                            .productId(productId)
+                            .actionType("purchase")
+                            .build());
+                } catch (Exception e) {
+                    System.err.println("Lỗi ghi nhận hành vi mua hàng: " + e.getMessage());
                 }
-            } catch (Exception e) {
-                System.err.println("Lỗi ghi nhận hành vi mua hàng: " + e.getMessage());
             }
         });
 

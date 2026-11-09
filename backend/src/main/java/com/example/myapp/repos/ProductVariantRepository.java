@@ -11,6 +11,19 @@ import java.util.List;
 @Repository
 public interface ProductVariantRepository extends JpaRepository<ProductVariant, Integer> {
 
+    // ===== Recommendation: nạp variant theo lô để tránh N+1 =====
+
+    @Query("SELECT pv FROM ProductVariant pv JOIN FETCH pv.Product p WHERE p.ProductId IN :productIds")
+    List<ProductVariant> findByProductIdIn(@Param("productIds") java.util.Collection<Integer> productIds);
+
+    @Query("SELECT pv FROM ProductVariant pv JOIN FETCH pv.Product p " +
+           "WHERE p.Category.CategoryId IN :categoryIds")
+    List<ProductVariant> findByCategoryIdIn(@Param("categoryIds") java.util.Collection<Integer> categoryIds);
+
+    @Query("SELECT pv FROM ProductVariant pv JOIN FETCH pv.Product p " +
+           "WHERE LOWER(p.Status) = 'active' AND (p.IsTest = false OR p.IsTest IS NULL)")
+    List<ProductVariant> findAllOfActiveProducts();
+
     // Use explicit JPQL — Spring Data can't derive `Product.ProductId` because
     // the Product entity field is named `ProductId`, not `id`.
     @Query("SELECT pv FROM ProductVariant pv WHERE pv.Product.ProductId = :productId")

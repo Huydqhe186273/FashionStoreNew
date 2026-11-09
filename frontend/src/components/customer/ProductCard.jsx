@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import FavoriteButton from './FavoriteButton';
 import { resolveProductImage, PLACEHOLDER, colorHex } from '../../utils/productImage';
+import './ProductCard.css';
 
 const SIZE_LIMIT = 4;   // show first 4 sizes; rest hidden behind "+N"
 const COLOR_LIMIT = 5;  // show first 5 swatches
