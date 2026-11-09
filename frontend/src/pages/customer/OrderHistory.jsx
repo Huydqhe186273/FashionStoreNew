@@ -432,11 +432,11 @@ export default function OrderHistory() {
 
                       {order.returnStatus === 'rejected' && (
                         <span className="badge-return-status rejected" title={order.returnReason || ''}>
-                          Hoàn tiền bị từ chối
+                          ❌ Hoàn tiền bị từ chối
                         </span>
                       )}
 
-                      {order.canReturn && (
+                      {order.canReturn && order.returnStatus !== 'rejected' && (
                         <button
                           type="button"
                           onClick={() => {
@@ -585,6 +585,14 @@ export default function OrderHistory() {
                     Ngân hàng: <strong>{selectedOrder.returnBankName || selectedOrder.payerBankName || 'N/A'}</strong> | 
                     STK: <strong style={{ color: '#2563eb' }}>{selectedOrder.returnBankAccount || selectedOrder.payerBankAccount}</strong> | 
                     Chủ TK: <strong>{selectedOrder.returnAccountHolder || selectedOrder.payerAccountHolder || 'N/A'}</strong>
+                  </div>
+                </div>
+              )}
+              {selectedOrder.returnStatus === 'rejected' && (
+                <div style={{ marginTop: '12px', padding: '10px 12px', backgroundColor: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca', fontSize: '0.85rem' }}>
+                  <div style={{ fontWeight: '700', color: '#991b1b', marginBottom: '4px' }}>❌ Yêu cầu hoàn tiền đã bị từ chối</div>
+                  <div style={{ color: '#b91c1c' }}>
+                    {selectedOrder.returnReason ? selectedOrder.returnReason : 'Đơn hàng không đáp ứng điều kiện hoàn trả.'} (Đơn hàng này không thể gửi lại yêu cầu hoàn tiền)
                   </div>
                 </div>
               )}

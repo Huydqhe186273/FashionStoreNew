@@ -251,6 +251,10 @@ public class StaffOrderService {
             order = orderRepository.save(order);
 
         } else if ("RETURNED".equals(target)) {
+            java.util.Optional<com.example.myapp.entity.ReturnRequest> rejectedCheck = returnRequestRepository.findLatestByOrderId(orderId);
+            if (rejectedCheck.isPresent() && "rejected".equalsIgnoreCase(rejectedCheck.get().getStatus())) {
+                throw new IllegalArgumentException("Đơn hàng #" + orderId + " đã bị từ chối hoàn tiền trước đó. Không thể chuyển sang trạng thái đã hoàn!");
+            }
             if ("SHIPPED".equals(current)) {
                 return markOrderRTO(orderId, "Nhân viên xác nhận bưu tá giao thất bại & hoàn về kho.");
             } else if ("DELIVERED".equals(current)) {
@@ -390,6 +394,11 @@ public class StaffOrderService {
     public StaffOrderDetailDTO createStaffReturn(Integer orderId, StaffCreateReturnDTO dto) {
         Order order = orderRepository.findByIdWithItems(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId));
+
+        java.util.Optional<com.example.myapp.entity.ReturnRequest> rejectedRR = returnRequestRepository.findLatestByOrderId(orderId);
+        if (rejectedRR.isPresent() && "rejected".equalsIgnoreCase(rejectedRR.get().getStatus())) {
+            throw new IllegalArgumentException("Đơn hàng #" + orderId + " đã bị từ chối hoàn tiền trước đó. Không thể tiếp nhận hay hoàn tiền nữa!");
+        }
 
         String current = normalizeStatus(order.getOrderStatus());
         if (!"DELIVERED".equals(current) && !"SHIPPED".equals(current)) {

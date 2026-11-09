@@ -573,7 +573,6 @@ export default function ManageOrders() {
                   const canConfirm = status === 'PENDING';
                   const canShip = status === 'PROCESSING';
                   const canCancel = status === 'PENDING' || status === 'PROCESSING';
-                  const canReturn = status === 'DELIVERED';
                   const hasReturnPending = o.returnStatus === 'pending';
 
                   return (
@@ -744,21 +743,22 @@ export default function ManageOrders() {
 
 
 
-                          {canReturn && (
+                          {hasReturnPending && (
                             <button
                               className="btn-action"
                               style={{
-                                backgroundColor: 'rgba(234, 88, 12, 0.12)',
+                                backgroundColor: 'rgba(234, 88, 12, 0.15)',
                                 color: '#c2410c',
-                                borderColor: 'rgba(234, 88, 12, 0.35)',
+                                borderColor: 'rgba(234, 88, 12, 0.4)',
                                 whiteSpace: 'nowrap',
-                                padding: '4px 7px',
-                                fontSize: '0.78rem'
+                                padding: '4px 8px',
+                                fontSize: '0.78rem',
+                                fontWeight: 700
                               }}
-                              onClick={() => handleOpenReturnModal(o)}
-                              title="Tiếp nhận khách gửi trả lại hàng về kho"
+                              onClick={() => handleOpenDetail(o.orderId)}
+                              title="Khách hàng yêu cầu hoàn hàng - Bấm để xem chi tiết và tiếp nhận hoàn hàng"
                             >
-                              ↩️ Hoàn
+                              ↩️ Tiếp nhận hoàn hàng
                             </button>
                           )}
 
@@ -777,26 +777,6 @@ export default function ManageOrders() {
                             >
                               ❌ Hủy
                             </button>
-                          )}
-
-                          {hasReturnPending && (
-                            <>
-                              <button
-                                className="btn-action"
-                                style={{
-                                  backgroundColor: 'rgba(16, 185, 129, 0.12)',
-                                  color: '#047857',
-                                  borderColor: 'rgba(16, 185, 129, 0.35)',
-                                  whiteSpace: 'nowrap',
-                                  padding: '5px 8px',
-                                  fontWeight: 700
-                                }}
-                                onClick={() => { handleOpenDetail(o.orderId); }}
-                                title="Duyệt yêu cầu hoàn tiền"
-                              >
-                                🔄 Duyệt HT
-                              </button>
-                            </>
                           )}
                         </div>
                       </td>
@@ -1021,8 +1001,13 @@ export default function ManageOrders() {
                   <strong>Trạng thái:</strong>{' '}
                   {selectedOrder.returnStatus === 'pending' && <span style={{ color: '#b45309', fontWeight: 700 }}>⏳ Đang chờ duyệt</span>}
                   {selectedOrder.returnStatus === 'approved' && <span style={{ color: '#047857', fontWeight: 700 }}>✅ Đã duyệt hoàn tiền</span>}
-                  {selectedOrder.returnStatus === 'rejected' && <span style={{ color: '#b91c1c', fontWeight: 700 }}>❌ Đã từ chối</span>}
+                  {selectedOrder.returnStatus === 'rejected' && <span style={{ color: '#b91c1c', fontWeight: 700 }}>❌ Đã từ chối (Không tiếp nhận hoàn tiền nữa)</span>}
                 </div>
+                {selectedOrder.returnStatus === 'rejected' && (
+                  <div style={{ marginTop: '8px', marginBottom: '8px', padding: '10px 14px', backgroundColor: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca', color: '#991b1b', fontSize: '0.85rem' }}>
+                    <strong>🚫 Đơn hàng này đã bị từ chối hoàn tiền:</strong> Không được phép hoàn tiền hay tạo yêu cầu hoàn tiền cho đơn này nữa.
+                  </div>
+                )}
                 {selectedOrder.returnReason && (
                   <div style={{ fontSize: '0.85rem', color: '#78350f', marginBottom: '4px' }}>
                     <strong>Lý do khách hàng:</strong> {selectedOrder.returnReason}
@@ -1153,7 +1138,7 @@ export default function ManageOrders() {
                   </button>
                 )}
 
-                {selectedOrder.orderStatus === 'DELIVERED' && (
+                {selectedOrder.orderStatus === 'DELIVERED' && selectedOrder.returnStatus === 'pending' && (
                   <button
                     type="button"
                     className="btn-action"

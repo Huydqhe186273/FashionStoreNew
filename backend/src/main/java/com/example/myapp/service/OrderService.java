@@ -458,6 +458,8 @@ public class OrderService {
                 throw new RuntimeException("Đơn hàng này đã có yêu cầu hoàn tiền đang chờ duyệt.");
             } else if ("approved".equalsIgnoreCase(currStatus) || "refunded".equalsIgnoreCase(currStatus)) {
                 throw new RuntimeException("Đơn hàng này đã được duyệt hoàn tiền.");
+            } else if ("rejected".equalsIgnoreCase(currStatus)) {
+                throw new RuntimeException("Đơn hàng này đã bị từ chối hoàn tiền trước đó. Không thể gửi lại yêu cầu hoàn tiền!");
             }
         }
 
@@ -579,7 +581,7 @@ public class OrderService {
 
         boolean isPaid = "paid".equalsIgnoreCase(order.getPaymentStatus());
         boolean notClosed = !"cancelled".equalsIgnoreCase(order.getOrderStatus()) && !"returned".equalsIgnoreCase(order.getOrderStatus());
-        boolean canReturn = isPaid && notClosed && (returnStatus == null || "rejected".equalsIgnoreCase(returnStatus));
+        boolean canReturn = isPaid && notClosed && returnStatus == null;
 
         // Xác định phương thức thanh toán chính xác nhất từ database
         String resolvedMethod = null;
