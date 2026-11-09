@@ -573,7 +573,6 @@ export default function ManageOrders() {
                   const canConfirm = status === 'PENDING';
                   const canShip = status === 'PROCESSING';
                   const canCancel = status === 'PENDING' || status === 'PROCESSING';
-                  const canRTO = status === 'SHIPPED';
                   const canReturn = status === 'DELIVERED';
                   const hasReturnPending = o.returnStatus === 'pending';
 
@@ -743,23 +742,7 @@ export default function ManageOrders() {
                             </button>
                           )}
 
-                          {canRTO && (
-                            <button
-                              className="btn-action"
-                              style={{
-                                backgroundColor: 'rgba(234, 88, 12, 0.12)',
-                                color: '#c2410c',
-                                borderColor: 'rgba(234, 88, 12, 0.35)',
-                                whiteSpace: 'nowrap',
-                                padding: '4px 7px',
-                                fontSize: '0.78rem'
-                              }}
-                              onClick={() => handleMarkRTO(o.orderId)}
-                              title="Giao thất bại / Bưu tá hoàn hàng về kho (Cộng lại tồn kho)"
-                            >
-                              📦 RTO
-                            </button>
-                          )}
+
 
                           {canReturn && (
                             <button
@@ -1160,24 +1143,14 @@ export default function ManageOrders() {
                 )}
 
                 {selectedOrder.orderStatus === 'SHIPPED' && (
-                  <>
-                    <button
-                      type="button"
-                      className="btn-action"
-                      style={{ backgroundColor: 'rgba(234, 88, 12, 0.12)', color: '#c2410c', borderColor: 'rgba(234, 88, 12, 0.35)', padding: '9px 18px', fontWeight: 600 }}
-                      onClick={() => handleMarkRTO(selectedOrder.orderId)}
-                    >
-                      📦 Bưu Tá Hoàn Về Kho (RTO)
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      style={{ backgroundColor: '#10b981', borderColor: '#10b981', padding: '9px 20px', fontWeight: 600 }}
-                      onClick={() => handleUpdateStatus(selectedOrder.orderId, 'DELIVERED')}
-                    >
-                      🏁 Xác Nhận Đã Giao (DELIVERED)
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    style={{ backgroundColor: '#10b981', borderColor: '#10b981', padding: '9px 20px', fontWeight: 600 }}
+                    onClick={() => handleUpdateStatus(selectedOrder.orderId, 'DELIVERED')}
+                  >
+                    🏁 Xác Nhận Đã Giao (DELIVERED)
+                  </button>
                 )}
 
                 {selectedOrder.orderStatus === 'DELIVERED' && (
