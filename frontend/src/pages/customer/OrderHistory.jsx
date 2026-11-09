@@ -27,7 +27,7 @@ const ORDER_STATUS_MAP = {
 
 // Hàm xác định duy nhất 1 trạng thái mới nhất & chính xác nhất của đơn hàng
 const getLatestOrderStatus = (order) => {
-  if (!order) return { label: 'Đang xử lý', class: 'pending', color: '#475569', bg: '#f1f5f9' };
+  if (!order) return { label: 'Đang xử lý', class: 'pending', color: '#ffffff', bg: '#475569' };
   const oStatus = (order.orderStatus || '').toLowerCase();
   const pStatus = (order.paymentStatus || '').toLowerCase();
   const isPaid = pStatus === 'paid' || oStatus === 'delivered';
@@ -35,43 +35,43 @@ const getLatestOrderStatus = (order) => {
 
   // 1. Trạng thái trả hàng / hoàn tiền nếu có (ưu tiên cao nhất)
   if (order.returnStatus === 'pending') {
-    return { label: '⏳ Chờ duyệt hoàn tiền', class: 'pending', color: '#b45309', bg: '#fef3c7' };
+    return { label: '⏳ Chờ duyệt hoàn tiền', class: 'pending', color: '#ffffff', bg: '#d97706' };
   }
   if (order.returnStatus === 'approved' || order.returnStatus === 'refunded') {
-    return { label: '↩️ Đã hoàn tiền', class: 'delivered', color: '#047857', bg: '#ecfdf5' };
+    return { label: '↩️ Đã hoàn tiền', class: 'delivered', color: '#ffffff', bg: '#059669' };
   }
   if (order.returnStatus === 'rejected') {
-    return { label: '❌ Hoàn tiền bị từ chối', class: 'cancelled', color: '#b91c1c', bg: '#fef2f2' };
+    return { label: '❌ Hoàn tiền bị từ chối', class: 'cancelled', color: '#ffffff', bg: '#dc2626' };
   }
 
   // 2. Trạng thái đơn hàng
   if (oStatus === 'cancelled') {
-    return { label: '❌ Đã hủy', class: 'cancelled', color: '#b91c1c', bg: '#fef2f2' };
+    return { label: '❌ Đã hủy', class: 'cancelled', color: '#ffffff', bg: '#dc2626' };
   }
   if (oStatus === 'returned') {
-    return { label: '↩️ Đã hoàn hàng', class: 'cancelled', color: '#c2410c', bg: '#fff7ed' };
+    return { label: '↩️ Đã hoàn hàng', class: 'cancelled', color: '#ffffff', bg: '#ea580c' };
   }
   if (oStatus === 'delivered') {
     // Đơn COD nhận hàng -> Đã thanh toán!
-    return { label: isCod ? '✅ Đã nhận hàng (Đã thanh toán)' : '✅ Đã giao thành công', class: 'delivered', color: '#047857', bg: '#ecfdf5' };
+    return { label: isCod ? '✅ Đã nhận hàng (Đã thanh toán)' : '✅ Đã giao thành công', class: 'delivered', color: '#ffffff', bg: '#059669' };
   }
   if (oStatus === 'shipping' || oStatus === 'shipped') {
-    return { label: '🚚 Đang giao hàng', class: 'shipping', color: '#4338ca', bg: '#e0e7ff' };
+    return { label: '🚚 Đang giao hàng', class: 'shipping', color: '#ffffff', bg: '#4f46e5' };
   }
   if (oStatus === 'processing' || oStatus === 'confirmed') {
-    return { label: '⚙️ Đang xử lý', class: 'confirmed', color: '#1d4ed8', bg: '#eff6ff' };
+    return { label: '⚙️ Đang xử lý', class: 'confirmed', color: '#ffffff', bg: '#2563eb' };
   }
   if (oStatus === 'pending') {
     if (isCod) {
-      return { label: '⏳ Chờ xác nhận (COD)', class: 'pending', color: '#b45309', bg: '#fef3c7' };
+      return { label: '⏳ Chờ xác nhận (COD)', class: 'pending', color: '#ffffff', bg: '#d97706' };
     }
     if (isPaid) {
-      return { label: '✅ Đã thanh toán (Chờ xác nhận)', class: 'confirmed', color: '#047857', bg: '#ecfdf5' };
+      return { label: '✅ Đã thanh toán (Chờ xác nhận)', class: 'confirmed', color: '#ffffff', bg: '#059669' };
     }
-    return { label: '⏳ Chờ thanh toán PayOS', class: 'pending', color: '#b45309', bg: '#fef3c7' };
+    return { label: '⏳ Chờ thanh toán PayOS', class: 'pending', color: '#ffffff', bg: '#d97706' };
   }
 
-  return { label: order.orderStatus || 'Đang xử lý', class: 'pending', color: '#475569', bg: '#f1f5f9' };
+  return { label: order.orderStatus || 'Đang xử lý', class: 'pending', color: '#ffffff', bg: '#475569' };
 };
 
 const PAYMENT_STATUS_MAP = {
@@ -381,15 +381,17 @@ export default function OrderHistory() {
                       className={`badge-status ${latestStatus.class}`}
                       style={{
                         backgroundColor: latestStatus.bg,
-                        color: latestStatus.color,
-                        fontWeight: 700,
-                        border: `1px solid ${latestStatus.color}33`,
-                        padding: '4px 10px',
-                        borderRadius: '20px',
-                        fontSize: '0.8rem',
+                        color: '#ffffff',
+                        fontWeight: 800,
+                        border: 'none',
+                        padding: '5px 12px',
+                        borderRadius: '6px',
+                        fontSize: '0.78rem',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '4px'
+                        gap: '5px',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.15)',
+                        letterSpacing: '0.02em'
                       }}
                     >
                       {latestStatus.label}
