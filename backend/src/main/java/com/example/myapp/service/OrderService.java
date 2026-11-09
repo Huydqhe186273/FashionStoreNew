@@ -600,9 +600,14 @@ public class OrderService {
             resolvedMethod = "paid".equalsIgnoreCase(order.getPaymentStatus()) ? "PayOS" : "COD";
         }
 
+        String resolvedStatus = order.getOrderStatus();
+        if ("shipped".equalsIgnoreCase(resolvedStatus)) {
+            resolvedStatus = "shipping";
+        }
+
         return com.example.myapp.model.OrderResponseDTO.builder()
                 .orderId(order.getOrderId())
-                .orderStatus(order.getOrderStatus())
+                .orderStatus(resolvedStatus)
                 .paymentStatus(order.getPaymentStatus())
                 .paymentMethod(resolvedMethod)
                 .totalAmount(order.getTotalAmount())

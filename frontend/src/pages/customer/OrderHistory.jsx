@@ -17,7 +17,9 @@ const formatColor = (color) => {
 const ORDER_STATUS_MAP = {
   pending: { label: 'Chờ xử lý', class: 'pending' },
   confirmed: { label: 'Đã xác nhận', class: 'confirmed' },
-  shipping: { label: 'Đang vận chuyển', class: 'shipping' },
+  processing: { label: 'Đang xử lý', class: 'confirmed' },
+  shipping: { label: 'Đang giao hàng', class: 'shipping' },
+  shipped: { label: 'Đang giao hàng', class: 'shipping' },
   delivered: { label: 'Đã giao thành công', class: 'delivered' },
   cancelled: { label: 'Đã hủy', class: 'cancelled' },
   returned: { label: 'Đã trả hàng', class: 'cancelled' }
@@ -95,7 +97,13 @@ export default function OrderHistory() {
   const filteredOrders = useMemo(() => {
     if (activeTab === 'all') return orders;
     if (activeTab === 'paid') return orders.filter((o) => o.paymentStatus === 'paid');
-    return orders.filter((o) => o.orderStatus === activeTab);
+    if (activeTab === 'shipping') {
+      return orders.filter((o) => {
+        const s = (o.orderStatus || '').toLowerCase();
+        return s === 'shipping' || s === 'shipped';
+      });
+    }
+    return orders.filter((o) => (o.orderStatus || '').toLowerCase() === activeTab);
   }, [orders, activeTab]);
 
   // Tự động kiểm tra kết quả thanh toán từ PayOS redirect về
@@ -255,7 +263,10 @@ export default function OrderHistory() {
           className={`orders-tab-btn ${activeTab === 'shipping' ? 'active' : ''}`}
           onClick={() => setActiveTab('shipping')}
         >
-          Đang vận chuyển ({orders.filter((o) => o.orderStatus === 'shipping').length})
+          Đang giao hàng ({orders.filter((o) => {
+            const s = (o.orderStatus || '').toLowerCase();
+            return s === 'shipping' || s === 'shipped';
+          }).length})
         </button>
         <button
           type="button"
@@ -570,6 +581,12 @@ export default function OrderHistory() {
                 <span>Phương thức thanh toán:</span>
                 <span style={{ fontWeight: '700', color: '#1e293b' }}>
                   {selectedOrder.paymentMethod?.toUpperCase() === 'COD' ? 'Thanh toán khi nhận hàng (COD)' : 'Cổng thanh toán PayOS'}
+                </span>
+              </div>
+              <div className="order-detail-summary-row" style={{ marginTop: '4px' }}>
+                <span>Trạng thái đơn hàng:</span>
+                <span style={{ fontWeight: '700', color: selectedOrder.orderStatus?.toLowerCase() === 'shipping' || selectedOrder.orderStatus?.toLowerCase() === 'shipped' ? '#6366f1' : '#1e293b' }}>
+                  {ORDER_STATUS_MAP[selectedOrder.orderStatus?.toLowerCase()]?.label || selectedOrder.orderStatus}
                 </span>
               </div>
               <div className="order-detail-summary-row" style={{ marginTop: '4px' }}>
