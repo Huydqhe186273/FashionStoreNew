@@ -392,8 +392,9 @@ export default function ManageOrders() {
     }
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, paymentMethod, returnStatus) => {
     const s = (status || '').toUpperCase();
+    const isCod = (paymentMethod || '').toUpperCase() === 'COD';
     const baseStyle = {
       display: 'inline-flex',
       alignItems: 'center',
@@ -405,6 +406,17 @@ export default function ManageOrders() {
       whiteSpace: 'nowrap'
     };
 
+    // Ưu tiên trạng thái mới nhất nếu đơn có quy trình hoàn tiền
+    if (returnStatus === 'pending') {
+      return <span style={{ ...baseStyle, backgroundColor: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}>⏳ Chờ duyệt hoàn tiền</span>;
+    }
+    if (returnStatus === 'approved') {
+      return <span style={{ ...baseStyle, backgroundColor: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>✅ Đã hoàn tiền</span>;
+    }
+    if (returnStatus === 'rejected') {
+      return <span style={{ ...baseStyle, backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>❌ Từ chối hoàn tiền</span>;
+    }
+
     switch (s) {
       case 'PENDING':
         return <span style={{ ...baseStyle, backgroundColor: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}>⏳ Chờ xác nhận</span>;
@@ -413,7 +425,7 @@ export default function ManageOrders() {
       case 'SHIPPED':
         return <span style={{ ...baseStyle, backgroundColor: '#f3e8ff', color: '#7e22ce', border: '1px solid #e9d5ff' }}>🚚 Đang giao</span>;
       case 'DELIVERED':
-        return <span style={{ ...baseStyle, backgroundColor: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>🏁 Hoàn tất</span>;
+        return <span style={{ ...baseStyle, backgroundColor: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>🏁 {isCod ? 'Đã giao (Đã thanh toán)' : 'Hoàn tất'}</span>;
       case 'RETURNED':
         return <span style={{ ...baseStyle, backgroundColor: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' }}>↩️ Đã hoàn hàng</span>;
       case 'CANCELLED':
@@ -569,12 +581,6 @@ export default function ManageOrders() {
                 </tr>
               ) : (
                 orders.map(o => {
-                  const status = (o.orderStatus || '').toUpperCase();
-                  const canConfirm = status === 'PENDING';
-                  const canShip = status === 'PROCESSING';
-                  const canCancel = status === 'PENDING' || status === 'PROCESSING';
-                  const hasReturnPending = o.returnStatus === 'pending';
-
                   return (
                     <tr key={o.orderId}>
                       <td style={{ padding: '10px 8px', whiteSpace: 'nowrap' }}>
@@ -652,28 +658,7 @@ export default function ManageOrders() {
                         </strong>
                       </td>
                       <td style={{ padding: '10px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                        {getStatusBadge(o.orderStatus)}
-                        {o.returnStatus === 'pending' && (
-                          <div style={{ marginTop: '4px' }}>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '12px', backgroundColor: '#fef3c7', color: '#b45309', fontSize: '0.75rem', fontWeight: 700, border: '1px solid #fde68a' }}>
-                              🔄 Chờ duyệt hoàn tiền
-                            </span>
-                          </div>
-                        )}
-                        {o.returnStatus === 'approved' && (
-                          <div style={{ marginTop: '4px' }}>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '12px', backgroundColor: '#ecfdf5', color: '#047857', fontSize: '0.75rem', fontWeight: 700, border: '1px solid #a7f3d0' }}>
-                              ✅ Đã hoàn tiền
-                            </span>
-                          </div>
-                        )}
-                        {o.returnStatus === 'rejected' && (
-                          <div style={{ marginTop: '4px' }}>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '12px', backgroundColor: '#fef2f2', color: '#b91c1c', fontSize: '0.75rem', fontWeight: 700, border: '1px solid #fecaca' }}>
-                              ❌ Từ chối hoàn tiền
-                            </span>
-                          </div>
-                        )}
+                        {getStatusBadge(o.orderStatus, o.paymentMethod, o.returnStatus)}
                       </td>
                       <td style={{ padding: '10px 6px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                         {(() => {
@@ -691,93 +676,19 @@ export default function ManageOrders() {
                           <button
                             className="btn-action"
                             style={{
-                              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                              backgroundColor: 'rgba(59, 130, 246, 0.12)',
                               color: '#2563eb',
-                              borderColor: 'rgba(59, 130, 246, 0.3)',
+                              borderColor: 'rgba(59, 130, 246, 0.35)',
                               whiteSpace: 'nowrap',
-                              padding: '4px 7px',
-                              fontSize: '0.78rem'
+                              padding: '5px 14px',
+                              fontSize: '0.82rem',
+                              fontWeight: 600
                             }}
                             onClick={() => handleOpenDetail(o.orderId)}
                             title="Xem chi tiết các sản phẩm và xử lý đơn"
                           >
                             👁️ Chi tiết
                           </button>
-
-                          {/* Quick Workflow Action */}
-                          {canConfirm && (
-                            <button
-                              className="btn-action"
-                              style={{
-                                backgroundColor: 'rgba(16, 185, 129, 0.12)',
-                                color: '#059669',
-                                borderColor: 'rgba(16, 185, 129, 0.35)',
-                                whiteSpace: 'nowrap',
-                                padding: '4px 7px',
-                                fontSize: '0.78rem'
-                              }}
-                              onClick={() => handleUpdateStatus(o.orderId, 'PROCESSING')}
-                              title="Xác nhận đơn hàng và trừ tồn kho biến thể"
-                            >
-                              ✅ Duyệt
-                            </button>
-                          )}
-
-                          {canShip && (
-                            <button
-                              className="btn-action"
-                              style={{
-                                backgroundColor: 'rgba(168, 85, 247, 0.12)',
-                                color: '#7e22ce',
-                                borderColor: 'rgba(168, 85, 247, 0.35)',
-                                whiteSpace: 'nowrap',
-                                padding: '4px 7px',
-                                fontSize: '0.78rem'
-                              }}
-                              onClick={() => handleUpdateStatus(o.orderId, 'SHIPPED')}
-                              title="Chuyển sang giao hàng (SHIPPED)"
-                            >
-                              🚚 Gửi
-                            </button>
-                          )}
-
-
-
-                          {hasReturnPending && (
-                            <button
-                              className="btn-action"
-                              style={{
-                                backgroundColor: 'rgba(234, 88, 12, 0.15)',
-                                color: '#c2410c',
-                                borderColor: 'rgba(234, 88, 12, 0.4)',
-                                whiteSpace: 'nowrap',
-                                padding: '4px 8px',
-                                fontSize: '0.78rem',
-                                fontWeight: 700
-                              }}
-                              onClick={() => handleOpenDetail(o.orderId)}
-                              title="Khách hàng yêu cầu hoàn hàng - Bấm để xem chi tiết và tiếp nhận hoàn hàng"
-                            >
-                              ↩️ Tiếp nhận hoàn hàng
-                            </button>
-                          )}
-
-                          {canCancel && (
-                            <button
-                              className="btn-action btn-lock"
-                              style={{
-                                borderColor: 'rgba(239, 68, 68, 0.35)',
-                                color: '#dc2626',
-                                whiteSpace: 'nowrap',
-                                padding: '4px 6px',
-                                fontSize: '0.78rem'
-                              }}
-                              onClick={() => handleUpdateStatus(o.orderId, 'CANCELLED')}
-                              title="Hủy đơn hàng (Cộng lại kho nếu đã xử lý)"
-                            >
-                              ❌ Hủy
-                            </button>
-                          )}
                         </div>
                       </td>
                     </tr>

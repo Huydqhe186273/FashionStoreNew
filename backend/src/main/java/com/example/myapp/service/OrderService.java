@@ -605,10 +605,16 @@ public class OrderService {
             resolvedStatus = "shipping";
         }
 
+        String resolvedPaymentStatus = order.getPaymentStatus() != null ? order.getPaymentStatus().toLowerCase() : "unpaid";
+        // Đối với đơn hàng đã giao (nhận hàng), nếu là COD thì mặc định là đã thanh toán
+        if ("delivered".equalsIgnoreCase(order.getOrderStatus()) && "unpaid".equalsIgnoreCase(resolvedPaymentStatus)) {
+            resolvedPaymentStatus = "paid";
+        }
+
         return com.example.myapp.model.OrderResponseDTO.builder()
                 .orderId(order.getOrderId())
                 .orderStatus(resolvedStatus)
-                .paymentStatus(order.getPaymentStatus())
+                .paymentStatus(resolvedPaymentStatus)
                 .paymentMethod(resolvedMethod)
                 .totalAmount(order.getTotalAmount())
                 .createdAt(order.getCreatedAt())

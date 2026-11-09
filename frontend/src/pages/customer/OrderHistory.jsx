@@ -25,6 +25,55 @@ const ORDER_STATUS_MAP = {
   returned: { label: 'Đã trả hàng', class: 'cancelled' }
 };
 
+// Hàm xác định duy nhất 1 trạng thái mới nhất & chính xác nhất của đơn hàng
+const getLatestOrderStatus = (order) => {
+  if (!order) return { label: 'Đang xử lý', class: 'pending', color: '#475569', bg: '#f1f5f9' };
+  const oStatus = (order.orderStatus || '').toLowerCase();
+  const pStatus = (order.paymentStatus || '').toLowerCase();
+  const isPaid = pStatus === 'paid' || oStatus === 'delivered';
+  const isCod = order.paymentMethod?.toUpperCase() === 'COD';
+
+  // 1. Trạng thái trả hàng / hoàn tiền nếu có (ưu tiên cao nhất)
+  if (order.returnStatus === 'pending') {
+    return { label: '⏳ Chờ duyệt hoàn tiền', class: 'pending', color: '#b45309', bg: '#fef3c7' };
+  }
+  if (order.returnStatus === 'approved' || order.returnStatus === 'refunded') {
+    return { label: '↩️ Đã hoàn tiền', class: 'delivered', color: '#047857', bg: '#ecfdf5' };
+  }
+  if (order.returnStatus === 'rejected') {
+    return { label: '❌ Hoàn tiền bị từ chối', class: 'cancelled', color: '#b91c1c', bg: '#fef2f2' };
+  }
+
+  // 2. Trạng thái đơn hàng
+  if (oStatus === 'cancelled') {
+    return { label: '❌ Đã hủy', class: 'cancelled', color: '#b91c1c', bg: '#fef2f2' };
+  }
+  if (oStatus === 'returned') {
+    return { label: '↩️ Đã hoàn hàng', class: 'cancelled', color: '#c2410c', bg: '#fff7ed' };
+  }
+  if (oStatus === 'delivered') {
+    // Đơn COD nhận hàng -> Đã thanh toán!
+    return { label: isCod ? '✅ Đã nhận hàng (Đã thanh toán)' : '✅ Đã giao thành công', class: 'delivered', color: '#047857', bg: '#ecfdf5' };
+  }
+  if (oStatus === 'shipping' || oStatus === 'shipped') {
+    return { label: '🚚 Đang giao hàng', class: 'shipping', color: '#4338ca', bg: '#e0e7ff' };
+  }
+  if (oStatus === 'processing' || oStatus === 'confirmed') {
+    return { label: '⚙️ Đang xử lý', class: 'confirmed', color: '#1d4ed8', bg: '#eff6ff' };
+  }
+  if (oStatus === 'pending') {
+    if (isCod) {
+      return { label: '⏳ Chờ xác nhận (COD)', class: 'pending', color: '#b45309', bg: '#fef3c7' };
+    }
+    if (isPaid) {
+      return { label: '✅ Đã thanh toán (Chờ xác nhận)', class: 'confirmed', color: '#047857', bg: '#ecfdf5' };
+    }
+    return { label: '⏳ Chờ thanh toán PayOS', class: 'pending', color: '#b45309', bg: '#fef3c7' };
+  }
+
+  return { label: order.orderStatus || 'Đang xử lý', class: 'pending', color: '#475569', bg: '#f1f5f9' };
+};
+
 const PAYMENT_STATUS_MAP = {
   paid: { label: 'Đã thanh toán', class: 'paid' },
   unpaid: { label: 'Chưa thanh toán', class: 'unpaid' },
@@ -310,28 +359,11 @@ export default function OrderHistory() {
       ) : (
         <div className="orders-list">
           {filteredOrders.map((order) => {
-            const statusMeta = ORDER_STATUS_MAP[order.orderStatus?.toLowerCase()] || {
-              label: order.orderStatus,
-              class: 'pending'
-            };
-            const paymentMeta = PAYMENT_STATUS_MAP[order.paymentStatus?.toLowerCase()] || {
-              label: order.paymentStatus,
-              class: 'unpaid'
-            };
-
-            let codList = [];
-            try {
-              codList = JSON.parse(localStorage.getItem('cod_orders') || '[]');
-            } catch (e) {}
-            // Đơn hàng #41 cũng được đưa vào COD
-            if (!codList.includes(41)) {
-              codList.push(41);
-              try { localStorage.setItem('cod_orders', JSON.stringify(codList)); } catch (e) {}
-            }
-            const isCod = order.paymentMethod?.toUpperCase() === 'COD' || codList.includes(order.orderId);
+            const latestStatus = getLatestOrderStatus(order);
+            const isCod = order.paymentMethod?.toUpperCase() === 'COD';
             const canRepay = order.orderStatus === 'pending' && order.paymentStatus !== 'paid' && !isCod;
-            const canReview = order.orderStatus?.toLowerCase() === 'confirmed'
-              && order.paymentStatus?.toLowerCase() === 'paid';
+            const canReview = (order.orderStatus?.toLowerCase() === 'confirmed' || order.orderStatus?.toLowerCase() === 'delivered')
+              && (order.paymentStatus?.toLowerCase() === 'paid' || order.orderStatus?.toLowerCase() === 'delivered');
 
             return (
               <div key={order.orderId} className="order-card">
@@ -345,14 +377,25 @@ export default function OrderHistory() {
                   </div>
 
                   <div className="order-status-badges">
-                    <span className={`badge-status ${statusMeta.class}`}>
-                      {statusMeta.label}
+                    <span
+                      className={`badge-status ${latestStatus.class}`}
+                      style={{
+                        backgroundColor: latestStatus.bg,
+                        color: latestStatus.color,
+                        fontWeight: 700,
+                        border: `1px solid ${latestStatus.color}33`,
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        fontSize: '0.8rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      {latestStatus.label}
                     </span>
-                    <span className={`badge-payment ${isCod && order.paymentStatus !== 'paid' ? 'cod-pending' : paymentMeta.class}`}>
-                      {isCod && order.paymentStatus !== 'paid' ? 'Chưa thanh toán' : paymentMeta.label}
-                    </span>
-                    <span className={`badge-method ${isCod ? 'cod' : 'payos'}`}>
-                      {isCod ? 'COD' : 'PayOS'}
+                    <span className={`badge-method ${isCod ? 'cod' : 'payos'}`} style={{ fontSize: '0.72rem', padding: '3px 8px' }}>
+                      {isCod ? '💵 COD' : '💳 PayOS'}
                     </span>
                   </div>
                 </div>
@@ -429,23 +472,6 @@ export default function OrderHistory() {
                         Chi tiết
                       </button>
 
-                      {order.returnStatus === 'pending' && (
-                        <span className="badge-return-status pending" title={order.returnReason || ''}>
-                          ⏳ Chờ duyệt hoàn tiền
-                        </span>
-                      )}
-
-                      {(order.returnStatus === 'approved' || order.returnStatus === 'refunded') && (
-                        <span className="badge-return-status approved">
-                          Đã hoàn tiền
-                        </span>
-                      )}
-
-                      {order.returnStatus === 'rejected' && (
-                        <span className="badge-return-status rejected" title={order.returnReason || ''}>
-                          ❌ Hoàn tiền bị từ chối
-                        </span>
-                      )}
 
                       {order.canReturn && order.returnStatus !== 'rejected' && (
                         <button
@@ -585,14 +611,14 @@ export default function OrderHistory() {
               </div>
               <div className="order-detail-summary-row" style={{ marginTop: '4px' }}>
                 <span>Trạng thái đơn hàng:</span>
-                <span style={{ fontWeight: '700', color: selectedOrder.orderStatus?.toLowerCase() === 'shipping' || selectedOrder.orderStatus?.toLowerCase() === 'shipped' ? '#6366f1' : '#1e293b' }}>
-                  {ORDER_STATUS_MAP[selectedOrder.orderStatus?.toLowerCase()]?.label || selectedOrder.orderStatus}
+                <span style={{ fontWeight: '700', color: getLatestOrderStatus(selectedOrder).color }}>
+                  {getLatestOrderStatus(selectedOrder).label}
                 </span>
               </div>
               <div className="order-detail-summary-row" style={{ marginTop: '4px' }}>
                 <span>Trạng thái thanh toán:</span>
-                <span style={{ fontWeight: '700', color: selectedOrder.paymentStatus === 'paid' ? '#059669' : '#e11d48' }}>
-                  {PAYMENT_STATUS_MAP[selectedOrder.paymentStatus?.toLowerCase()]?.label || selectedOrder.paymentStatus}
+                <span style={{ fontWeight: '700', color: (selectedOrder.orderStatus?.toLowerCase() === 'delivered' || selectedOrder.paymentStatus?.toLowerCase() === 'paid') ? '#059669' : '#e11d48' }}>
+                  {(selectedOrder.orderStatus?.toLowerCase() === 'delivered' || selectedOrder.paymentStatus?.toLowerCase() === 'paid') ? 'Đã thanh toán' : 'Chưa thanh toán'}
                 </span>
               </div>
               {(selectedOrder.returnBankAccount || selectedOrder.payerBankAccount) && (
