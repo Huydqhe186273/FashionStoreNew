@@ -220,6 +220,13 @@ public class InboundOrderService {
             throw new IllegalArgumentException("Tên nhà cung cấp không được vượt quá 150 ký tự!");
         }
 
+        String supplierOrderCode = (dto.getSupplierOrderCode() != null && !dto.getSupplierOrderCode().trim().isEmpty())
+                ? dto.getSupplierOrderCode().trim()
+                : null;
+        if (supplierOrderCode != null && supplierOrderCode.length() > 100) {
+            throw new IllegalArgumentException("Mã phiếu giao / số hóa đơn NCC không được vượt quá 100 ký tự!");
+        }
+
         String note = (dto.getNote() != null && !dto.getNote().trim().isEmpty()) ? dto.getNote().trim() : null;
         if (note != null && note.length() > 500) {
             throw new IllegalArgumentException("Ghi chú đợt nhập không được vượt quá 500 ký tự!");
@@ -253,6 +260,7 @@ public class InboundOrderService {
         InboundOrder order = new InboundOrder();
         order.setBatchCode(batchCode);
         order.setSupplierName(supplier);
+        order.setSupplierOrderCode(supplierOrderCode);
         order.setImportDate(importDate);
         order.setNote(note);
         order.setStatus("COMPLETED");
@@ -273,9 +281,14 @@ public class InboundOrderService {
             ProductVariant variant = productVariantRepository.findById(itemDTO.getVariantId())
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy biến thể #" + itemDTO.getVariantId()));
 
+            String supplierSku = (itemDTO.getSupplierSku() != null && !itemDTO.getSupplierSku().trim().isEmpty())
+                    ? itemDTO.getSupplierSku().trim()
+                    : ("SUP-" + (variant.getSku() != null ? variant.getSku() : "VAR" + variant.getVariantId()));
+
             InboundBatch batch = new InboundBatch();
             batch.setInboundOrder(order);
             batch.setVariant(variant);
+            batch.setSupplierSku(supplierSku);
             batch.setInitialQuantity(itemDTO.getQuantity());
             batch.setRemainingQuantity(itemDTO.getQuantity());
             batch.setImportPrice(price);
@@ -309,6 +322,7 @@ public class InboundOrderService {
                 .categoryId(o.getCategory() != null ? o.getCategory().getCategoryId() : null)
                 .categoryName(catName)
                 .supplierName(o.getSupplierName())
+                .supplierOrderCode(o.getSupplierOrderCode())
                 .importDate(o.getImportDate())
                 .totalAmount(o.getTotalAmount())
                 .note(o.getNote())
@@ -338,6 +352,7 @@ public class InboundOrderService {
                 .categoryId(o.getCategory() != null ? o.getCategory().getCategoryId() : null)
                 .categoryName(catName)
                 .supplierName(o.getSupplierName())
+                .supplierOrderCode(o.getSupplierOrderCode())
                 .importDate(o.getImportDate())
                 .totalAmount(o.getTotalAmount())
                 .note(o.getNote())
@@ -358,12 +373,22 @@ public class InboundOrderService {
         BigDecimal price = b.getImportPrice() != null ? b.getImportPrice() : BigDecimal.ZERO;
         BigDecimal subtotal = price.multiply(BigDecimal.valueOf(b.getRemainingQuantity() != null ? b.getRemainingQuantity() : 0));
 
+        String supOrderCode = b.getInboundOrder() != null ? b.getInboundOrder().getSupplierOrderCode() : null;
+        String supName = b.getInboundOrder() != null ? b.getInboundOrder().getSupplierName() : null;
+        String fallbackSupplierSku = (v != null && v.getSku() != null) ? "SUP-" + v.getSku() : "N/A";
+        String actualSupplierSku = (b.getSupplierSku() != null && !b.getSupplierSku().trim().isEmpty())
+                ? b.getSupplierSku().trim()
+                : fallbackSupplierSku;
+
         return InboundBatchItemDTO.builder()
                 .batchId(b.getBatchId())
                 .inboundOrderId(b.getInboundOrder() != null ? b.getInboundOrder().getInboundOrderId() : null)
                 .batchCode(b.getInboundOrder() != null ? b.getInboundOrder().getBatchCode() : "N/A")
+                .supplierOrderCode(supOrderCode)
+                .supplierName(supName)
                 .variantId(v != null ? v.getVariantId() : null)
                 .sku(v != null ? v.getSku() : "N/A")
+                .supplierSku(actualSupplierSku)
                 .size(v != null ? v.getSize() : "")
                 .color(v != null ? v.getColor() : "")
                 .productId(p != null ? p.getProductId() : null)

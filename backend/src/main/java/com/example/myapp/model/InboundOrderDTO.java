@@ -17,6 +17,7 @@ public class InboundOrderDTO {
     private Integer categoryId;
     private String categoryName;
     private String supplierName;
+    private String supplierOrderCode;
     private LocalDateTime importDate;
     private BigDecimal totalAmount;
     private String note;

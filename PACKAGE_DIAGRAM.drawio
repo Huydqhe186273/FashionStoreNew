@@ -1,0 +1,212 @@
+<mxfile host="app.diagrams.net" agent="Antigravity/2.0">
+  <diagram id="diag_pkg_exact_sample" name="Package Diagram">
+    <mxGraphModel dx="1609" dy="823" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="outer_canvas_frame" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;strokeWidth=2;pointerEvents=0;" value="" vertex="1">
+          <mxGeometry height="780" width="1400" x="40" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_presentation" parent="1" style="swimlane;html=1;startSize=25;horizontal=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontStyle=1;fontSize=11;fontFamily=Helvetica;fontColor=#000000;align=center;collapsible=0;rounded=0;pointerEvents=0;" value="Presentation Package (Frontend)" vertex="1">
+          <mxGeometry height="185" width="430" x="60" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="f_pages" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Pages" vertex="1">
+          <mxGeometry height="55" width="115" x="80" y="88" as="geometry" />
+        </mxCell>
+        <mxCell id="f_components" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Components" vertex="1">
+          <mxGeometry height="55" width="115" x="215" y="88" as="geometry" />
+        </mxCell>
+        <mxCell id="f_contexts" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Contexts" vertex="1">
+          <mxGeometry height="55" width="115" x="350" y="88" as="geometry" />
+        </mxCell>
+        <mxCell id="f_api_services" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="API Services" vertex="1">
+          <mxGeometry height="55" width="115" x="80" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="f_routes" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Routes" vertex="1">
+          <mxGeometry height="55" width="115" x="215" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="f_layouts" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Layouts" vertex="1">
+          <mxGeometry height="55" width="115" x="350" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_controller" parent="1" style="swimlane;html=1;startSize=25;horizontal=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontStyle=1;fontSize=11;fontFamily=Helvetica;fontColor=#000000;align=center;collapsible=0;rounded=0;pointerEvents=0;" value="Controller Package" vertex="1">
+          <mxGeometry height="185" width="870" x="550" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c_auth" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="AuthController" vertex="1">
+          <mxGeometry height="55" width="150" x="570" y="88" as="geometry" />
+        </mxCell>
+        <mxCell id="c_product" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="ProductController" vertex="1">
+          <mxGeometry height="55" width="150" x="740" y="88" as="geometry" />
+        </mxCell>
+        <mxCell id="c_variant" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="AdminVariant Controller" vertex="1">
+          <mxGeometry height="55" width="150" x="910" y="88" as="geometry" />
+        </mxCell>
+        <mxCell id="c_order" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="OrderController" vertex="1">
+          <mxGeometry height="55" width="150" x="1080" y="88" as="geometry" />
+        </mxCell>
+        <mxCell id="c_staff_order" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="StaffOrder Controller" vertex="1">
+          <mxGeometry height="55" width="150" x="1250" y="88" as="geometry" />
+        </mxCell>
+        <mxCell id="c_inbound" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="InboundOrder Controller" vertex="1">
+          <mxGeometry height="55" width="150" x="570" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="c_cart" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="CartController" vertex="1">
+          <mxGeometry height="55" width="150" x="740" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="c_payment" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="PaymentController (PayOS)" vertex="1">
+          <mxGeometry height="55" width="150" x="910" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="c_admin_user" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="AdminUser Controller" vertex="1">
+          <mxGeometry height="55" width="150" x="1080" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="c_dashboard" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Dashboard Controller" vertex="1">
+          <mxGeometry height="55" width="150" x="1250" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_service" parent="1" style="swimlane;html=1;startSize=25;horizontal=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontStyle=1;fontSize=11;fontFamily=Helvetica;fontColor=#000000;align=center;collapsible=0;rounded=0;pointerEvents=0;" value="Service Package" vertex="1">
+          <mxGeometry height="190" width="760" x="660" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="s_auth" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="AuthService" vertex="1">
+          <mxGeometry height="55" width="135" x="680" y="328" as="geometry" />
+        </mxCell>
+        <mxCell id="s_product" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="ProductService" vertex="1">
+          <mxGeometry height="55" width="135" x="825" y="328" as="geometry" />
+        </mxCell>
+        <mxCell id="s_variant" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="ProductVariant Service" vertex="1">
+          <mxGeometry height="55" width="135" x="970" y="328" as="geometry" />
+        </mxCell>
+        <mxCell id="s_order" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="OrderService" vertex="1">
+          <mxGeometry height="55" width="135" x="1115" y="328" as="geometry" />
+        </mxCell>
+        <mxCell id="s_staff_order" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="StaffOrder Service" vertex="1">
+          <mxGeometry height="55" width="135" x="1260" y="328" as="geometry" />
+        </mxCell>
+        <mxCell id="s_inbound" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="InboundOrder Service" vertex="1">
+          <mxGeometry height="55" width="135" x="680" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="s_cart" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="CartService" vertex="1">
+          <mxGeometry height="55" width="135" x="825" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="s_dashboard" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Dashboard Service" vertex="1">
+          <mxGeometry height="55" width="135" x="970" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="s_report" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="AdminReport Service" vertex="1">
+          <mxGeometry height="55" width="135" x="1115" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="s_cloudinary" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Cloudinary Service" vertex="1">
+          <mxGeometry height="55" width="135" x="1260" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_repository" parent="1" style="swimlane;html=1;startSize=25;horizontal=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontStyle=1;fontSize=11;fontFamily=Helvetica;fontColor=#000000;align=center;collapsible=0;rounded=0;pointerEvents=0;" value="Repository Package" vertex="1">
+          <mxGeometry height="190" width="540" x="60" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="r_user" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="UserRepository" vertex="1">
+          <mxGeometry height="55" width="115" x="80" y="328" as="geometry" />
+        </mxCell>
+        <mxCell id="r_product" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="ProductRepository" vertex="1">
+          <mxGeometry height="55" width="120" x="205" y="328" as="geometry" />
+        </mxCell>
+        <mxCell id="r_variant" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="ProductVariant Repository" vertex="1">
+          <mxGeometry height="55" width="120" x="335" y="328" as="geometry" />
+        </mxCell>
+        <mxCell id="r_category" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Category Repository" vertex="1">
+          <mxGeometry height="55" width="115" x="465" y="328" as="geometry" />
+        </mxCell>
+        <mxCell id="r_inbound_batch" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="InboundBatch Repository" vertex="1">
+          <mxGeometry height="55" width="115" x="80" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="r_inbound_order" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="InboundOrder Repository" vertex="1">
+          <mxGeometry height="55" width="120" x="205" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="r_order" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="OrderRepository" vertex="1">
+          <mxGeometry height="55" width="120" x="335" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="r_return" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="ReturnRequest Repository" vertex="1">
+          <mxGeometry height="55" width="115" x="465" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_model" parent="1" style="swimlane;html=1;startSize=25;horizontal=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontStyle=1;fontSize=11;fontFamily=Helvetica;fontColor=#000000;align=center;collapsible=0;rounded=0;pointerEvents=0;" value="Model Package" vertex="1">
+          <mxGeometry height="190" width="750" x="60" y="535" as="geometry" />
+        </mxCell>
+        <mxCell id="m_user" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="User" vertex="1">
+          <mxGeometry height="55" width="105" x="80" y="573" as="geometry" />
+        </mxCell>
+        <mxCell id="m_product" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Product" vertex="1">
+          <mxGeometry height="55" width="105" x="195" y="573" as="geometry" />
+        </mxCell>
+        <mxCell id="m_prod_img" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="ProductImage" vertex="1">
+          <mxGeometry height="55" width="105" x="310" y="573" as="geometry" />
+        </mxCell>
+        <mxCell id="m_category" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Category" vertex="1">
+          <mxGeometry height="55" width="105" x="425" y="573" as="geometry" />
+        </mxCell>
+        <mxCell id="m_cart" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Cart" vertex="1">
+          <mxGeometry height="55" width="105" x="540" y="573" as="geometry" />
+        </mxCell>
+        <mxCell id="m_order" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Order" vertex="1">
+          <mxGeometry height="55" width="105" x="655" y="573" as="geometry" />
+        </mxCell>
+        <mxCell id="m_variant" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="ProductVariant" vertex="1">
+          <mxGeometry height="55" width="105" x="80" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="m_inb_batch" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="InboundBatch" vertex="1">
+          <mxGeometry height="55" width="105" x="195" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="m_inb_order" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="InboundOrder" vertex="1">
+          <mxGeometry height="55" width="105" x="310" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="m_return_req" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="ReturnRequest" vertex="1">
+          <mxGeometry height="55" width="105" x="425" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="m_payment" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Payment" vertex="1">
+          <mxGeometry height="55" width="105" x="540" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="m_discount" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="DiscountCode" vertex="1">
+          <mxGeometry height="55" width="105" x="655" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_database" parent="1" style="swimlane;html=1;startSize=25;horizontal=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontStyle=1;fontSize=11;fontFamily=Helvetica;fontColor=#000000;align=center;collapsible=0;rounded=0;pointerEvents=0;" value="Database" vertex="1">
+          <mxGeometry height="140" width="190" x="850" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="db_mysql" parent="1" style="shape=folder;fontStyle=0;tabWidth=40;tabHeight=14;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="MySQL / SQL Server" vertex="1">
+          <mxGeometry height="65" width="110" x="890" y="608" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_external" parent="1" style="swimlane;html=1;startSize=25;horizontal=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontStyle=1;fontSize=11;fontFamily=Helvetica;fontColor=#000000;align=center;collapsible=0;rounded=0;pointerEvents=0;" value="External Systems" vertex="1">
+          <mxGeometry height="190" width="340" x="1080" y="535" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_payos" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="PayOS Payment Gateway" vertex="1">
+          <mxGeometry height="55" width="135" x="1105" y="573" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_smtp" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Gmail SMTP Service" vertex="1">
+          <mxGeometry height="55" width="135" x="1260" y="573" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_cloudinary" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Cloudinary Storage" vertex="1">
+          <mxGeometry height="55" width="135" x="1105" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_google" parent="1" style="shape=folder;fontStyle=0;tabWidth=45;tabHeight=12;tabPosition=left;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=10;fontFamily=Helvetica;fontColor=#000000;spacingTop=6;spacingLeft=3;spacingRight=3;" value="Google Identity (OAuth2)" vertex="1">
+          <mxGeometry height="55" width="135" x="1260" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_pres_to_ctrl" edge="1" parent="1" source="pkg_presentation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.2;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="pkg_controller" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_ctrl_to_srv" edge="1" parent="1" source="pkg_controller" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.2;endArrow=classic;endSize=6;exitX=0.55;exitY=1;entryX=0.55;entryY=0;" target="pkg_service" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_srv_to_repo" edge="1" parent="1" source="pkg_service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.2;endArrow=classic;endSize=6;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" target="pkg_repository" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_repo_to_model" edge="1" parent="1" source="pkg_repository" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.2;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.45;entryY=0;" target="pkg_model" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_model_to_db" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.2;endArrow=classic;endSize=6;entryX=0;entryY=0.55;" target="pkg_database" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="810" y="637" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_srv_to_ext" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.2;endArrow=classic;endSize=6;entryX=0.5;entryY=0;" target="pkg_external" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1250" y="480" />
+            </Array>
+            <mxPoint x="1250" y="480" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

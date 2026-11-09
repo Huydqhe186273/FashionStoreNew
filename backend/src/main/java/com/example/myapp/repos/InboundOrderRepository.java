@@ -20,7 +20,7 @@ public interface InboundOrderRepository extends JpaRepository<InboundOrder, Inte
            "LEFT JOIN FETCH o.category c " +
            "LEFT JOIN FETCH o.createdBy u " +
            "WHERE " +
-           "(:keyword IS NULL OR LOWER(o.batchCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(o.supplierName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:keyword IS NULL OR LOWER(o.batchCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(o.supplierName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(o.supplierOrderCode) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:categoryId IS NULL OR o.category.CategoryId = :categoryId) AND " +
            "(:status IS NULL OR LOWER(o.status) = LOWER(:status)) " +
            "ORDER BY o.importDate DESC, o.inboundOrderId DESC")

@@ -77,12 +77,24 @@ public class AdminUserService {
             user.setFullName(dto.getFullName().trim());
         }
 
-        if (dto.getPhone() != null && !dto.getPhone().trim().isEmpty()) {
-            String cleanPhone = dto.getPhone().trim();
-            if (userRepository.existsByPhoneAndUserIdNot(cleanPhone, id)) {
-                throw new IllegalArgumentException("Số điện thoại '" + cleanPhone + "' đã được sử dụng bởi người dùng khác!");
+        if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()) {
+            String cleanEmail = dto.getEmail().trim();
+            if (!cleanEmail.equalsIgnoreCase(user.getEmail()) && userRepository.existsByEmailAndUserIdNot(cleanEmail, id)) {
+                throw new IllegalArgumentException("Email '" + cleanEmail + "' đã được sử dụng bởi người dùng khác!");
             }
-            user.setPhone(cleanPhone);
+            user.setEmail(cleanEmail);
+        }
+
+        if (dto.getPhone() != null) {
+            String cleanPhone = dto.getPhone().trim();
+            if (!cleanPhone.isEmpty()) {
+                if (userRepository.existsByPhoneAndUserIdNot(cleanPhone, id)) {
+                    throw new IllegalArgumentException("Số điện thoại '" + cleanPhone + "' đã được sử dụng bởi người dùng khác!");
+                }
+                user.setPhone(cleanPhone);
+            } else {
+                user.setPhone(null);
+            }
         }
 
         if (dto.getRole() != null && !dto.getRole().trim().isEmpty()) {

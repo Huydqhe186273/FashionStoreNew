@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
 import { getStaff, createStaff, updateStaff, toggleStaffLock } from '../services/staffService';
+import { useToast } from '../context/ToastContext';
 
 const mockStaff = [
   { userId: 1, fullName: "Admin Hệ Thống", email: "admin@fashionstore.vn", phone: "0901234567", role: "admin", status: "active" },
@@ -9,6 +10,7 @@ const mockStaff = [
 ];
 
 export default function ManageStaff() {
+  const { toast } = useToast();
   const [staffList, setStaffList] = useState(mockStaff);
   const [isLive, setIsLive] = useState(false);
   const [search, setSearch] = useState('');
@@ -80,19 +82,41 @@ export default function ManageStaff() {
 
   const handleSubmitStaff = async (e) => {
     e.preventDefault();
+    const cleanEmail = (formData.email || '').trim().toLowerCase();
+    if (!cleanEmail) {
+      toast?.error?.('Email không được để trống!') || alert('Email không được để trống!');
+      return;
+    }
+
+    // Kiểm tra xem email có bị trùng với tài khoản khác trong danh sách không
+    const isDuplicate = staffList.some(
+      s => s.userId !== editingStaff?.userId && (s.email || '').trim().toLowerCase() === cleanEmail
+    );
+    if (isDuplicate) {
+      const errMsg = "Email '" + formData.email.trim() + "' đã được sử dụng bởi tài khoản khác!";
+      toast?.error?.(errMsg) || alert(errMsg);
+      return;
+    }
+
     if (editingStaff) {
       try {
-        await updateStaff(editingStaff.userId, {
+        const payload = {
           fullName: formData.fullName,
-          phone: formData.phone,
+          email: formData.email.trim(),
+          phone: formData.phone || '',
           role: formData.role,
           status: formData.status
-        });
+        };
+        if (formData.password && formData.password.trim() !== '') {
+          payload.password = formData.password.trim();
+        }
+        await updateStaff(editingStaff.userId, payload);
+        toast?.success?.('Cập nhật nhân viên thành công!') || alert('Cập nhật nhân viên thành công!');
         handleCloseModal();
         loadStaff();
       } catch (err) {
         const msg = err.response?.data?.message || err.response?.data?.error || err.message;
-        alert("Lỗi khi cập nhật nhân viên: " + msg);
+        toast?.error?.('Lỗi khi cập nhật nhân viên: ' + msg) || alert('Lỗi khi cập nhật nhân viên: ' + msg);
         if (!err.response) {
           setStaffList(prev => prev.map(s => s.userId === editingStaff.userId ? { ...s, ...formData } : s));
           handleCloseModal();
@@ -100,12 +124,16 @@ export default function ManageStaff() {
       }
     } else {
       try {
-        await createStaff(formData);
+        await createStaff({
+          ...formData,
+          email: formData.email.trim()
+        });
+        toast?.success?.('Tạo nhân viên mới thành công!') || alert('Tạo nhân viên mới thành công!');
         handleCloseModal();
         loadStaff();
       } catch (err) {
         const msg = err.response?.data?.message || err.response?.data?.error || err.message;
-        alert("Lỗi khi tạo nhân viên: " + msg);
+        toast?.error?.('Lỗi khi tạo nhân viên: ' + msg) || alert('Lỗi khi tạo nhân viên: ' + msg);
         if (!err.response) {
           setStaffList(prev => [...prev, { ...formData, userId: prev.length + 1, status: 'active' }]);
           handleCloseModal();
@@ -240,12 +268,16 @@ export default function ManageStaff() {
               className="input-control"
               value={formData.email}
               onChange={e => setFormData({ ...formData, email: e.target.value })}
-              required={!editingStaff}
-              disabled={!!editingStaff}
+              required
               placeholder="ví dụ: staff@gmail.com"
             />
+            {editingStaff && (
+              <small style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>
+                * Có thể sửa email đăng nhập (hệ thống sẽ kiểm tra trùng lặp tự động).
+              </small>
+            )}
           </div>
-          {!editingStaff && (
+          {!editingStaff ? (
             <div className="form-group">
               <label>Mật Khẩu Ban Đầu</label>
               <input
@@ -257,6 +289,19 @@ export default function ManageStaff() {
                 minLength={6}
                 maxLength={32}
                 placeholder="Tối thiểu 6 ký tự..."
+              />
+            </div>
+          ) : (
+            <div className="form-group">
+              <label>Đặt Lại Mật Khẩu (Để trống nếu giữ nguyên)</label>
+              <input
+                type="password"
+                className="input-control"
+                value={formData.password}
+                onChange={e => setFormData({ ...formData, password: e.target.value })}
+                minLength={6}
+                maxLength={32}
+                placeholder="Nhập tối thiểu 6 ký tự nếu muốn đổi mật khẩu..."
               />
             </div>
           )}

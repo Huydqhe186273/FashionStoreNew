@@ -14,8 +14,11 @@ public class InboundBatchItemDTO {
     private Integer batchId;
     private Integer inboundOrderId;
     private String batchCode;
+    private String supplierOrderCode;
+    private String supplierName;
     private Integer variantId;
-    private String sku;
+    private String sku; // Mã SKU hệ thống nội bộ
+    private String supplierSku; // Mã sản phẩm / SKU của Nhà Cung Cấp
     private String size;
     private String color;
     private Integer productId;

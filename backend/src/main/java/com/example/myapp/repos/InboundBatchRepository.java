@@ -48,7 +48,7 @@ public interface InboundBatchRepository extends JpaRepository<InboundBatch, Inte
            "WHERE (:variantId IS NULL OR v.VariantId = :variantId) AND " +
            "(:categoryId IS NULL OR c.CategoryId = :categoryId) AND " +
            "(:status IS NULL OR LOWER(b.status) = LOWER(:status)) AND " +
-           "(:keyword IS NULL OR LOWER(o.batchCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.Name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(v.Sku) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "(:keyword IS NULL OR LOWER(o.batchCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.Name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(v.Sku) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(b.supplierSku) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(o.supplierOrderCode) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
            "ORDER BY b.importDate DESC, b.batchId DESC")
     List<InboundBatch> searchBatches(@Param("variantId") Integer variantId,
                                      @Param("categoryId") Integer categoryId,
@@ -80,7 +80,7 @@ public interface InboundBatchRepository extends JpaRepository<InboundBatch, Inte
            "WHERE (:variantId IS NULL OR v.VariantId = :variantId) AND " +
            "(:categoryId IS NULL OR c.CategoryId = :categoryId) AND " +
            "(:status IS NULL OR LOWER(b.status) = LOWER(:status)) AND " +
-           "(:keyword IS NULL OR LOWER(o.batchCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.Name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(v.Sku) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "(:keyword IS NULL OR LOWER(o.batchCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.Name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(v.Sku) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(b.supplierSku) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(o.supplierOrderCode) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
            "ORDER BY b.importDate DESC, b.batchId DESC",
            countQuery = "SELECT COUNT(b) FROM InboundBatch b " +
            "JOIN b.variant v " +
@@ -90,7 +90,7 @@ public interface InboundBatchRepository extends JpaRepository<InboundBatch, Inte
            "WHERE (:variantId IS NULL OR v.VariantId = :variantId) AND " +
            "(:categoryId IS NULL OR c.CategoryId = :categoryId) AND " +
            "(:status IS NULL OR LOWER(b.status) = LOWER(:status)) AND " +
-           "(:keyword IS NULL OR LOWER(o.batchCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.Name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(v.Sku) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+           "(:keyword IS NULL OR LOWER(o.batchCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.Name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(v.Sku) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(b.supplierSku) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(o.supplierOrderCode) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     org.springframework.data.domain.Page<InboundBatch> searchBatchesPaged(@Param("variantId") Integer variantId,
                                                                          @Param("categoryId") Integer categoryId,
                                                                          @Param("status") String status,

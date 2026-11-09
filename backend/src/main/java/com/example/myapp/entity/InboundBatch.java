@@ -25,6 +25,9 @@ public class InboundBatch {
     @JoinColumn(name = "VariantId", nullable = false, foreignKey = @ForeignKey(name = "FK_InboundBatches_Variants"))
     private ProductVariant variant;
 
+    @Column(name = "SupplierSku", length = 100)
+    private String supplierSku;
+
     @Column(name = "InitialQuantity", nullable = false)
     private Integer initialQuantity;
 

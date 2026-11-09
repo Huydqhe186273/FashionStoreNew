@@ -6,6 +6,21 @@ import { getInboundOrders, getInboundOrderDetail, createInboundOrder, getInbound
 import { getProducts } from '../services/productService';
 import { getVariants } from '../services/variantService';
 import { getCategories } from '../services/categoryService';
+import {
+  ClipboardList,
+  CheckCircle2,
+  Boxes,
+  CheckCheck,
+  FileSpreadsheet,
+  Search,
+  Plus,
+  Eye,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  PieChart,
+  X
+} from 'lucide-react';
 
 // Helper functions for date handling (local time)
 const getLocalDateTimeString = (date = new Date()) => {
@@ -332,15 +347,7 @@ export default function ManageInbound() {
       return;
     }
 
-    if (formData.importDate) {
-      const chosenDate = new Date(formData.importDate);
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      if (chosenDate < todayStart) {
-        setFormError('Ngày nhập kho không hợp lệ! Chỉ cho phép tạo phiếu nhập kho trong ngày hôm nay hoặc tương lai.');
-        return;
-      }
-    }
+
 
     const seenVariants = new Set();
     for (let i = 0; i < formData.items.length; i++) {
@@ -380,12 +387,14 @@ export default function ManageInbound() {
     try {
       const payload = {
         batchCode: formData.batchCode.trim(),
+        supplierOrderCode: formData.supplierOrderCode?.trim() || null,
         categoryId: formData.categoryId ? Number(formData.categoryId) : null,
         supplierName: formData.supplierName.trim(),
-        importDate: formData.importDate ? formData.importDate : null,
+        importDate: getLocalDateTimeString(), // Mặc định thời điểm tạo đơn hiện tại
         note: formData.note,
         items: formData.items.map(it => ({
           variantId: Number(it.variantId),
+          supplierSku: it.supplierSku?.trim() || null,
           quantity: Number(it.quantity),
           importPrice: Number(it.importPrice)
         }))
@@ -401,6 +410,8 @@ export default function ManageInbound() {
       } else {
         loadInboundBatches();
       }
+      loadInboundOrders();
+      loadInboundBatches();
     } catch (err) {
       setFormError(err.response?.data?.message || err.response?.data || err.message || 'Lỗi khi tạo đợt nhập kho');
     } finally {
@@ -411,6 +422,30 @@ export default function ManageInbound() {
   // Helper calculation for Create Modal summary
   const totalModalQuantity = formData.items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0);
   const totalModalAmount = formData.items.reduce((sum, it) => sum + ((Number(it.quantity) || 0) * (Number(it.importPrice) || 0)), 0);
+
+  // Helper calculation: Đối chiếu tổng tiền và số lượng theo từng danh mục
+  const categorySummary = React.useMemo(() => {
+    const summaryMap = {};
+    formData.items.forEach(it => {
+      if (!it.productId) return;
+      const product = products.find(p => String(p.productId) === String(it.productId));
+      const catId = product?.categoryId || 'unknown';
+      const catName = categories.find(c => String(c.categoryId) === String(catId))?.name || product?.categoryName || 'Khác / Chưa phân loại';
+      const qty = Number(it.quantity) || 0;
+      const amount = qty * (Number(it.importPrice) || 0);
+
+      if (!summaryMap[catId]) {
+        summaryMap[catId] = {
+          name: catName,
+          quantity: 0,
+          totalAmount: 0
+        };
+      }
+      summaryMap[catId].quantity += qty;
+      summaryMap[catId].totalAmount += amount;
+    });
+    return Object.values(summaryMap);
+  }, [formData.items, products, categories]);
 
   // Batch summary metrics
   const activeBatchesCount = batches.filter(b => b.status === 'ACTIVE').length;
@@ -433,28 +468,36 @@ export default function ManageInbound() {
       {/* Stats Summary Grid */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#6366f1' }}>📋</div>
+          <div className="stat-icon" style={{ background: '#e0e7ff', color: '#4338ca', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', borderRadius: '12px' }}>
+            <ClipboardList size={24} strokeWidth={2.2} />
+          </div>
           <div>
             <div className="stat-val">{stats.totalOrders ?? orders.length}</div>
             <div className="stat-label">Tổng Đợt Nhập Kho</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#10b981' }}>🟢</div>
+          <div className="stat-icon" style={{ background: '#dcfce7', color: '#15803d', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', borderRadius: '12px' }}>
+            <CheckCircle2 size={24} strokeWidth={2.2} />
+          </div>
           <div>
             <div className="stat-val">{stats.activeBatches ?? (batches.length ? activeBatchesCount : 0)}</div>
             <div className="stat-label">Lô Đang Xuất Bán (FIFO)</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#3b82f6' }}>📦</div>
+          <div className="stat-icon" style={{ background: '#dbeafe', color: '#1d4ed8', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', borderRadius: '12px' }}>
+            <Boxes size={24} strokeWidth={2.2} />
+          </div>
           <div>
             <div className="stat-val">{(stats.totalRemainingStock ?? (batches.length ? totalRemainingStock : 0)).toLocaleString('vi-VN')}</div>
             <div className="stat-label">Tổng Tồn Kho Trong Lô (Cái)</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#ef4444' }}>🏁</div>
+          <div className="stat-icon" style={{ background: '#fee2e2', color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', borderRadius: '12px' }}>
+            <CheckCheck size={24} strokeWidth={2.2} />
+          </div>
           <div>
             <div className="stat-val">{stats.depletedBatches ?? (batches.length ? depletedBatchesCount : 0)}</div>
             <div className="stat-label">Lô Đã Xuất Hết Hàng</div>
@@ -467,45 +510,65 @@ export default function ManageInbound() {
         <button
           onClick={() => setActiveTab('orders')}
           style={{
-            padding: '12px 22px',
+            padding: '11px 22px',
             borderRadius: '10px',
-            border: activeTab === 'orders' ? '1px solid var(--primary)' : '1px solid var(--border-color)',
-            background: activeTab === 'orders' ? 'var(--primary-gradient)' : '#ffffff',
-            color: activeTab === 'orders' ? '#ffffff' : 'var(--text-main)',
+            border: activeTab === 'orders' ? '1.5px solid #b86a5d' : '1.5px solid #e5e7eb',
+            background: activeTab === 'orders' ? '#b86a5d' : '#ffffff',
+            color: activeTab === 'orders' ? '#ffffff' : '#374151',
             fontWeight: '700',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            boxShadow: activeTab === 'orders' ? 'var(--shadow-glow)' : 'var(--shadow-card)',
+            boxShadow: activeTab === 'orders' ? '0 4px 12px rgba(184, 106, 93, 0.28)' : '0 1px 3px rgba(0, 0, 0, 0.05)',
             fontSize: '0.92rem',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s ease-in-out'
           }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
-          Danh Sách Đợt Nhập Kho ({stats.totalOrders || orders.length})
+          <FileSpreadsheet size={18} strokeWidth={2.2} />
+          <span>Danh Sách Đợt Nhập Kho</span>
+          <span style={{
+            background: activeTab === 'orders' ? 'rgba(255, 255, 255, 0.25)' : '#f3f4f6',
+            color: activeTab === 'orders' ? '#ffffff' : '#4b5563',
+            padding: '2px 8px',
+            borderRadius: '12px',
+            fontSize: '0.8rem',
+            fontWeight: '700'
+          }}>
+            {stats.totalOrders || orders.length}
+          </span>
         </button>
 
         <button
           onClick={() => setActiveTab('batches')}
           style={{
-            padding: '12px 22px',
+            padding: '11px 22px',
             borderRadius: '10px',
-            border: activeTab === 'batches' ? '1px solid var(--primary)' : '1px solid var(--border-color)',
-            background: activeTab === 'batches' ? 'var(--primary-gradient)' : '#ffffff',
-            color: activeTab === 'batches' ? '#ffffff' : 'var(--text-main)',
+            border: activeTab === 'batches' ? '1.5px solid #b86a5d' : '1.5px solid #e5e7eb',
+            background: activeTab === 'batches' ? '#b86a5d' : '#ffffff',
+            color: activeTab === 'batches' ? '#ffffff' : '#374151',
             fontWeight: '700',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            boxShadow: activeTab === 'batches' ? 'var(--shadow-glow)' : 'var(--shadow-card)',
+            boxShadow: activeTab === 'batches' ? '0 4px 12px rgba(184, 106, 93, 0.28)' : '0 1px 3px rgba(0, 0, 0, 0.05)',
             fontSize: '0.92rem',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s ease-in-out'
           }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>
-          Theo Dõi Từng Lô Hàng FIFO ({stats.totalBatches || batches.length})
+          <Boxes size={18} strokeWidth={2.2} />
+          <span>Theo Dõi Từng Lô Hàng FIFO</span>
+          <span style={{
+            background: activeTab === 'batches' ? 'rgba(255, 255, 255, 0.25)' : '#f3f4f6',
+            color: activeTab === 'batches' ? '#ffffff' : '#4b5563',
+            padding: '2px 8px',
+            borderRadius: '12px',
+            fontSize: '0.8rem',
+            fontWeight: '700'
+          }}>
+            {stats.totalBatches || batches.length}
+          </span>
         </button>
       </div>
 
@@ -516,7 +579,7 @@ export default function ManageInbound() {
           <div className="toolbar-card">
             <div className="filter-group">
               <div className="search-input-wrapper">
-                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <Search size={16} strokeWidth={2.2} color="#9ca3af" />
                 <input
                   type="text"
                   className="input-control"
@@ -539,9 +602,10 @@ export default function ManageInbound() {
             <button 
               className="btn-primary" 
               onClick={handleOpenCreateModal}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-              Tạo Đợt Nhập Kho Mới
+              <Plus size={18} strokeWidth={2.5} />
+              <span>Tạo Đợt Nhập Kho Mới</span>
             </button>
           </div>
 
@@ -565,11 +629,11 @@ export default function ManageInbound() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="9" style={{ textAlign: 'center', padding: '30px' }}>Đang tải dữ liệu đợt nhập kho...</td>
+                      <td colSpan="10" style={{ textAlign: 'center', padding: '30px' }}>Đang tải dữ liệu đợt nhập kho...</td>
                     </tr>
                   ) : orders.length === 0 ? (
                     <tr>
-                      <td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: '#6b7280' }}>
+                      <td colSpan="10" style={{ textAlign: 'center', padding: '30px', color: '#6b7280' }}>
                         Chưa có đợt nhập kho nào. Hãy bấm <strong>"+ Tạo Đợt Nhập Kho Mới"</strong> để bắt đầu.
                       </td>
                     </tr>
@@ -596,9 +660,10 @@ export default function ManageInbound() {
                           <button
                             className="btn-action"
                             onClick={() => handleOpenDetail(o.inboundOrderId)}
-                            style={{ margin: '0 auto', whiteSpace: 'nowrap' }}
+                            style={{ margin: '0 auto', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                           >
-                            👁️ Xem Chi Tiết
+                            <Eye size={15} strokeWidth={2.2} />
+                            <span>Xem Chi Tiết</span>
                           </button>
                         </td>
                       </tr>
@@ -618,7 +683,7 @@ export default function ManageInbound() {
           <div className="toolbar-card">
             <div className="filter-group">
               <div className="search-input-wrapper">
-                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <Search size={16} strokeWidth={2.2} color="#9ca3af" />
                 <input
                   type="text"
                   className="input-control"
@@ -673,11 +738,11 @@ export default function ManageInbound() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="9" style={{ textAlign: 'center', padding: '30px' }}>Đang tải danh sách lô hàng...</td>
+                      <td colSpan="10" style={{ textAlign: 'center', padding: '30px' }}>Đang tải danh sách lô hàng...</td>
                     </tr>
                   ) : batches.length === 0 ? (
                     <tr>
-                      <td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: '#6b7280' }}>
+                      <td colSpan="10" style={{ textAlign: 'center', padding: '30px', color: '#6b7280' }}>
                         Không tìm thấy lô hàng nào phù hợp.
                       </td>
                     </tr>
@@ -783,9 +848,10 @@ export default function ManageInbound() {
                     className="btn-action"
                     disabled={batchPage <= 1}
                     onClick={() => setBatchPage(p => Math.max(1, p - 1))}
-                    style={{ padding: '6px 12px', fontSize: '0.85rem', cursor: batchPage <= 1 ? 'not-allowed' : 'pointer' }}
+                    style={{ padding: '6px 12px', fontSize: '0.85rem', cursor: batchPage <= 1 ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                   >
-                    ◀ Trước
+                    <ChevronLeft size={15} strokeWidth={2.2} />
+                    <span>Trước</span>
                   </button>
                   <span style={{ fontSize: '0.88rem', fontWeight: '600', color: '#374151' }}>
                     {batchPage} / {Math.max(1, totalPages)}
@@ -795,9 +861,10 @@ export default function ManageInbound() {
                     className="btn-action"
                     disabled={batchPage >= totalPages}
                     onClick={() => setBatchPage(p => Math.min(totalPages, p + 1))}
-                    style={{ padding: '6px 12px', fontSize: '0.85rem', cursor: batchPage >= totalPages ? 'not-allowed' : 'pointer' }}
+                    style={{ padding: '6px 12px', fontSize: '0.85rem', cursor: batchPage >= totalPages ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                   >
-                    Sau ▶
+                    <span>Sau</span>
+                    <ChevronRight size={15} strokeWidth={2.2} />
                   </button>
                 </div>
               </div>
@@ -811,7 +878,7 @@ export default function ManageInbound() {
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           title="Tạo Đợt Nhập Kho Mới (Đánh Lô & Giá Vốn)"
-          maxWidth="900px"
+          maxWidth="960px"
         >
           <form onSubmit={handleSubmitInbound}>
             {formError && (
@@ -824,28 +891,28 @@ export default function ManageInbound() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '16px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '5px' }}>
-                  Mã Lô / Mã Đợt Nhập *
+                  Mã Lô Hệ Thống *
                 </label>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <input
-                    type="text"
-                    required
-                    maxLength={50}
-                    value={formData.batchCode}
-                    onChange={e => setFormData({ ...formData, batchCode: e.target.value })}
-                    placeholder="VD: LO-20261017-01"
-                    style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontFamily: 'monospace', fontWeight: '600' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleGenerateBatchCode}
-                    className="btn-action"
-                    style={{ padding: '6px 12px', fontSize: '0.82rem', whiteSpace: 'nowrap' }}
-                    title="Tự sinh mã ngẫu nhiên"
-                  >
-                    🎲 Tự sinh
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  required
+                  readOnly
+                  maxLength={50}
+                  value={formData.batchCode}
+                  placeholder="Hệ thống tự sinh..."
+                  title="Mã lô do hệ thống tự sinh tự động, không thể chỉnh sửa"
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #d1d5db',
+                    fontFamily: 'monospace',
+                    fontWeight: '600',
+                    backgroundColor: '#f3f4f6',
+                    color: '#4b5563',
+                    cursor: 'not-allowed'
+                  }}
+                />
               </div>
 
               <div>
@@ -865,19 +932,17 @@ export default function ManageInbound() {
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '5px' }}>
-                  Ngày Giờ Nhập Kho *
+                  Số Hóa Đơn / Phiếu Giao NCC
                 </label>
                 <input
-                  type="datetime-local"
-                  required
-                  min={getTodayStartString()}
-                  value={formData.importDate}
-                  onChange={e => setFormData({ ...formData, importDate: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                  type="text"
+                  maxLength={100}
+                  value={formData.supplierOrderCode || ''}
+                  onChange={e => setFormData({ ...formData, supplierOrderCode: e.target.value })}
+                  placeholder="Ví dụ: HD-NCC-2026-098..."
+                  title="Mã phiếu giao hàng hoặc số hóa đơn bên phía Nhà Cung Cấp để đối soát"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontFamily: 'monospace' }}
                 />
-                <small style={{ display: 'block', marginTop: '4px', color: '#6b7280', fontSize: '0.75rem' }}>
-                  Chỉ cho phép chọn thời gian trong ngày hôm nay hoặc tương lai.
-                </small>
               </div>
 
               <div>
@@ -921,10 +986,10 @@ export default function ManageInbound() {
                   type="button"
                   onClick={handleAddItemRow}
                   className="btn-action"
-                  style={{ padding: '6px 14px', fontSize: '0.85rem' }}
+                  style={{ padding: '6px 14px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                  Thêm Mặt Hàng
+                  <Plus size={15} strokeWidth={2.5} />
+                  <span>Thêm Mặt Hàng</span>
                 </button>
               </div>
 
@@ -932,11 +997,14 @@ export default function ManageInbound() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
                   <thead style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0 }}>
                     <tr>
-                      <th style={{ padding: '8px 10px', textAlign: 'left', width: '30%' }}>Sản Phẩm</th>
-                      <th style={{ padding: '8px 10px', textAlign: 'left', width: '25%' }}>Phân Loại (Biến Thể)</th>
-                      <th style={{ padding: '8px 10px', textAlign: 'center', width: '15%' }}>Số Lượng</th>
-                      <th style={{ padding: '8px 10px', textAlign: 'right', width: '18%' }}>Giá Nhập (VNĐ)</th>
-                      <th style={{ padding: '8px 10px', textAlign: 'center', width: '12%' }}>Xóa</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'left', width: '22%' }}>Sản Phẩm</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'left', width: '18%' }}>Phân Loại (Biến Thể)</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'center', width: '14%' }}>Mã SP Hệ Thống</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'left', width: '16%' }}>Mã SP Nhà Cung Cấp</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'center', width: '8%' }}>Số Lượng</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'right', width: '11%' }}>Giá Nhập (VNĐ)</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'right', width: '11%' }}>Thành Tiền</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'center', width: '4%' }}>Xóa</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -972,6 +1040,20 @@ export default function ManageInbound() {
                                 </>
                               )}
                             </select>
+                            {row.productId && (
+                              <div style={{ marginTop: '3px' }}>
+                                <span style={{
+                                  fontSize: '0.72rem',
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                  background: '#eff6ff',
+                                  color: '#1d4ed8',
+                                  fontWeight: '600'
+                                }}>
+                                  📁 {categories.find(c => String(c.categoryId) === String(products.find(p => String(p.productId) === String(row.productId))?.categoryId))?.name || 'Khác'}
+                                </span>
+                              </div>
+                            )}
                           </td>
 
                           <td style={{ padding: '8px 10px' }}>
@@ -1007,6 +1089,48 @@ export default function ManageInbound() {
                           </td>
 
                           <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                            {row.variantId ? (
+                              <span style={{
+                                fontSize: '0.78rem',
+                                padding: '3px 8px',
+                                borderRadius: '4px',
+                                background: '#f3f4f6',
+                                color: '#374151',
+                                fontWeight: '700',
+                                fontFamily: 'monospace',
+                                border: '1px solid #e5e7eb',
+                                display: 'inline-block',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {allVariants.find(v => String(v.variantId) === String(row.variantId))?.sku || ('VAR-' + row.variantId)}
+                              </span>
+                            ) : (
+                              <span style={{ color: '#9ca3af', fontSize: '0.78rem' }}>--</span>
+                            )}
+                          </td>
+
+                          <td style={{ padding: '8px 10px' }}>
+                            <input
+                              type="text"
+                              maxLength={100}
+                              value={row.supplierSku || ''}
+                              onChange={e => handleItemChange(idx, 'supplierSku', e.target.value)}
+                              placeholder="Mã SP của NCC..."
+                              title="Mã sản phẩm / SKU riêng do Nhà cung cấp in trên tem mác hoặc hóa đơn"
+                              style={{
+                                width: '100%',
+                                padding: '6px 8px',
+                                borderRadius: '4px',
+                                border: '1px solid #d1d5db',
+                                fontSize: '0.82rem',
+                                fontFamily: 'monospace',
+                                color: '#1e40af',
+                                backgroundColor: '#f8fafc'
+                              }}
+                            />
+                          </td>
+
+                          <td style={{ padding: '8px 10px', textAlign: 'center' }}>
                             <input
                               type="number"
                               required
@@ -1027,18 +1151,22 @@ export default function ManageInbound() {
                               step="1000"
                               value={row.importPrice}
                               onChange={e => handleItemChange(idx, 'importPrice', e.target.value)}
-                              style={{ width: '120px', padding: '6px 8px', borderRadius: '4px', border: '1px solid #d1d5db', textAlign: 'right', fontSize: '0.85rem' }}
+                              style={{ width: '110px', padding: '6px 8px', borderRadius: '4px', border: '1px solid #d1d5db', textAlign: 'right', fontSize: '0.85rem' }}
                             />
+                          </td>
+
+                          <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '700', color: '#059669', fontSize: '0.88rem', whiteSpace: 'nowrap' }}>
+                            {((Number(row.quantity) || 0) * (Number(row.importPrice) || 0)).toLocaleString('vi-VN')} đ
                           </td>
 
                           <td style={{ padding: '8px 10px', textAlign: 'center' }}>
                             <button
                               type="button"
                               onClick={() => handleRemoveItemRow(idx)}
-                              style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                              style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                               title="Xóa mặt hàng này"
                             >
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                              <Trash2 size={16} strokeWidth={2} />
                             </button>
                           </td>
                         </tr>
@@ -1048,6 +1176,56 @@ export default function ManageInbound() {
                 </table>
               </div>
             </div>
+
+            {/* Category Breakdown Box for easy comparison */}
+            {categorySummary.length > 0 && (
+              <div style={{
+                marginBottom: '14px',
+                background: '#f8fafc',
+                borderRadius: '8px',
+                padding: '12px 16px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.85rem',
+                  fontWeight: '700',
+                  color: '#334155',
+                  marginBottom: '8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  <PieChart size={16} strokeWidth={2.2} color="#475569" />
+                  <span>Đối Chiếu Tổng Tiền Theo Từng Danh Mục ({categorySummary.length} danh mục):</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '8px' }}>
+                  {categorySummary.map((cat, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: '#ffffff',
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        border: '1px solid #cbd5e1',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <div>
+                        <strong style={{ color: '#0f172a', fontSize: '0.88rem' }}>{cat.name}</strong>
+                        <span style={{ fontSize: '0.78rem', color: '#64748b', marginLeft: '6px' }}>({cat.quantity} chiếc)</span>
+                      </div>
+                      <span style={{ color: '#059669', fontWeight: '700', fontSize: '0.92rem' }}>
+                        {cat.totalAmount.toLocaleString('vi-VN')} đ
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Total Summary Footer */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderRadius: '8px', marginBottom: '20px' }}>
@@ -1109,6 +1287,7 @@ export default function ManageInbound() {
               }}>
                 <div><span style={{ color: '#64748b' }}>Mã đợt / Lô: </span><strong style={{ fontFamily: 'monospace' }}>{selectedOrder.batchCode}</strong></div>
                 <div><span style={{ color: '#64748b' }}>Nhà cung cấp: </span><strong>{selectedOrder.supplierName || '—'}</strong></div>
+                <div><span style={{ color: '#64748b' }}>Mã phiếu giao NCC: </span><strong style={{ fontFamily: 'monospace', color: '#1e40af' }}>{selectedOrder.supplierOrderCode || '—'}</strong></div>
                 <div><span style={{ color: '#64748b' }}>Ngày nhập: </span><strong>{new Date(selectedOrder.importDate).toLocaleString('vi-VN')}</strong></div>
                 <div><span style={{ color: '#64748b' }}>Người tạo: </span><strong>{selectedOrder.createdByName || 'Hệ thống'}</strong></div>
                 <div><span style={{ color: '#64748b' }}>Tổng số lượng: </span><strong style={{ color: '#2563eb' }}>{selectedOrder.totalQuantity} chiếc</strong></div>
@@ -1154,7 +1333,7 @@ export default function ManageInbound() {
                   <tbody>
                     {(!selectedOrder.items || selectedOrder.items.length === 0) ? (
                       <tr>
-                        <td colSpan="7" style={{ textAlign: 'center', padding: '24px', color: '#6b7280' }}>
+                        <td colSpan="8" style={{ textAlign: 'center', padding: '24px', color: '#6b7280' }}>
                           Đợt nhập chưa có chi tiết mặt hàng.
                         </td>
                       </tr>
@@ -1199,8 +1378,13 @@ export default function ManageInbound() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
-                <button className="btn-action" onClick={() => setIsDetailModalOpen(false)}>
-                  Đóng
+                <button 
+                  className="btn-action" 
+                  onClick={() => setIsDetailModalOpen(false)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <X size={15} strokeWidth={2.2} />
+                  <span>Đóng</span>
                 </button>
               </div>
             </div>

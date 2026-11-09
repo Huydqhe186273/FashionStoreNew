@@ -14,6 +14,7 @@ public class CreateInboundOrderRequestDTO {
     private String batchCode;
     private Integer categoryId;
     private String supplierName;
+    private String supplierOrderCode;
     private LocalDateTime importDate;
     private String note;
     private List<CreateInboundBatchItemDTO> items;

@@ -5,6 +5,7 @@ import Modal from '../components/Modal';
 import { getVariants, createVariant, updateVariant, deleteVariant, generateMatrixVariants } from '../services/variantService';
 import { getProducts } from '../services/productService';
 import { useToast } from '../context/ToastContext';
+import { Boxes } from 'lucide-react';
 
 const mockVariants = [
   { variantId: 1, productId: 1, productName: "Áo Polo Nam Premium Flex", size: "M", color: "Đen", sku: "POLO-BLK-M", stockQuantity: 45 },
@@ -716,7 +717,8 @@ export default function ManageVariants() {
                     textDecoration: 'underline' 
                   }}
                 >
-                  📦 Đi tới Nhập Kho (Theo Lô)
+                  <Boxes size={14} />
+                  <span>Đi tới Nhập Kho (Theo Lô)</span>
                 </button>
               )}
             </div>

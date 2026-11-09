@@ -3,16 +3,11 @@
  * --------------------------------------------------------------
  * Resolves a representative product image. Priority:
  *   1) Backend-provided primaryImage / images[0] — used as-is when
- *      it's a real URL.
+ *      it's a real URL (excluding legacy random picsum placeholders).
  *   2) Generated SVG artwork (utils/productArtwork.js) — built from
  *      the product's name + category so each card shows art that
  *      actually matches the product. No external CDN required.
  *   3) Inline SVG placeholder — only if artwork building fails.
- *
- * Why this exists: Unsplash Source was deprecated mid-2024 and was
- * rate-limiting us. The generated artwork is name-aware so a card
- * titled "Áo Phao Unisex Puffer" gets a puffer silhouette, not a
- * random photo.
  */
 
 import { buildProductArtwork } from './productArtwork';
@@ -47,17 +42,21 @@ const COLOR_HEX = {
 export function resolveProductImage(product, options) {
   const backendImg =
     product?.primaryImage ||
+    product?.imageUrl ||
+    product?.primaryImageUrl ||
     (Array.isArray(product?.images) && product.images[0]) ||
     null;
   if (backendImg && typeof backendImg === 'string') {
     const trimmed = backendImg.trim();
-    if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed;
-    if (trimmed.startsWith('/')) return trimmed;
-    if (trimmed.length > 0) return `/${trimmed}`;
+    // Ignore legacy random picsum placeholders that do not match products
+    if (!trimmed.includes('picsum.photos')) {
+      if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed;
+      if (trimmed.startsWith('/')) return trimmed;
+      if (trimmed.length > 0) return `/${trimmed}`;
+    }
   }
 
-  // No backend image (or it's a relative path we can't trust):
-  // generate name-aware SVG artwork. This guarantees the picture
+  // No backend image: generate name-aware SVG artwork. This guarantees the picture
   // visually matches the product title.
   try {
     return buildProductArtwork(product || {});

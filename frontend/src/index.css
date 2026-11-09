@@ -22,6 +22,7 @@
   --text-subtle: #9ca3af;
 
   --primary: #b86a5d; /* Dusty Rose / Peach */
+  --primary-gradient: linear-gradient(135deg, #b86a5d 0%, #a25548 100%);
   --secondary-gradient: #6b6865;
 
   --success: #10b981;

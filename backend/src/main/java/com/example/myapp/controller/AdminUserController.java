@@ -80,7 +80,7 @@ public class AdminUserController {
 
     @PostMapping("/staff")
     // Xử lý POST /api/admin/staff để tạo tài khoản nhân viên.
-    public ResponseEntity<StaffDTO> createStaff(@Valid @RequestBody CreateStaffRequestDTO dto) {
+    public ResponseEntity<StaffDTO> createStaff(@RequestBody CreateStaffRequestDTO dto) {
         return ResponseEntity.ok(adminUserService.createStaff(dto));
     }
 
@@ -88,7 +88,7 @@ public class AdminUserController {
     // Xử lý PUT /api/admin/staff/{id} để cập nhật thông tin nhân viên.
     public ResponseEntity<StaffDTO> updateStaff(
             @PathVariable("id") Integer id,
-            @Valid @RequestBody CreateStaffRequestDTO dto) {
+            @RequestBody CreateStaffRequestDTO dto) {
         return ResponseEntity.ok(adminUserService.updateStaff(id, dto));
     }
 

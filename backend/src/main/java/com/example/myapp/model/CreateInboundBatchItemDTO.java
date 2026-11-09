@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class CreateInboundBatchItemDTO {
     private Integer variantId;
+    private String supplierSku;
     private Integer quantity;
     private BigDecimal importPrice;
 

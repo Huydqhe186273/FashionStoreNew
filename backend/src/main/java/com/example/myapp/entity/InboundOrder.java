@@ -29,6 +29,9 @@ public class InboundOrder {
     @Column(name = "SupplierName", length = 150)
     private String supplierName;
 
+    @Column(name = "SupplierOrderCode", length = 100)
+    private String supplierOrderCode;
+
     @Column(name = "ImportDate", nullable = false)
     private LocalDateTime importDate = LocalDateTime.now();
 
