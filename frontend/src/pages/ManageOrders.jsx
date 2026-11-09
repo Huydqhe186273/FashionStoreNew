@@ -1272,44 +1272,78 @@ export default function ManageOrders() {
               borderRadius: '8px',
               border: '1px solid #cbd5e1'
             }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                🏦 Thông Tin Ngân Hàng Hoàn Tiền (Chuyển khoản)
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155' }}>
+                  🏦 Thông Tin Ngân Hàng Hoàn Tiền (Chuyển khoản)
+                </div>
+                {Boolean(returnOrder.payerBankAccount) && (
+                  <span style={{ fontSize: '0.72rem', backgroundColor: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                    🔒 Cố định theo thanh toán gốc
+                  </span>
+                )}
               </div>
               <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '8px' }}>
-                Tài khoản được lấy từ giao dịch PayOS nếu có; nhân viên có thể kiểm tra và chỉnh sửa.
+                {returnOrder.payerBankAccount
+                  ? '🔒 Đơn hàng thanh toán qua PayOS/thẻ ngân hàng: thông tin nhận tiền hoàn được cố định về tài khoản thanh toán gốc.'
+                  : 'Vui lòng điền thông tin tài khoản ngân hàng của khách để tiến hành hoàn tiền.'}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '8px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px' }}>Tên Ngân Hàng</label>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px' }}>
+                    Tên Ngân Hàng {Boolean(returnOrder.payerBankAccount) && '(Khóa 🔒)'}
+                  </label>
                   <input
                     type="text"
                     className="input-control"
-                    style={{ width: '100%' }}
+                    style={{
+                      width: '100%',
+                      backgroundColor: returnOrder.payerBankAccount ? '#e2e8f0' : '#ffffff',
+                      cursor: returnOrder.payerBankAccount ? 'not-allowed' : 'text'
+                    }}
                     placeholder="VD: MBBank, Vietcombank..."
                     value={bankName}
+                    readOnly={Boolean(returnOrder.payerBankAccount)}
+                    disabled={Boolean(returnOrder.payerBankAccount)}
                     onChange={(e) => setBankName(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px' }}>Số Tài Khoản</label>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px' }}>
+                    Số Tài Khoản {Boolean(returnOrder.payerBankAccount) && '(Khóa 🔒)'}
+                  </label>
                   <input
                     type="text"
                     className="input-control"
-                    style={{ width: '100%' }}
+                    style={{
+                      width: '100%',
+                      backgroundColor: returnOrder.payerBankAccount ? '#e2e8f0' : '#ffffff',
+                      cursor: returnOrder.payerBankAccount ? 'not-allowed' : 'text',
+                      fontFamily: 'monospace'
+                    }}
                     placeholder="VD: 0987654321"
                     value={bankAccount}
+                    readOnly={Boolean(returnOrder.payerBankAccount)}
+                    disabled={Boolean(returnOrder.payerBankAccount)}
                     onChange={(e) => setBankAccount(e.target.value)}
                   />
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px' }}>Tên Chủ Tài Khoản</label>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px' }}>
+                  Tên Chủ Tài Khoản {Boolean(returnOrder.payerBankAccount) && '(Khóa 🔒)'}
+                </label>
                 <input
                   type="text"
                   className="input-control"
-                  style={{ width: '100%' }}
+                  style={{
+                    width: '100%',
+                    backgroundColor: returnOrder.payerBankAccount ? '#e2e8f0' : '#ffffff',
+                    cursor: returnOrder.payerBankAccount ? 'not-allowed' : 'text'
+                  }}
                   placeholder="VD: NGUYEN VAN A"
                   value={accountHolder}
+                  readOnly={Boolean(returnOrder.payerBankAccount)}
+                  disabled={Boolean(returnOrder.payerBankAccount)}
                   onChange={(e) => setAccountHolder(e.target.value)}
                 />
               </div>

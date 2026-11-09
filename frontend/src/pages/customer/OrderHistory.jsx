@@ -671,12 +671,19 @@ export default function OrderHistory() {
 
             {/* Thông tin tài khoản nhận hoàn tiền */}
             <div style={{ backgroundColor: '#f0fdf4', padding: '14px 16px', borderRadius: '10px', marginBottom: '16px', border: '1px solid #bbf7d0' }}>
-              <div style={{ fontSize: '0.875rem', fontWeight: '700', color: '#166534', marginBottom: '4px' }}>
-                🏦 Tài khoản nhận tiền hoàn (Chuyển khoản)
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <div style={{ fontSize: '0.875rem', fontWeight: '700', color: '#166534' }}>
+                  🏦 Tài khoản nhận tiền hoàn (Chuyển khoản)
+                </div>
+                {Boolean(orderToReturn.payerBankAccount) && (
+                  <span style={{ fontSize: '0.72rem', backgroundColor: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                    🔒 Cố định theo tài khoản thanh toán
+                  </span>
+                )}
               </div>
               {orderToReturn.payerBankAccount ? (
-                <div style={{ fontSize: '0.78rem', color: '#15803d', marginBottom: '10px' }}>
-                  ✅ Hệ thống đã tự động lấy tài khoản người đã chuyển tiền thanh toán đơn hàng này. Bạn có thể kiểm tra hoặc điều chỉnh nếu cần.
+                <div style={{ fontSize: '0.78rem', color: '#15803d', marginBottom: '10px', lineHeight: 1.4 }}>
+                  🔒 Hệ thống sẽ tự động hoàn tiền trực tiếp về tài khoản ngân hàng bạn đã dùng để thanh toán đơn hàng này (không thể thay đổi để đảm bảo an toàn giao dịch).
                 </div>
               ) : (
                 <div style={{ fontSize: '0.78rem', color: '#64748b', marginBottom: '10px' }}>
@@ -685,34 +692,80 @@ export default function OrderHistory() {
               )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '8px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '600', color: '#334155', marginBottom: '4px' }}>Tên Ngân Hàng</label>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '600', color: '#334155', marginBottom: '4px' }}>
+                    Tên Ngân Hàng {Boolean(orderToReturn.payerBankAccount) && <span style={{ color: '#64748b', fontSize: '0.72rem' }}>(Khóa 🔒)</span>}
+                  </label>
                   <input
                     type="text"
                     placeholder="VD: MBBank, Vietcombank..."
                     value={returnBankName}
+                    readOnly={Boolean(orderToReturn.payerBankAccount)}
+                    disabled={Boolean(orderToReturn.payerBankAccount)}
                     onChange={(e) => setReturnBankName(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', boxSizing: 'border-box' }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.85rem',
+                      boxSizing: 'border-box',
+                      backgroundColor: orderToReturn.payerBankAccount ? '#f1f5f9' : '#ffffff',
+                      color: orderToReturn.payerBankAccount ? '#334155' : '#0f172a',
+                      cursor: orderToReturn.payerBankAccount ? 'not-allowed' : 'text',
+                      fontWeight: orderToReturn.payerBankAccount ? '600' : 'normal'
+                    }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '600', color: '#334155', marginBottom: '4px' }}>Số Tài Khoản</label>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '600', color: '#334155', marginBottom: '4px' }}>
+                    Số Tài Khoản {Boolean(orderToReturn.payerBankAccount) && <span style={{ color: '#64748b', fontSize: '0.72rem' }}>(Khóa 🔒)</span>}
+                  </label>
                   <input
                     type="text"
                     placeholder="VD: 0987654321"
                     value={returnBankAccount}
+                    readOnly={Boolean(orderToReturn.payerBankAccount)}
+                    disabled={Boolean(orderToReturn.payerBankAccount)}
                     onChange={(e) => setReturnBankAccount(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', boxSizing: 'border-box' }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.85rem',
+                      boxSizing: 'border-box',
+                      backgroundColor: orderToReturn.payerBankAccount ? '#f1f5f9' : '#ffffff',
+                      color: orderToReturn.payerBankAccount ? '#334155' : '#0f172a',
+                      cursor: orderToReturn.payerBankAccount ? 'not-allowed' : 'text',
+                      fontWeight: orderToReturn.payerBankAccount ? '700' : 'normal',
+                      letterSpacing: orderToReturn.payerBankAccount ? '0.5px' : 'normal'
+                    }}
                   />
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '600', color: '#334155', marginBottom: '4px' }}>Tên Chủ Tài Khoản</label>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '600', color: '#334155', marginBottom: '4px' }}>
+                  Tên Chủ Tài Khoản {Boolean(orderToReturn.payerBankAccount) && <span style={{ color: '#64748b', fontSize: '0.72rem' }}>(Khóa 🔒)</span>}
+                </label>
                 <input
                   type="text"
                   placeholder="VD: NGUYEN VAN A"
                   value={returnAccountHolder}
+                  readOnly={Boolean(orderToReturn.payerBankAccount)}
+                  disabled={Boolean(orderToReturn.payerBankAccount)}
                   onChange={(e) => setReturnAccountHolder(e.target.value.toUpperCase())}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', boxSizing: 'border-box' }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.85rem',
+                    boxSizing: 'border-box',
+                    backgroundColor: orderToReturn.payerBankAccount ? '#f1f5f9' : '#ffffff',
+                    color: orderToReturn.payerBankAccount ? '#334155' : '#0f172a',
+                    cursor: orderToReturn.payerBankAccount ? 'not-allowed' : 'text',
+                    fontWeight: orderToReturn.payerBankAccount ? '600' : 'normal'
+                  }}
                 />
               </div>
             </div>

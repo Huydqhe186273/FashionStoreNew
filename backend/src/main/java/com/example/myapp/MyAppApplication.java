@@ -7,7 +7,7 @@ import com.example.myapp.config.DatabaseInitializer;
 
 @SpringBootApplication
 public class MyAppApplication {
-  
+
 	// Điểm khởi động ứng dụng: bảo đảm database tồn tại trước khi chạy Spring Boot.
 	// args chứa các tham số dòng lệnh khi chạy ứng dụng.
 	public static void main(String[] args) {
@@ -15,9 +15,9 @@ public class MyAppApplication {
 			loadDotEnv();
 			// Connection config from environment variables / .env (with safe defaults).
 			String dbUrl = getProperty("DB_URL",
-				"jdbc:sqlserver://localhost:1433;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;");
+					"jdbc:sqlserver://localhost:1433;databaseName=FashionStoreDB;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;stringtype=nvarchar;");
 			String dbUser = getProperty("DB_USERNAME", "sa");
-			String dbPass = getProperty("DB_PASSWORD", "sa");
+			String dbPass = getProperty("DB_PASSWORD", "123456");
 			DatabaseInitializer.initialize(dbUrl, dbUser, dbPass);
 		} catch (Exception exception) {
 			throw new IllegalStateException("Unable to create or verify FashionStoreDB", exception);
@@ -26,7 +26,7 @@ public class MyAppApplication {
 	}
 
 	private static void loadDotEnv() {
-		String[] paths = {".env", "backend/.env", "../backend/.env"};
+		String[] paths = { ".env", "backend/.env", "../backend/.env" };
 		for (String path : paths) {
 			java.io.File envFile = new java.io.File(path);
 			if (envFile.isFile()) {

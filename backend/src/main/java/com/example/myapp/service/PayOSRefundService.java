@@ -81,27 +81,36 @@ public class PayOSRefundService {
         Payment successfulPayment = paymentRepository.findSuccessfulPaymentsWithPayerAccount(orderId).stream()
                 .findFirst().orElse(null);
 
-        String bankName = (inputBankName != null && !inputBankName.trim().isEmpty())
-                ? inputBankName.trim()
-                : (returnRequest != null && returnRequest.getBankName() != null && !returnRequest.getBankName().trim().isEmpty()
-                    ? returnRequest.getBankName().trim()
-                    : (successfulPayment != null ? successfulPayment.getPayerBankName() : "MBBank"));
+        // Nếu đã có thông tin tài khoản chuyển tiền gốc từ giao dịch thành công (PayOS/ngân hàng),
+        // luôn cố định chuyển hoàn tiền về tài khoản đó (bảo đảm an toàn giao dịch, không cho sửa)
+        String bankName;
+        String rawBankAccount;
+        String accountHolder;
 
-        String rawBankAccount = (inputBankAccount != null && !inputBankAccount.trim().isEmpty())
-                ? inputBankAccount.trim()
-                : (returnRequest != null && returnRequest.getBankAccount() != null && !returnRequest.getBankAccount().trim().isEmpty()
-                    ? returnRequest.getBankAccount().trim()
-                    : (successfulPayment != null ? successfulPayment.getPayerBankAccount() : null));
-
-        String accountHolder = (inputAccountHolder != null && !inputAccountHolder.trim().isEmpty())
-                ? inputAccountHolder.trim().toUpperCase()
-                : (returnRequest != null && returnRequest.getAccountHolder() != null && !returnRequest.getAccountHolder().trim().isEmpty()
-                    ? returnRequest.getAccountHolder().trim().toUpperCase()
-                    : (successfulPayment != null && successfulPayment.getPayerAccountHolder() != null
-                        ? successfulPayment.getPayerAccountHolder()
+        if (successfulPayment != null && successfulPayment.getPayerBankAccount() != null && !successfulPayment.getPayerBankAccount().trim().isEmpty()) {
+            bankName = successfulPayment.getPayerBankName() != null && !successfulPayment.getPayerBankName().trim().isEmpty()
+                    ? successfulPayment.getPayerBankName().trim() : "MBBank";
+            rawBankAccount = successfulPayment.getPayerBankAccount().trim();
+            accountHolder = successfulPayment.getPayerAccountHolder() != null && !successfulPayment.getPayerAccountHolder().trim().isEmpty()
+                    ? successfulPayment.getPayerAccountHolder().trim().toUpperCase()
+                    : (inputAccountHolder != null && !inputAccountHolder.trim().isEmpty() ? inputAccountHolder.trim().toUpperCase() : "KHACH HANG");
+        } else {
+            bankName = (inputBankName != null && !inputBankName.trim().isEmpty())
+                    ? inputBankName.trim()
+                    : (returnRequest != null && returnRequest.getBankName() != null && !returnRequest.getBankName().trim().isEmpty()
+                        ? returnRequest.getBankName().trim() : "MBBank");
+            rawBankAccount = (inputBankAccount != null && !inputBankAccount.trim().isEmpty())
+                    ? inputBankAccount.trim()
+                    : (returnRequest != null && returnRequest.getBankAccount() != null && !returnRequest.getBankAccount().trim().isEmpty()
+                        ? returnRequest.getBankAccount().trim() : null);
+            accountHolder = (inputAccountHolder != null && !inputAccountHolder.trim().isEmpty())
+                    ? inputAccountHolder.trim().toUpperCase()
+                    : (returnRequest != null && returnRequest.getAccountHolder() != null && !returnRequest.getAccountHolder().trim().isEmpty()
+                        ? returnRequest.getAccountHolder().trim().toUpperCase()
                         : (order.getAddress() != null && order.getAddress().getRecipientName() != null
                             ? order.getAddress().getRecipientName().toUpperCase()
-                            : (order.getUser() != null ? order.getUser().getFullName().toUpperCase() : "KHACH HANG"))));
+                            : (order.getUser() != null ? order.getUser().getFullName().toUpperCase() : "KHACH HANG")));
+        }
 
         BigDecimal finalAmount = refundAmount != null ? refundAmount
                 : (returnRequest != null && returnRequest.getRefundAmount() != null

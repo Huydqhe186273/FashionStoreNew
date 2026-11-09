@@ -469,15 +469,19 @@ public class OrderService {
         request.setStatus("pending");
         request.setRefundAmount(order.getTotalAmount());
         request.setCreatedAt(LocalDateTime.now());
-        request.setBankName(bankName != null && !bankName.trim().isEmpty()
-                ? bankName.trim()
-                : (payerPayment != null ? payerPayment.getPayerBankName() : null));
-        request.setBankAccount(bankAccount != null && !bankAccount.trim().isEmpty()
-                ? bankAccount.trim()
-                : (payerPayment != null ? payerPayment.getPayerBankAccount() : null));
-        request.setAccountHolder(accountHolder != null && !accountHolder.trim().isEmpty()
-                ? accountHolder.trim().toUpperCase()
-                : (payerPayment != null ? payerPayment.getPayerAccountHolder() : null));
+        // Nếu đơn hàng đã có tài khoản người chuyển tiền lúc thanh toán (PayOS), luôn cố định hoàn về tài khoản đó
+        if (payerPayment != null && payerPayment.getPayerBankAccount() != null && !payerPayment.getPayerBankAccount().trim().isEmpty()) {
+            request.setBankName(payerPayment.getPayerBankName() != null && !payerPayment.getPayerBankName().trim().isEmpty()
+                    ? payerPayment.getPayerBankName().trim() : "MBBank");
+            request.setBankAccount(payerPayment.getPayerBankAccount().trim());
+            request.setAccountHolder(payerPayment.getPayerAccountHolder() != null && !payerPayment.getPayerAccountHolder().trim().isEmpty()
+                    ? payerPayment.getPayerAccountHolder().trim().toUpperCase()
+                    : (accountHolder != null && !accountHolder.trim().isEmpty() ? accountHolder.trim().toUpperCase() : "KHACH HANG"));
+        } else {
+            request.setBankName(bankName != null && !bankName.trim().isEmpty() ? bankName.trim() : "MBBank");
+            request.setBankAccount(bankAccount != null && !bankAccount.trim().isEmpty() ? bankAccount.trim() : null);
+            request.setAccountHolder(accountHolder != null && !accountHolder.trim().isEmpty() ? accountHolder.trim().toUpperCase() : null);
+        }
 
         ReturnRequest saved = returnRequestRepository.save(request);
 
