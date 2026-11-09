@@ -1003,7 +1003,8 @@ tr:hover td {
 }
 
 /* Shop page styles now live in src/pages/customer/shop.css
-   and are loaded by ProductListPage.jsx. The `.product-card`
+   and are loaded by ProductListPage.jsx. ProductCard styles live in
+   src/components/customer/ProductCard.css (imported by ProductCard.jsx). The `.product-card`
    family below USED to have a safety-net `display: revert` so
    unstyled Shop pages still showed cards in some shape — but
    `display: revert` resets `<a>` back to `inline`, which actually
@@ -1309,38 +1310,57 @@ tr:hover td {
 
 .btn-add-cart,
 .btn-buy-now {
-  background: #b86a5d;
-  color: white;
-  border: 1px solid #b86a5d;
+  flex: 1;
+  min-width: 160px;
+  min-height: 48px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
   box-shadow: none;
-  transition: background-color 0.15s ease;
+  transition: all 0.2s ease;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.btn-add-cart {
+  background: #ffffff;
+  color: #b86a5d;
+  border: 1.5px solid #b86a5d;
+}
+
+.btn-add-cart:hover:not(:disabled) {
+  background: #fdf5f4;
+  color: #a4574a;
+  border-color: #a4574a;
+}
+
+.btn-buy-now {
+  background: #b86a5d;
+  color: #ffffff;
+  border: 1.5px solid #b86a5d;
 }
 
 .btn-buy-now:hover:not(:disabled) {
   background: #a4574a;
   border-color: #a4574a;
-}
-
-.btn-add-cart {
-  background: #ffffff;
-  color: #9c4c3f;
-  border: 1px solid #b86a5d;
-  transition: background-color 0.15s ease;
-}
-
-.btn-add-cart:hover:not(:disabled) {
-  background: #fbf3f2;
-  border-color: #a4574a;
-}
-
-.btn-buy-now {
-  background: var(--primary-gradient);
-  color: white;
-  box-shadow: var(--shadow-glow);
+  color: #ffffff;
 }
 
 .btn-buy-now:disabled,
-.btn-add-cart:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-add-cart:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+}
 
 .product-detail-description {
   border-top: 1px solid var(--border-color);

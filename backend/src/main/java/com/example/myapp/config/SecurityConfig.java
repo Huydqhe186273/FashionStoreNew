@@ -86,6 +86,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/admin/dashboard/**", "/api/admin/users/**", "/api/admin/staff/**", "/api/admin/coupons/**", "/api/admin/reports/**").hasRole("ADMIN")
                     .requestMatchers("/api/admin/orders/**", "/api/admin/products/**", "/api/admin/variants/**", "/api/admin/categories/**", "/api/admin/inbound/**").hasAnyRole("STAFF", "ADMIN")
                     .requestMatchers("/api/manager/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/api/recommendations/similarity/**").hasRole("ADMIN")
                     .requestMatchers("/api/profile/**", "/api/cart/**", "/api/orders/**", "/api/payment/**").authenticated()
                     .anyRequest().permitAll()
             );

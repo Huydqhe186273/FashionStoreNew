@@ -1,0 +1,108 @@
+flowchart TD
+  %% Professional Styling & Color Classes
+  classDef startEnd fill:#ffffff,stroke:#0f172a,stroke-width:2px;
+  classDef userNode fill:#eff6ff,stroke:#2563eb,stroke-width:1.5px,color:#1e3a8a;
+  classDef sysNode fill:#f8fafc,stroke:#475569,stroke-width:1.5px,color:#0f172a;
+  classDef payNode fill:#faf5ff,stroke:#7c3aed,stroke-width:1.5px,color:#5b21b6;
+  classDef decision fill:#fef3c7,stroke:#d97706,stroke-width:1.5px,color:#92400e;
+
+  %% ==========================================
+  %% LANE 1: CUSTOMER / USER (UI & ACTIONS)
+  %% ==========================================
+  subgraph LaneUser ["👤 Customer / User"]
+    direction TB
+    node_0((Start)):::startEnd
+    node_1["Select Variant (Color, Size) & Quantity"]:::userNode
+    node_2["Click 'Add to Cart'"]:::userNode
+    node_5["Display Out of Stock Error"]:::userNode
+    node_6["Show Success Toast & Open Cart"]:::userNode
+    node_8a["Select Delivery Address"]:::userNode
+    node_8b["Apply Coupon / Voucher"]:::userNode
+    node_8c["Select Payment (COD / PayOS)"]:::userNode
+    node_10["Click 'Place Order / Checkout'"]:::userNode
+    node_12["Display Insufficient Stock Error"]:::userNode
+    node_17["Scan VietQR & Transfer via Banking App"]:::userNode
+    node_21["Display Payment Failed / Expired"]:::userNode
+    node_22["Notify COD Order Placed Successfully"]:::userNode
+    node_24["Display PayOS Payment Success Badge"]:::userNode
+    node_25["View Order Details in 'Order History'"]:::userNode
+    node_end(((End))):::startEnd
+  end
+
+  %% ==========================================
+  %% LANE 2: SYSTEM (BACKEND & DATABASE)
+  %% ==========================================
+  subgraph LaneSystem ["⚙️ System (Backend)"]
+    direction TB
+    node_3{"In Stock?"}:::decision
+    node_4["Save to CartItem & Recalculate Total"]:::sysNode
+    node_7["Fetch Cart Data & Calculate Subtotal"]:::sysNode
+    node_11{"Sufficient Stock?"}:::decision
+    node_13["Deduct Stock, Create Order (Pending) & Clear Cart"]:::sysNode
+    node_14{"Payment Method is PayOS?"}:::decision
+    node_15["Call PayOS SDK to Generate VietQR Link"]:::sysNode
+    node_18["Record COD Order & Send Notification"]:::sysNode
+    node_23["Verify HMAC Signature & Update Order = PAID"]:::sysNode
+  end
+
+  %% ==========================================
+  %% LANE 3: PAYOS (PAYMENT GATEWAY)
+  %% ==========================================
+  subgraph LanePayOS ["💳 PayOS Gateway"]
+    direction TB
+    node_16["Generate VietQR Code & Return checkoutUrl"]:::payNode
+    node_19{"Payment Successful?"}:::decision
+    node_20["Send IPN Webhook to System"]:::payNode
+  end
+
+  %% ==========================================
+  %% EDGES & TRANSITIONS
+  %% ==========================================
+  node_0 --> node_1
+  node_1 --> node_2
+  node_2 --> node_3
+
+  %% Stock validation for Add to Cart
+  node_3 -- "Yes" --> node_4
+  node_3 -- "No" --> node_5
+  node_5 -.->|Retry| node_1
+  node_4 --> node_6
+  node_6 --> node_7
+
+  %% Parallel Checkout actions
+  node_7 --> node_8a
+  node_7 --> node_8b
+  node_7 --> node_8c
+  node_8a --> node_10
+  node_8b --> node_10
+  node_8c --> node_10
+
+  %% Full Cart stock check before order creation
+  node_10 --> node_11
+  node_11 -- "No" --> node_12
+  node_12 -.->|Update Cart| node_6
+  node_11 -- "Yes" --> node_13
+  node_13 --> node_14
+
+  %% Payment Method branch
+  node_14 -- "Yes (PayOS)" --> node_15
+  node_14 -- "No (COD)" --> node_18
+
+  %% Online PayOS Payment flow
+  node_15 --> node_16
+  node_16 --> node_17
+  node_17 --> node_19
+
+  node_19 -- "No" --> node_21
+  node_21 -.->|Reselect Payment| node_8c
+  node_19 -- "Yes" --> node_20
+  node_20 --> node_23
+  node_23 --> node_24
+
+  %% COD Payment flow
+  node_18 --> node_22
+
+  %% Convergence to Order History & End
+  node_22 --> node_25
+  node_24 --> node_25
+  node_25 --> node_end

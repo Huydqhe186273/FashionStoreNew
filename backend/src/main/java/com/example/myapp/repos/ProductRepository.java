@@ -20,6 +20,17 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query("SELECT p FROM Product p ORDER BY p.SoldCount DESC LIMIT 10")
     List<Product> findTop10ByOrderBySoldCountDesc();
 
+    // ===== Recommendation =====
+
+    @Query("SELECT p FROM Product p JOIN FETCH p.Category c " +
+           "WHERE LOWER(p.Status) = 'active' AND (p.IsTest = false OR p.IsTest IS NULL)")
+    List<Product> findAllActive();
+
+    @Query("SELECT p FROM Product p JOIN FETCH p.Category c " +
+           "WHERE LOWER(p.Status) = 'active' AND (p.IsTest = false OR p.IsTest IS NULL) " +
+           "AND c.CategoryId IN :categoryIds")
+    List<Product> findActiveByCategoryIds(@Param("categoryIds") java.util.Collection<Integer> categoryIds);
+
     @Query("SELECT COALESCE(SUM(pv.StockQuantity), 0) FROM ProductVariant pv")
     long sumTotalStockQuantity();
 
