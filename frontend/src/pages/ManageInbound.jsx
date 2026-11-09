@@ -583,7 +583,7 @@ export default function ManageInbound() {
                 <input
                   type="text"
                   className="input-control"
-                  placeholder="Tìm mã đợt nhập, nhà cung cấp..."
+                  placeholder="Tìm mã đợt nhập, số HĐ nhà cung cấp, tên NCC..."
                   value={orderSearch}
                   onChange={e => setOrderSearch(e.target.value)}
                 />
@@ -615,7 +615,7 @@ export default function ManageInbound() {
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Mã Đợt Nhập</th>
+                    <th>Mã Đợt / Hóa Đơn Nhập</th>
                     <th>Danh Mục</th>
                     <th>Nhà Cung Cấp</th>
                     <th>Ngày Nhập Kho</th>
@@ -644,6 +644,11 @@ export default function ManageInbound() {
                           <span style={{ fontWeight: '700', color: '#1f2937', background: '#f3f4f6', padding: '4px 8px', borderRadius: '6px', fontFamily: 'monospace' }}>
                             {o.batchCode}
                           </span>
+                          {o.supplierOrderCode && (
+                            <div style={{ fontSize: '0.78rem', color: '#1e40af', fontFamily: 'monospace', marginTop: '3px' }} title="Số hóa đơn / Phiếu giao của Nhà Cung Cấp">
+                              📄 HĐ: {o.supplierOrderCode}
+                            </div>
+                          )}
                         </td>
                         <td style={{ whiteSpace: 'nowrap' }}>{o.categoryName || 'Đa danh mục'}</td>
                         <td style={{ fontWeight: '600', whiteSpace: 'nowrap' }}>{o.supplierName || '—'}</td>
@@ -687,7 +692,7 @@ export default function ManageInbound() {
                 <input
                   type="text"
                   className="input-control"
-                  placeholder="Tìm tên sản phẩm, mã SKU, mã lô..."
+                  placeholder="Tìm tên sản phẩm, mã SKU, mã lô, số HĐ nhà cung cấp..."
                   value={batchSearch}
                   onChange={e => setBatchSearch(e.target.value)}
                 />
@@ -724,7 +729,7 @@ export default function ManageInbound() {
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Mã Lô Nhập</th>
+                    <th>Mã Lô & Hóa Đơn Nhập</th>
                     <th>Sản Phẩm & Danh Mục</th>
                     <th>Biến Thể (Size - Màu)</th>
                     <th>Mã SKU</th>
@@ -752,9 +757,29 @@ export default function ManageInbound() {
                       return (
                         <tr key={b.batchId} style={{ opacity: isDepleted ? 0.65 : 1 }}>
                           <td style={{ whiteSpace: 'nowrap' }}>
-                            <span style={{ fontWeight: '700', color: '#1f2937', background: '#f3f4f6', padding: '4px 8px', borderRadius: '6px', fontFamily: 'monospace' }}>
-                              {b.batchCode}
-                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDetail(b.inboundOrderId)}
+                              title="Bấm để xem chi tiết hóa đơn đợt nhập kho này"
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                padding: 0,
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                display: 'block'
+                              }}
+                            >
+                              <span style={{ fontWeight: '700', color: '#1e40af', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: '6px', fontFamily: 'monospace', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                {b.batchCode}
+                                <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>↗</span>
+                              </span>
+                            </button>
+                            {b.supplierOrderCode && (
+                              <div style={{ fontSize: '0.76rem', color: '#047857', fontFamily: 'monospace', marginTop: '3px' }} title="Số hóa đơn / Phiếu giao của Nhà Cung Cấp">
+                                📄 HĐ: {b.supplierOrderCode}
+                              </div>
+                            )}
                           </td>
                           <td>
                             <div style={{ fontWeight: '600', color: '#111827' }}>{b.productName}</div>
