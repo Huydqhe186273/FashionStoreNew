@@ -1,11 +1,14 @@
 package com.example.myapp.controller;
 
 import com.example.myapp.entity.Order;
+import com.example.myapp.entity.ReturnRequest;
 import com.example.myapp.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -93,19 +96,22 @@ public class OrderController {
             String bankName = body != null ? body.get("bankName") : null;
             String bankAccount = body != null ? body.get("bankAccount") : null;
             String accountHolder = body != null ? body.get("accountHolder") : null;
-            com.example.myapp.entity.ReturnRequest request = orderService.createReturnRequest(orderId, userId, reason, bankName, bankAccount, accountHolder);
-            return ResponseEntity.ok(Map.of(
-                    "message", "Đã gửi yêu cầu trả hàng & hoàn tiền thành công!",
-                    "returnId", request.getReturnId(),
-                    "status", request.getStatus(),
-                    "refundAmount", request.getRefundAmount() != null ? request.getRefundAmount() : 0,
-                    "bankName", request.getBankName() != null ? request.getBankName() : "",
-                    "bankAccount", request.getBankAccount() != null ? request.getBankAccount() : "",
-                    "accountHolder", request.getAccountHolder() != null ? request.getAccountHolder() : ""
-            ));
+            ReturnRequest request = orderService.createReturnRequest(orderId, userId, reason, bankName, bankAccount, accountHolder);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", "Đã gửi yêu cầu trả hàng & hoàn tiền thành công!");
+            result.put("returnId", request != null ? request.getReturnId() : null);
+            result.put("status", request != null ? request.getStatus() : "pending");
+            result.put("refundAmount", request != null && request.getRefundAmount() != null ? request.getRefundAmount() : BigDecimal.ZERO);
+            result.put("bankName", request != null && request.getBankName() != null ? request.getBankName() : "");
+            result.put("bankAccount", request != null && request.getBankAccount() != null ? request.getBankAccount() : "");
+            result.put("accountHolder", request != null && request.getAccountHolder() != null ? request.getAccountHolder() : "");
+
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            String errorMsg = e.getMessage() != null ? e.getMessage() : "Đã xảy ra lỗi khi tạo yêu cầu hoàn tiền";
+            return ResponseEntity.badRequest().body(Map.of("error", errorMsg));
         }
     }
 }
