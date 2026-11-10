@@ -2,6 +2,7 @@
 > **Dự án:** Fashion Store (thương mại điện tử thời trang)
 > **Phạm vi:** Toàn bộ module gợi ý: thu thập hành vi → hồ sơ sở thích → gợi ý "Dành cho bạn" → "Sản phẩm tương tự" → tính sẵn độ tương đồng → reset dữ liệu.
 > **Loại thuật toán:** Rule-based (chấm điểm theo luật), không dùng Machine Learning.
+> **Sơ đồ swimlane (draw.io):** [`ai_recommendation_swimlane.drawio`](ai_recommendation_swimlane.drawio). Mở bằng [app.diagrams.net](https://app.diagrams.net) → **File** → **Open from** → **Device…** (2 trang: *Gợi ý Dành cho bạn* và *Sản phẩm tương tự*).
 
 ---
 
