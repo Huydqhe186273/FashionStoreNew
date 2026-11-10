@@ -223,7 +223,7 @@ export default function ManageOrders() {
     setActionSuccess('');
     const isPayOS = selectedOrder?.paymentMethod === 'PayOS';
     const targetAcc = selectedOrder?.returnRequest?.bankAccount || selectedOrder?.payerBankAccount || '';
-    const targetBank = selectedOrder?.returnRequest?.bankName || selectedOrder?.payerBankName || (targetAcc ? 'MBBank' : '');
+    const targetBank = selectedOrder?.returnRequest?.bankName || selectedOrder?.payerBankName || (targetAcc ? 'TPBank' : '');
     const refundAmt = formatCurrency(selectedOrder?.refundAmount || selectedOrder?.totalAmount);
 
     const promptText = isPayOS
@@ -875,7 +875,7 @@ export default function ManageOrders() {
                         ⚡ Chuyển hoàn tự động qua cổng PayOS:
                       </div>
                       <div style={{ fontSize: '0.82rem', color: '#047857', lineHeight: 1.5 }}>
-                        Ngân hàng: <strong>{bName || 'MBBank'}</strong> | STK: <strong style={{ color: '#2563eb' }}>{bAcc || 'Chưa cung cấp'}</strong> | Chủ TK: <strong>{bHolder}</strong>
+                        Ngân hàng: <strong>{bName || 'TPBank'}</strong> | STK: <strong style={{ color: '#2563eb' }}>{bAcc || 'Chưa cung cấp'}</strong> | Chủ TK: <strong>{bHolder}</strong>
                       </div>
                       <div style={{ fontSize: '0.75rem', color: '#059669', marginTop: '4px', fontStyle: 'italic' }}>
                         Dựa vào hóa đơn #{selectedOrder.orderId}, hệ thống sẽ tự động chuyển hoàn {formatCurrency(selectedOrder.refundAmount || selectedOrder.totalAmount)} về tài khoản trên khi bấm "Duyệt hoàn tiền".

@@ -571,7 +571,7 @@ export default function OrderHistory() {
                             setOrderToReturn(order);
                             setReturnReasonType('Hàng bị lỗi hoặc hư hại do vận chuyển');
                             setReturnReasonDetail('');
-                            setReturnBankName(order.payerBankName || order.returnBankName || (order.payerBankAccount ? 'MBBank' : ''));
+                            setReturnBankName(order.payerBankName || order.returnBankName || (order.payerBankAccount ? 'TPBank' : ''));
                             setReturnBankAccount(order.payerBankAccount || order.returnBankAccount || '');
                             setReturnAccountHolder(order.payerAccountHolder || order.returnAccountHolder || order.recipientName || '');
                           }}
@@ -848,7 +848,7 @@ export default function OrderHistory() {
                   </label>
                   <input
                     type="text"
-                    placeholder="VD: MBBank, Vietcombank..."
+                    placeholder="VD: TPBank, Vietcombank, MBBank..."
                     value={returnBankName}
                     readOnly={Boolean(orderToReturn.payerBankAccount)}
                     disabled={Boolean(orderToReturn.payerBankAccount)}

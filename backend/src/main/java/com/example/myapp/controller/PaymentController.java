@@ -87,20 +87,23 @@ public class PaymentController {
                 String pBankAccount = payerTransaction != null ? payerTransaction.getCounterAccountNumber() : null;
                 String pAccountHolder = payerTransaction != null ? payerTransaction.getCounterAccountName() : null;
 
-                // Chuẩn hóa tên ngân hàng nếu PayOS chỉ trả về BankId (BIN) hoặc để trống
-                if (pBankName == null || pBankName.trim().isEmpty()) {
-                    if (pBankId != null && !pBankId.trim().isEmpty()) {
-                        pBankName = VietQRBankHelper.getBankDisplayName(pBankId);
+                // Chuẩn hóa tên ngân hàng nếu PayOS chỉ trả về BankId (BIN/CITAD) hoặc để trống
+                if (pBankId != null && !pBankId.trim().isEmpty()) {
+                    String resolved = VietQRBankHelper.getBankDisplayName(pBankId);
+                    if (resolved != null && !resolved.trim().isEmpty()) {
+                        pBankName = resolved;
                     }
+                } else if (pBankName != null && !pBankName.trim().isEmpty()) {
+                    pBankName = VietQRBankHelper.getBankDisplayName(pBankName);
                 }
                 if (pBankName == null || pBankName.trim().isEmpty()) {
-                    pBankName = "MBBank";
+                    pBankName = "TPBank";
                 }
 
                 // Nếu PayOS Sandbox không trả về tài khoản ngân hàng thật, fallback dữ liệu hợp lệ để hỗ trợ kiểm thử hoàn tiền
                 if (pBankAccount == null || pBankAccount.trim().isEmpty()) {
                     Order ord = orderRepository.findById(realOrderId).orElse(null);
-                    pBankName = "MBBank";
+                    pBankName = "TPBank";
                     pBankAccount = "0987654321";
                     pAccountHolder = (ord != null && ord.getAddress() != null && ord.getAddress().getRecipientName() != null && !ord.getAddress().getRecipientName().isEmpty())
                             ? ord.getAddress().getRecipientName().toUpperCase()
@@ -147,19 +150,22 @@ public class PaymentController {
                 String pBankAccount = webhookData.getCounterAccountNumber();
                 String pAccountHolder = webhookData.getCounterAccountName();
 
-                // Chuẩn hóa tên ngân hàng nếu PayOS chỉ trả về BankId (BIN) hoặc để trống
-                if (pBankName == null || pBankName.trim().isEmpty()) {
-                    if (pBankId != null && !pBankId.trim().isEmpty()) {
-                        pBankName = VietQRBankHelper.getBankDisplayName(pBankId);
+                // Chuẩn hóa tên ngân hàng nếu PayOS chỉ trả về BankId (BIN/CITAD) hoặc để trống
+                if (pBankId != null && !pBankId.trim().isEmpty()) {
+                    String resolved = VietQRBankHelper.getBankDisplayName(pBankId);
+                    if (resolved != null && !resolved.trim().isEmpty()) {
+                        pBankName = resolved;
                     }
+                } else if (pBankName != null && !pBankName.trim().isEmpty()) {
+                    pBankName = VietQRBankHelper.getBankDisplayName(pBankName);
                 }
                 if (pBankName == null || pBankName.trim().isEmpty()) {
-                    pBankName = "MBBank";
+                    pBankName = "TPBank";
                 }
 
                 if (pBankAccount == null || pBankAccount.trim().isEmpty()) {
                     Order ord = orderRepository.findById(realOrderId).orElse(null);
-                    pBankName = "MBBank";
+                    pBankName = "TPBank";
                     pBankAccount = "0987654321";
                     pAccountHolder = (ord != null && ord.getAddress() != null && ord.getAddress().getRecipientName() != null && !ord.getAddress().getRecipientName().isEmpty())
                             ? ord.getAddress().getRecipientName().toUpperCase()

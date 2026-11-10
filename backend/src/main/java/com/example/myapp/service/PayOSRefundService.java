@@ -89,16 +89,16 @@ public class PayOSRefundService {
 
         if (successfulPayment != null && successfulPayment.getPayerBankAccount() != null && !successfulPayment.getPayerBankAccount().trim().isEmpty()) {
             bankName = successfulPayment.getPayerBankName() != null && !successfulPayment.getPayerBankName().trim().isEmpty()
-                    ? successfulPayment.getPayerBankName().trim() : "MBBank";
+                    ? VietQRBankHelper.getBankDisplayName(successfulPayment.getPayerBankName().trim()) : "TPBank";
             rawBankAccount = successfulPayment.getPayerBankAccount().trim();
             accountHolder = successfulPayment.getPayerAccountHolder() != null && !successfulPayment.getPayerAccountHolder().trim().isEmpty()
                     ? successfulPayment.getPayerAccountHolder().trim().toUpperCase()
                     : (inputAccountHolder != null && !inputAccountHolder.trim().isEmpty() ? inputAccountHolder.trim().toUpperCase() : "KHACH HANG");
         } else {
             bankName = (inputBankName != null && !inputBankName.trim().isEmpty())
-                    ? inputBankName.trim()
+                    ? VietQRBankHelper.getBankDisplayName(inputBankName.trim())
                     : (returnRequest != null && returnRequest.getBankName() != null && !returnRequest.getBankName().trim().isEmpty()
-                        ? returnRequest.getBankName().trim() : "MBBank");
+                        ? VietQRBankHelper.getBankDisplayName(returnRequest.getBankName().trim()) : "TPBank");
             rawBankAccount = (inputBankAccount != null && !inputBankAccount.trim().isEmpty())
                     ? inputBankAccount.trim()
                     : (returnRequest != null && returnRequest.getBankAccount() != null && !returnRequest.getBankAccount().trim().isEmpty()

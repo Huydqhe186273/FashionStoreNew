@@ -255,7 +255,7 @@ public class StaffOrderService {
             if (isOnlinePaid) {
                 // Lấy thông tin tài khoản ngân hàng mà khách hàng đã thanh toán trước đó
                 String bankName = successfulPayerPayment != null && successfulPayerPayment.getPayerBankName() != null && !successfulPayerPayment.getPayerBankName().trim().isEmpty()
-                        ? successfulPayerPayment.getPayerBankName().trim() : "MBBank";
+                        ? com.example.myapp.util.VietQRBankHelper.getBankDisplayName(successfulPayerPayment.getPayerBankName().trim()) : "TPBank";
                 String bankAccount = successfulPayerPayment != null && successfulPayerPayment.getPayerBankAccount() != null
                         ? successfulPayerPayment.getPayerBankAccount().trim() : null;
                 String accountHolder = successfulPayerPayment != null && successfulPayerPayment.getPayerAccountHolder() != null && !successfulPayerPayment.getPayerAccountHolder().trim().isEmpty()
@@ -521,8 +521,8 @@ public class StaffOrderService {
         String pBank = dto.getBankName() != null && !dto.getBankName().trim().isEmpty()
             ? dto.getBankName().trim()
             : (rr.getBankName() != null ? rr.getBankName() : (payerPayment != null && payerPayment.getPayerBankName() != null && !payerPayment.getPayerBankName().trim().isEmpty()
-                ? payerPayment.getPayerBankName()
-                : (pAcc != null ? "MBBank" : null)));
+                ? com.example.myapp.util.VietQRBankHelper.getBankDisplayName(payerPayment.getPayerBankName().trim())
+                : (pAcc != null ? "TPBank" : null)));
         String pHolder = dto.getAccountHolder() != null && !dto.getAccountHolder().trim().isEmpty()
             ? dto.getAccountHolder().trim().toUpperCase()
             : (rr.getAccountHolder() != null ? rr.getAccountHolder() : (payerPayment != null ? payerPayment.getPayerAccountHolder() : null));
@@ -718,8 +718,10 @@ public class StaffOrderService {
         String resolvedPayerBankName = payerPayment != null ? payerPayment.getPayerBankName() : null;
         String resolvedPayerBankAccount = payerPayment != null ? payerPayment.getPayerBankAccount() : null;
         String resolvedPayerAccountHolder = payerPayment != null ? payerPayment.getPayerAccountHolder() : null;
-        if ((resolvedPayerBankName == null || resolvedPayerBankName.trim().isEmpty()) && resolvedPayerBankAccount != null && !resolvedPayerBankAccount.trim().isEmpty()) {
-            resolvedPayerBankName = "MBBank";
+        if (resolvedPayerBankName != null && !resolvedPayerBankName.trim().isEmpty()) {
+            resolvedPayerBankName = com.example.myapp.util.VietQRBankHelper.getBankDisplayName(resolvedPayerBankName);
+        } else if (resolvedPayerBankAccount != null && !resolvedPayerBankAccount.trim().isEmpty()) {
+            resolvedPayerBankName = "TPBank";
         }
 
         return StaffOrderDetailDTO.builder()

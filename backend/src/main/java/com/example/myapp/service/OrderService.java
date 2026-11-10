@@ -495,7 +495,7 @@ public class OrderService {
         // Nếu đơn hàng đã có tài khoản người chuyển tiền lúc thanh toán (PayOS), luôn cố định hoàn về tài khoản đó
         if (payerPayment != null && payerPayment.getPayerBankAccount() != null && !payerPayment.getPayerBankAccount().trim().isEmpty()) {
             request.setBankName(payerPayment.getPayerBankName() != null && !payerPayment.getPayerBankName().trim().isEmpty()
-                    ? payerPayment.getPayerBankName().trim() : "MBBank");
+                    ? com.example.myapp.util.VietQRBankHelper.getBankDisplayName(payerPayment.getPayerBankName().trim()) : "TPBank");
             request.setBankAccount(payerPayment.getPayerBankAccount().trim());
             request.setAccountHolder(payerPayment.getPayerAccountHolder() != null && !payerPayment.getPayerAccountHolder().trim().isEmpty()
                     ? payerPayment.getPayerAccountHolder().trim().toUpperCase()
@@ -609,8 +609,10 @@ public class OrderService {
             resolvedPayerBankAccount = payerPayment.getPayerBankAccount();
             resolvedPayerAccountHolder = payerPayment.getPayerAccountHolder();
             resolvedPayerBankName = payerPayment.getPayerBankName();
-            if ((resolvedPayerBankName == null || resolvedPayerBankName.trim().isEmpty()) && resolvedPayerBankAccount != null && !resolvedPayerBankAccount.trim().isEmpty()) {
-                resolvedPayerBankName = "MBBank";
+            if (resolvedPayerBankName != null && !resolvedPayerBankName.trim().isEmpty()) {
+                resolvedPayerBankName = com.example.myapp.util.VietQRBankHelper.getBankDisplayName(resolvedPayerBankName);
+            } else if (resolvedPayerBankAccount != null && !resolvedPayerBankAccount.trim().isEmpty()) {
+                resolvedPayerBankName = "TPBank";
             }
         }
 
