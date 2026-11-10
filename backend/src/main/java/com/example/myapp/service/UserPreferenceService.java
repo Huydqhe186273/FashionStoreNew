@@ -53,7 +53,7 @@ public class UserPreferenceService {
             return null;
         }
 
-        UserPreferenceDTO dto = aggreagte(logs);
+        UserPreferenceDTO dto = aggregate(logs);
         if (dto != null) {
             dto.setUserId(userId);
         }
