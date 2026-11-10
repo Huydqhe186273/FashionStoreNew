@@ -276,13 +276,37 @@ export default function ManageOrders() {
     if (newStatus === 'CANCELLED') actionName = 'Hủy đơn hàng (CANCELLED)';
     if (newStatus === 'RETURNED') actionName = 'Hoàn hàng về kho (RETURNED)';
 
-    if (!window.confirm(`Bạn có chắc muốn thực hiện: "${actionName}" cho đơn #${orderId}?`)) {
-      return;
+    if (newStatus === 'CANCELLED') {
+      const isPayOS = selectedOrder?.paymentMethod === 'PayOS' || selectedOrder?.paymentStatus === 'PAID';
+      const payerAcc = selectedOrder?.payerBankAccount || selectedOrder?.returnRequest?.bankAccount || '';
+      const payerBank = selectedOrder?.payerBankName || selectedOrder?.returnRequest?.bankName || 'Ngân hàng';
+      const payerHolder = selectedOrder?.payerAccountHolder || selectedOrder?.customerName || '';
+      const refundAmt = formatCurrency(selectedOrder?.totalAmount || 0);
+
+      const confirmMsg = isPayOS
+        ? `Xác nhận HỦY ĐƠN HÀNG và HOÀN TIỀN cho đơn #ORD-${orderId}?\n\n` +
+          `⚡ Đơn hàng đã được khách thanh toán trực tuyến qua PayOS.\n` +
+          `• Số tiền hoàn lại: ${refundAmt}\n` +
+          `• Hoàn về tài khoản thanh toán: ${payerAcc ? `${payerAcc} (${payerBank}) - ${payerHolder}` : 'Tài khoản khách đã thanh toán'}\n\n` +
+          `Hệ thống sẽ tự động hoàn tiền về tài khoản ngân hàng của khách và cập nhật trạng thái đơn thành ĐÃ HỦY (ĐÃ HOÀN TIỀN).`
+        : `Bạn có chắc muốn thực hiện: "Hủy đơn hàng (CANCELLED)" cho đơn #${orderId}?`;
+
+      if (!window.confirm(confirmMsg)) return;
+    } else {
+      if (!window.confirm(`Bạn có chắc muốn thực hiện: "${actionName}" cho đơn #${orderId}?`)) {
+        return;
+      }
     }
 
     try {
       const updated = await updateOrderStatus(orderId, newStatus);
-      setActionSuccess(`✅ Đã chuyển trạng thái đơn #${orderId} sang ${newStatus} thành công!`);
+      if (newStatus === 'CANCELLED' && updated.paymentStatus === 'REFUNDED') {
+        const payerAcc = updated.payerBankAccount || updated.returnRequest?.bankAccount || '';
+        const payerBank = updated.payerBankName || updated.returnRequest?.bankName || '';
+        setActionSuccess(`✅ Đã hủy đơn #ORD-${orderId} thành công và tự động hoàn tiền về tài khoản ngân hàng ${payerAcc ? `${payerAcc} (${payerBank})` : ''} của khách hàng!`);
+      } else {
+        setActionSuccess(`✅ Đã chuyển trạng thái đơn #${orderId} sang ${newStatus} thành công!`);
+      }
       setSelectedOrder(updated);
       loadOrders();
     } catch (err) {
@@ -396,7 +420,9 @@ export default function ManageOrders() {
       case 'RETURNED':
         return <span style={{ ...baseStyle, backgroundColor: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' }}>↩️ Đã hoàn hàng</span>;
       case 'CANCELLED':
-        return <span style={{ ...baseStyle, backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>❌ Đã hủy</span>;
+        return <span style={{ ...baseStyle, backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>
+          {returnStatus === 'approved' ? '❌ Đã hủy (Đã hoàn tiền)' : '❌ Đã hủy'}
+        </span>;
       default:
         return <span style={{ ...baseStyle, backgroundColor: '#f3f4f6', color: '#4b5563', border: '1px solid #e5e7eb' }}>{status}</span>;
     }
@@ -807,7 +833,7 @@ export default function ManageOrders() {
               <div style={{ marginBottom: '20px', padding: '14px 18px', borderRadius: '10px', border: '1.5px solid #fde68a', backgroundColor: '#fffbeb' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#92400e' }}>
-                    🔄 Yêu cầu trả hàng & hoàn tiền
+                    {selectedOrder.orderStatus === 'CANCELLED' ? '↩️ Thông tin hoàn tiền (Cửa hàng hủy đơn)' : '🔄 Yêu cầu trả hàng & hoàn tiền'}
                   </div>
                   <div>
                     <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 8px', borderRadius: '12px', backgroundColor: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0' }}>

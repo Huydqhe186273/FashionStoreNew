@@ -247,8 +247,75 @@ public class StaffOrderService {
                 restockOrderItems(order, false);
             }
 
+            // Kiểm tra nếu đơn hàng đã thanh toán qua hình thức online (PayOS / Chuyển khoản)
+            boolean wasPaid = "PAID".equalsIgnoreCase(order.getPaymentStatus()) || "paid".equalsIgnoreCase(order.getPaymentStatus());
+            Payment successfulPayerPayment = paymentRepository.findSuccessfulPaymentsWithPayerAccount(orderId).stream().findFirst().orElse(null);
+            boolean isOnlinePaid = wasPaid && ("PayOS".equalsIgnoreCase(payOSRefundService.resolvePaymentMethod(order)) || successfulPayerPayment != null);
+
+            if (isOnlinePaid) {
+                // Lấy thông tin tài khoản ngân hàng mà khách hàng đã thanh toán trước đó
+                String bankName = successfulPayerPayment != null && successfulPayerPayment.getPayerBankName() != null && !successfulPayerPayment.getPayerBankName().trim().isEmpty()
+                        ? successfulPayerPayment.getPayerBankName().trim() : "MBBank";
+                String bankAccount = successfulPayerPayment != null && successfulPayerPayment.getPayerBankAccount() != null
+                        ? successfulPayerPayment.getPayerBankAccount().trim() : null;
+                String accountHolder = successfulPayerPayment != null && successfulPayerPayment.getPayerAccountHolder() != null && !successfulPayerPayment.getPayerAccountHolder().trim().isEmpty()
+                        ? successfulPayerPayment.getPayerAccountHolder().trim().toUpperCase()
+                        : (order.getUser() != null && order.getUser().getFullName() != null ? order.getUser().getFullName().toUpperCase() : "KHACH HANG");
+
+                final Order targetOrder = order;
+                // Tạo hoặc cập nhật ReturnRequest ghi nhận phiếu hoàn tiền tự động khi shop hủy đơn
+                ReturnRequest rr = returnRequestRepository.findLatestByOrderId(orderId).orElseGet(() -> {
+                    ReturnRequest newRr = new ReturnRequest();
+                    newRr.setOrder(targetOrder);
+                    return newRr;
+                });
+                rr.setOrder(order);
+                rr.setReason("Cửa hàng hủy đơn hàng - Hoàn tiền tự động về tài khoản ngân hàng đã thanh toán trước đó");
+                rr.setStatus("approved");
+                rr.setRefundAmount(order.getTotalAmount());
+                rr.setCreatedAt(LocalDateTime.now());
+                rr.setBankName(bankName);
+                rr.setBankAccount(bankAccount);
+                rr.setAccountHolder(accountHolder);
+
+                // Thực hiện quy trình hoàn tiền qua PayOS (chuyển tiền về STK ban đầu của khách)
+                PayOSRefundService.RefundExecutionResult refundResult = payOSRefundService.processRefund(
+                        order,
+                        rr,
+                        order.getTotalAmount(),
+                        bankName,
+                        bankAccount,
+                        accountHolder
+                );
+
+                if (refundResult != null && refundResult.getAdminNote() != null) {
+                    rr.setAdminNote(refundResult.getAdminNote());
+                }
+                returnRequestRepository.save(rr);
+
+                order.setPaymentStatus("REFUNDED");
+            } else {
+                order.setPaymentStatus("unpaid");
+            }
+
             order.setOrderStatus("CANCELLED");
             order = orderRepository.save(order);
+
+            // Gửi thông báo đến khách hàng
+            try {
+                final java.text.DecimalFormat df = new java.text.DecimalFormat("#,###₫");
+                String notifyMsg = isOnlinePaid
+                        ? "Đơn hàng #" + order.getOrderId() + " đã được cửa hàng hủy. Toàn bộ số tiền " + df.format(order.getTotalAmount())
+                          + " đã được hoàn lại về tài khoản ngân hàng của bạn (" + (successfulPayerPayment != null && successfulPayerPayment.getPayerBankAccount() != null ? successfulPayerPayment.getPayerBankAccount() : "") + ")."
+                        : "Đơn hàng #" + order.getOrderId() + " của bạn đã được cửa hàng hủy.";
+                notificationService.createNotification(
+                        order.getUser().getUserId(),
+                        "order",
+                        notifyMsg
+                );
+            } catch (Exception ex) {
+                System.err.println("Lỗi gửi thông báo shop hủy đơn: " + ex.getMessage());
+            }
 
         } else if ("RETURNED".equals(target)) {
             java.util.Optional<com.example.myapp.entity.ReturnRequest> rejectedCheck = returnRequestRepository.findLatestByOrderId(orderId);

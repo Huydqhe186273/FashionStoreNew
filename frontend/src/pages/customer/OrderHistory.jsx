@@ -46,6 +46,9 @@ const getLatestOrderStatus = (order) => {
 
   // 2. Trạng thái đơn hàng
   if (oStatus === 'cancelled') {
+    if (pStatus === 'refunded' || order.returnStatus === 'approved') {
+      return { label: '❌ Đã hủy (Đã hoàn tiền)', class: 'cancelled', color: '#ffffff', bg: '#dc2626' };
+    }
     return { label: '❌ Đã hủy', class: 'cancelled', color: '#ffffff', bg: '#dc2626' };
   }
   if (oStatus === 'returned') {
@@ -711,12 +714,21 @@ export default function OrderHistory() {
               </div>
               {(selectedOrder.returnBankAccount || selectedOrder.payerBankAccount) && (
                 <div style={{ marginTop: '12px', padding: '10px 12px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0', fontSize: '0.85rem' }}>
-                  <div style={{ fontWeight: '700', color: '#166534', marginBottom: '4px' }}>🏦 Tài khoản hoàn tiền:</div>
+                  <div style={{ fontWeight: '700', color: '#166534', marginBottom: '4px' }}>
+                    {selectedOrder.orderStatus?.toLowerCase() === 'cancelled'
+                      ? '↩️ Đơn hàng đã được hủy và hoàn tiền lại tài khoản:'
+                      : '🏦 Tài khoản hoàn tiền:'}
+                  </div>
                   <div style={{ color: '#14532d' }}>
                     Ngân hàng: <strong>{selectedOrder.returnBankName || selectedOrder.payerBankName || 'N/A'}</strong> | 
                     STK: <strong style={{ color: '#2563eb' }}>{selectedOrder.returnBankAccount || selectedOrder.payerBankAccount}</strong> | 
                     Chủ TK: <strong>{selectedOrder.returnAccountHolder || selectedOrder.payerAccountHolder || 'N/A'}</strong>
                   </div>
+                  {selectedOrder.orderStatus?.toLowerCase() === 'cancelled' && (
+                    <div style={{ fontSize: '0.78rem', color: '#15803d', marginTop: '4px', fontStyle: 'italic' }}>
+                      Số tiền <strong>{selectedOrder.totalAmount?.toLocaleString()}₫</strong> đã được chuyển hoàn về tài khoản thanh toán ban đầu của bạn.
+                    </div>
+                  )}
                 </div>
               )}
               {selectedOrder.returnStatus === 'rejected' && (
