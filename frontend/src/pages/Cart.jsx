@@ -13,6 +13,8 @@ import {
 import { getProductVariants } from '../services/customerProductService';
 import { getActiveCoupons, applyCoupon } from '../services/couponService';
 import { getAddresses, createAddress } from '../services/addressService';
+import { getSimilarProducts } from '../services/recommendationService';
+import ProductCard from '../components/customer/ProductCard';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import './Cart.css';
@@ -110,6 +112,25 @@ export default function Cart() {
       setLoading(false);
     }
   }, [userId, authLoading, loadCart, loadAddresses]);
+
+  // Gợi ý "Có thể bạn cũng thích": sản phẩm tương tự với món đầu tiên trong giỏ
+  const [suggestions, setSuggestions] = useState([]);
+  const firstCartProductId = cartData?.items?.[0]?.productId;
+  const cartProductIdsKey = (cartData?.items || []).map((i) => i.productId).join(',');
+  useEffect(() => {
+    if (!firstCartProductId) {
+      setSuggestions([]);
+      return;
+    }
+    let cancelled = false;
+    const inCart = new Set(cartProductIdsKey.split(',').map(Number));
+    getSimilarProducts(firstCartProductId, 8).then((data) => {
+      if (!cancelled) {
+        setSuggestions((data || []).filter((p) => !inCart.has(p.productId)).slice(0, 4));
+      }
+    });
+    return () => { cancelled = true; };
+  }, [firstCartProductId, cartProductIdsKey]);
 
   // Cập nhật tên/sđt mặc định nếu user load sau
   useEffect(() => {
@@ -962,6 +983,18 @@ export default function Cart() {
           </div>
 
         </div>
+      )}
+
+      {/* Gợi ý sản phẩm tương tự */}
+      {!loading && cartData?.items?.length > 0 && suggestions.length > 0 && (
+        <section className="cart-suggestions">
+          <h3 className="cart-suggestions-title">Có thể bạn cũng thích</h3>
+          <div className="cart-suggestions-grid">
+            {suggestions.map((p) => (
+              <ProductCard key={p.productId} product={p} />
+            ))}
+          </div>
+        </section>
       )}
 
       {/* MODAL 1: Đổi Phân Loại (Size & Màu Sắc Trực Tiếp Trong Giỏ) */}

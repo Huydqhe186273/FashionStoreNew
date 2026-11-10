@@ -1,6 +1,6 @@
 import api from './api';
 
-const getSessionId = () => {
+export const getSessionId = () => {
   try {
     let sid = localStorage.getItem('fs_session_id');
     if (!sid) {
@@ -16,17 +16,8 @@ const getSessionId = () => {
 export const logBehavior = async ({ productId, actionType = 'view', durationSeconds = null }) => {
   if (!productId) return;
   try {
-    let userId = null;
-    try {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const u = JSON.parse(userStr);
-        userId = u?.id || u?.userId || null;
-      }
-    } catch (_) {}
-
+    // userId được backend lấy từ JWT (api.js tự gắn header Authorization)
     await api.post('/tracking/log', {
-      userId,
       sessionId: getSessionId(),
       productId: Number(productId),
       actionType,
@@ -36,6 +27,10 @@ export const logBehavior = async ({ productId, actionType = 'view', durationSeco
     // Tracking is non-blocking; don't disrupt user workflow
     console.debug('Tracking non-fatal error:', err?.message);
   }
+};
+
+export const trackClick = (productId) => {
+  return logBehavior({ productId, actionType: 'click' });
 };
 
 export const trackView = (productId, durationSeconds = null) => {
@@ -60,6 +55,7 @@ export const trackPurchase = (productId) => {
 
 export default {
   logBehavior,
+  trackClick,
   trackView,
   trackSearch,
   trackAddToCart,

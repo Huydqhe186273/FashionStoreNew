@@ -3,53 +3,75 @@ package com.example.myapp.service;
 import com.example.myapp.entity.Category;
 import com.example.myapp.entity.Product;
 import com.example.myapp.entity.ProductVariant;
-import com.example.myapp.entity.User;
 import com.example.myapp.entity.UserBehaviorLog;
-import com.example.myapp.entity.UserPreference;
 import com.example.myapp.model.UserPreferenceDTO;
 import com.example.myapp.repos.CategoryRepository;
 import com.example.myapp.repos.ProductVariantRepository;
 import com.example.myapp.repos.UserBehaviorLogRepository;
-import com.example.myapp.repos.UserPreferenceRepository;
-import com.example.myapp.repos.UserRepository;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Xây "hồ sơ sở thích" của người dùng trực tiếp từ hành vi gần đây (không lưu trữ lại).
+ * Dùng chung một luồng cho cả user đã đăng nhập và khách vãng lai (theo sessionId).
+ */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class UserPreferenceService {
 
-    private final UserPreferenceRepository userPreferenceRepository;
+    /** Chỉ xét hành vi trong 30 ngày gần nhất. */
+    static final int LOOKBACK_DAYS = 30;
+    /** Số danh mục / màu / size ưa thích tối đa giữ lại. */
+    static final int TOP_N = 5;
+
     private final UserBehaviorLogRepository userBehaviorLogRepository;
-    private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ProductVariantRepository productVariantRepository;
-    private final ObjectMapper objectMapper;
 
     /**
-     * Updates or builds the preference profile for the given user by aggregating recent behavior logs.
+     * Trả về sở thích của user (ưu tiên) hoặc của phiên khách vãng lai.
+     * Trả về {@code null} nếu chưa có hành vi nào đủ ý nghĩa.
      */
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
-    public UserPreference updatePreferences(Integer userId) {
-        if (userId == null) return null;
+    @Transactional(readOnly = true)
+    public UserPreferenceDTO getPreferences(Integer userId, String sessionId) {
+        String sid = (sessionId == null || sessionId.isBlank()) ? null : sessionId;
+        LocalDateTime since = LocalDateTime.now().minusDays(LOOKBACK_DAYS);
 
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) return null;
-
-        List<UserBehaviorLog> logs = userBehaviorLogRepository.findTop100ByUserUserIdOrderByCreatedAtDesc(userId);
-        if (logs.isEmpty()) {
-            return userPreferenceRepository.findByUserId(userId).orElse(null);
+        List<UserBehaviorLog> logs;
+        if (userId != null) {
+            logs = userBehaviorLogRepository.findRecentByUser(userId, sid, since);
+        } else if (sid != null) {
+            logs = userBehaviorLogRepository.findRecentBySession(sid, since);
+        } else {
+            return null;
         }
+
+        UserPreferenceDTO dto = aggregate(logs);
+        if (dto != null) {
+            dto.setUserId(userId);
+        }
+        return dto;
+    }
+
+    /** Tổng hợp danh sách hành vi thành hồ sơ sở thích. */
+    UserPreferenceDTO aggregate(List<UserBehaviorLog> logs) {
+        if (logs == null || logs.isEmpty()) return null;
+
+        // Nạp variant của tất cả sản phẩm liên quan bằng 1 truy vấn
+        Set<Integer> productIds = logs.stream()
+                .map(UserBehaviorLog::getProduct).filter(Objects::nonNull)
+                .map(Product::getProductId).collect(Collectors.toSet());
+        Map<Integer, List<ProductVariant>> variantsByProduct = productIds.isEmpty()
+                ? Map.of()
+                : productVariantRepository.findByProductIdIn(productIds).stream()
+                        .collect(Collectors.groupingBy(v -> v.getProduct().getProductId()));
 
         Map<Integer, Integer> categoryScores = new HashMap<>();
         Map<String, Integer> colorScores = new HashMap<>();
@@ -60,134 +82,102 @@ public class UserPreferenceService {
             Product p = logEntry.getProduct();
             if (p == null) continue;
 
-            int weight = getActionWeight(logEntry.getActionType());
+            int weight = interactionWeight(logEntry.getActionType(), logEntry.getDurationSeconds());
+            if (weight <= 0) continue;
 
-            // Category score
             if (p.getCategory() != null) {
                 categoryScores.merge(p.getCategory().getCategoryId(), weight, Integer::sum);
             }
 
-            // Price
-            BigDecimal price = p.getDiscountPrice() != null && p.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
-                    ? p.getDiscountPrice()
-                    : p.getBasePrice();
-            if (price != null && price.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal price = effectivePrice(p);
+            if (price.compareTo(BigDecimal.ZERO) > 0) {
                 prices.add(price);
             }
 
-            // Variants (colors, sizes)
-            List<ProductVariant> variants = productVariantRepository.findByProductId(p.getProductId());
-            for (ProductVariant v : variants) {
-                if (v.getColor() != null && !v.getColor().isBlank()) {
-                    colorScores.merge(v.getColor().trim(), 1, Integer::sum);
-                }
-                if (v.getSize() != null && !v.getSize().isBlank()) {
-                    sizeScores.merge(v.getSize().trim(), 1, Integer::sum);
-                }
+            // Mỗi sản phẩm chỉ cộng 1 lần cho mỗi màu/size (tránh SP nhiều size bị tính nhiều lần)
+            List<ProductVariant> variants = variantsByProduct.getOrDefault(p.getProductId(), List.of());
+            for (String color : distinct(variants, ProductVariant::getColor)) {
+                colorScores.merge(color, weight, Integer::sum);
+            }
+            for (String size : distinct(variants, ProductVariant::getSize)) {
+                sizeScores.merge(size, weight, Integer::sum);
             }
         }
 
-        // Top categories
-        List<Integer> topCategories = categoryScores.entrySet().stream()
-                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
-                .limit(5)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
+        if (categoryScores.isEmpty()) return null;
 
-        // Top colors
-        List<String> topColors = colorScores.entrySet().stream()
-                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
-                .limit(5)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
+        List<Integer> topCategories = topKeys(categoryScores);
 
-        // Top sizes
-        List<String> topSizes = sizeScores.entrySet().stream()
-                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
-                .limit(5)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
-        BigDecimal minPrice = prices.stream().min(BigDecimal::compareTo).orElse(BigDecimal.valueOf(100000));
-        BigDecimal maxPrice = prices.stream().max(BigDecimal::compareTo).orElse(BigDecimal.valueOf(2000000));
-
-        UserPreference preference = userPreferenceRepository.findByUserId(userId)
-                .orElseGet(() -> {
-                    UserPreference p = new UserPreference();
-                    p.setUser(user);
-                    return p;
-                });
-
-        try {
-            preference.setPreferredCategories(objectMapper.writeValueAsString(topCategories));
-            preference.setPreferredColors(objectMapper.writeValueAsString(topColors));
-            preference.setPreferredSizes(objectMapper.writeValueAsString(topSizes));
-        } catch (Exception e) {
-            log.warn("Error serializing user preferences to JSON: {}", e.getMessage());
-        }
-
-        preference.setPreferredPriceMin(minPrice);
-        preference.setPreferredPriceMax(maxPrice);
-        preference.setUpdatedAt(LocalDateTime.now());
-
-        return userPreferenceRepository.save(preference);
-    }
-
-    @Transactional(readOnly = true)
-    public UserPreferenceDTO getUserPreferenceDTO(Integer userId) {
-        if (userId == null) return null;
-        UserPreference p = userPreferenceRepository.findByUserId(userId).orElse(null);
-        if (p == null) return null;
-
-        List<Integer> categoryIds = parseJsonList(p.getPreferredCategories(), Integer.class);
-        List<String> colors = parseJsonList(p.getPreferredColors(), String.class);
-        List<String> sizes = parseJsonList(p.getPreferredSizes(), String.class);
-
-        List<String> categoryNames = new ArrayList<>();
-        if (categoryIds != null && !categoryIds.isEmpty()) {
-            for (Integer catId : categoryIds) {
-                categoryRepository.findById(catId).ifPresent(c -> categoryNames.add(c.getName()));
-            }
-        }
+        Map<Integer, String> names = categoryRepository.findAllById(topCategories).stream()
+                .collect(Collectors.toMap(Category::getCategoryId, Category::getName, (a, b) -> a));
+        List<String> categoryNames = topCategories.stream()
+                .map(names::get).filter(Objects::nonNull).collect(Collectors.toList());
 
         return UserPreferenceDTO.builder()
-                .userId(userId)
-                .preferredCategoryIds(categoryIds)
+                .preferredCategoryIds(topCategories)
                 .preferredCategoryNames(categoryNames)
-                .preferredPriceMin(p.getPreferredPriceMin())
-                .preferredPriceMax(p.getPreferredPriceMax())
-                .preferredColors(colors)
-                .preferredSizes(sizes)
-                .updatedAt(p.getUpdatedAt())
+                .preferredPriceMin(prices.stream().min(BigDecimal::compareTo).orElse(null))
+                .preferredPriceMax(prices.stream().max(BigDecimal::compareTo).orElse(null))
+                .preferredColors(topKeys(colorScores))
+                .preferredSizes(topKeys(sizeScores))
+                .updatedAt(LocalDateTime.now())
                 .build();
     }
 
-    public List<Integer> getPreferredCategoryIds(Integer userId) {
-        if (userId == null) return Collections.emptyList();
-        UserPreference p = userPreferenceRepository.findByUserId(userId).orElse(null);
-        if (p == null || p.getPreferredCategories() == null) return Collections.emptyList();
-        return parseJsonList(p.getPreferredCategories(), Integer.class);
-    }
-
-    private int getActionWeight(String actionType) {
-        if (actionType == null) return 1;
-        return switch (actionType.toLowerCase()) {
-            case "purchase" -> 6;
-            case "favorite" -> 4;
-            case "add_to_cart" -> 3;
-            case "search" -> 2;
-            case "view", "click" -> 1;
-            default -> 1;
-        };
-    }
-
-    private <T> List<T> parseJsonList(String json, Class<T> clazz) {
-        if (json == null || json.isBlank()) return Collections.emptyList();
-        try {
-            return objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
-        } catch (Exception e) {
-            log.warn("Error parsing JSON preferences list: {}", e.getMessage());
-            return Collections.emptyList();
+    /**
+     * Điểm mức độ quan tâm của một hành vi:
+     * <ul>
+     *   <li>click: 2</li>
+     *   <li>view: &lt;5s = 0, 5–15s = 2, 15–40s = 5, &gt;40s = 8 (không rõ thời gian = 1)</li>
+     *   <li>add_to_cart: 6</li>
+     *   <li>favorite: 10</li>
+     *   <li>purchase: 12</li>
+     *   <li>search / khác: 0</li>
+     * </ul>
+     */
+    static int interactionWeight(String actionType, Integer durationSeconds) {
+        String action = actionType == null ? "" : actionType.toLowerCase();
+        switch (action) {
+            case "click":
+                return 2;
+            case "view":
+                if (durationSeconds == null) return 1;
+                if (durationSeconds > 40) return 8;
+                if (durationSeconds > 15) return 5;
+                if (durationSeconds >= 5) return 2;
+                return 0;
+            case "add_to_cart":
+                return 6;
+            case "favorite":
+                return 10;
+            case "purchase":
+                return 12;
+            default:
+                return 0;
         }
+    }
+
+    static BigDecimal effectivePrice(Product p) {
+        if (p.getDiscountPrice() != null && p.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0) {
+            return p.getDiscountPrice();
+        }
+        return p.getBasePrice() != null ? p.getBasePrice() : BigDecimal.ZERO;
+    }
+
+    private static Set<String> distinct(List<ProductVariant> variants, Function<ProductVariant, String> field) {
+        Set<String> out = new HashSet<>();
+        for (ProductVariant v : variants) {
+            String value = field.apply(v);
+            if (value != null && !value.isBlank()) out.add(value.trim());
+        }
+        return out;
+    }
+
+    private static <K> List<K> topKeys(Map<K, Integer> scores) {
+        return scores.entrySet().stream()
+                .sorted(Map.Entry.<K, Integer>comparingByValue().reversed())
+                .limit(TOP_N)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 }

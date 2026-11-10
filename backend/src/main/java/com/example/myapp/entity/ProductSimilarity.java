@@ -33,6 +33,7 @@ public class ProductSimilarity {
     @Getter
     @Setter
     @NoArgsConstructor
+    @lombok.EqualsAndHashCode
     public static class ProductSimilarityId implements Serializable {
         @Column(name = "ProductIdA")
         private Integer ProductIdA;

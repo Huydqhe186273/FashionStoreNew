@@ -1118,3 +1118,27 @@
   gap: 6px;
 }
 
+
+/* ===== Gợi ý "Có thể bạn cũng thích" ===== */
+.cart-suggestions {
+  margin-top: 32px;
+}
+
+.cart-suggestions-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 16px;
+}
+
+.cart-suggestions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 992px) {
+  .cart-suggestions-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
