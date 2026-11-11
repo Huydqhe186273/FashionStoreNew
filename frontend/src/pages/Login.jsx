@@ -25,8 +25,8 @@ export default function Login() {
     setError('');
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { token, id, role } = response.data;
-      login(token, { id, email, role });
+      const { token, id, role, fullName } = response.data;
+      login(token, { id, email, role, fullName });
       if (role === 'admin') {
         navigate('/admin');
       } else if (role === 'staff') {
@@ -81,8 +81,8 @@ export default function Login() {
       } else {
         res = await api.post('/auth/google-login', { email: googleEmailInput, fullName, googleId: 'google-sub-123' });
       }
-      const { token, id, role } = res.data;
-      login(token, { id, email: googleEmailInput, role });
+      const { token, id, role, fullName: gFullName } = res.data;
+      login(token, { id, email: googleEmailInput, role, fullName: gFullName });
       setShowGoogleModal(false);
       if (role === 'admin') navigate('/admin');
       else if (role === 'staff') navigate('/staff/orders');

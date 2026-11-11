@@ -12,19 +12,24 @@ const getUserFromToken = () => {
             if (decoded.userId != null) {
                 localStorage.setItem('userId', String(decoded.userId));
             }
+            // Restore fullName from localStorage if available (set during login)
+            const savedFullName = localStorage.getItem('fullName');
             return {
                 id: decoded.userId,
                 email: decoded.sub,
-                role: decoded.role ? decoded.role.replace('ROLE_', '').toLowerCase() : ''
+                role: decoded.role ? decoded.role.replace('ROLE_', '').toLowerCase() : '',
+                fullName: savedFullName || undefined
             };
         } else {
             localStorage.removeItem('token');
             localStorage.removeItem('userId');
+            localStorage.removeItem('fullName');
             return null;
         }
     } catch (err) {
         localStorage.removeItem('token');
         localStorage.removeItem('userId');
+        localStorage.removeItem('fullName');
         return null;
     }
 };
@@ -47,12 +52,19 @@ export const AuthProvider = ({ children }) => {
         } else {
             localStorage.removeItem('userId');
         }
+        // Save fullName to localStorage so it survives page refresh
+        if (userData?.fullName) {
+            localStorage.setItem('fullName', userData.fullName);
+        } else {
+            localStorage.removeItem('fullName');
+        }
         setUser(userData);
     };
 
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('userId');
+        localStorage.removeItem('fullName');
         setUser(null);
     };
 

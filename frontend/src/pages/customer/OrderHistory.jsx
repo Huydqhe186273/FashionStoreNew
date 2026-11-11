@@ -639,8 +639,7 @@ export default function OrderHistory() {
             const oStatus = (order.orderStatus || '').toLowerCase();
             const pStatus = (order.paymentStatus || '').toLowerCase();
             const canReview = !isReturnedOrRefunding &&
-              ['confirmed', 'delivered', 'completed'].includes(oStatus) &&
-              (pStatus === 'paid' || oStatus === 'delivered' || oStatus === 'completed');
+              oStatus === 'delivered';
 
             return (
               <div key={order.orderId} className="order-card">
@@ -1051,8 +1050,7 @@ export default function OrderHistory() {
                 const oStatus = (selectedOrder.orderStatus || '').toLowerCase();
                 const pStatus = (selectedOrder.paymentStatus || '').toLowerCase();
                 const canReviewSelected = !isReturnedOrRefunding &&
-                  ['confirmed', 'delivered', 'completed'].includes(oStatus) &&
-                  (pStatus === 'paid' || oStatus === 'delivered' || oStatus === 'completed');
+                  oStatus === 'delivered';
                 if (canReviewSelected) {
                   return (
                     <button
