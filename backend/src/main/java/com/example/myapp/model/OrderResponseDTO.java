@@ -42,6 +42,7 @@ public class OrderResponseDTO {
     private String returnBankName;
     private String returnBankAccount;
     private String returnAccountHolder;
+    private String returnEvidenceImages;
 
     // Thông tin tài khoản người đã chuyển tiền thanh toán
     private String payerBankName;

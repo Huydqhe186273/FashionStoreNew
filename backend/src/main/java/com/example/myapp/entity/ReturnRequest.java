@@ -27,6 +27,15 @@ public class ReturnRequest {
     private String AccountHolder;
     private String AdminNote;
 
+    @Column(name = "EvidenceImages")
+    private String EvidenceImages;
+
+    @Column(name = "ReceiptImage")
+    private String ReceiptImage;
+
+    @Column(name = "TransactionRef")
+    private String TransactionRef;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "OrderId", nullable = false, foreignKey = @ForeignKey(name = "FK_Return_Orders"))
     private Order Order;

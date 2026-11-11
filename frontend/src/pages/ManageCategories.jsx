@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
+import { Folder, Plus, Edit, Trash2 } from 'lucide-react';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../services/categoryService';
 import { useToast } from '../context/ToastContext';
 
@@ -139,7 +140,9 @@ export default function ManageCategories() {
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#6366f1' }}>📁</div>
+          <div className="stat-icon" style={{ color: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Folder size={26} />
+          </div>
           <div>
             <div className="stat-val">{categories.length}</div>
             <div className="stat-label">Tổng Số Danh Mục</div>
@@ -163,7 +166,9 @@ export default function ManageCategories() {
             <option value="unisex">Unisex</option>
           </select>
         </div>
-        <button className="btn-primary" onClick={handleOpenAdd}>➕ Thêm Danh Mục Mới</button>
+        <button className="btn-primary" onClick={handleOpenAdd} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <Plus size={16} /> Thêm Danh Mục Mới
+        </button>
       </div>
 
       <div className="panel-card">
@@ -184,13 +189,25 @@ export default function ManageCategories() {
                 <tr key={c.categoryId}>
                   <td><strong>#CAT-{c.categoryId}</strong></td>
                   <td><strong style={{ color: '#0f0f0fff' }}>{c.name}</strong></td>
-                  <td>{c.parentName ? <span className="role-tag role-staff">📁 {c.parentName}</span> : <span style={{ color: 'var(--text-muted)' }}>Gốc (Root)</span>}</td>
+                  <td>
+                    {c.parentName ? (
+                      <span className="role-tag role-staff" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Folder size={12} /> {c.parentName}
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)' }}>Gốc (Root)</span>
+                    )}
+                  </td>
                   <td><span className="role-tag role-customer">{c.gender || 'Unisex'}</span></td>
                   <td>{c.season || 'Tất cả'}</td>
                   <td>
                     <div className="action-buttons">
-                      <button className="btn-action" onClick={() => handleOpenEdit(c)}>✏️ Sửa</button>
-                      <button className="btn-action btn-lock" onClick={() => handleDelete(c.categoryId)}>🗑️ Xóa</button>
+                      <button className="btn-action" onClick={() => handleOpenEdit(c)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Edit size={13} /> Sửa
+                      </button>
+                      <button className="btn-action btn-lock" onClick={() => handleDelete(c.categoryId)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Trash2 size={13} /> Xóa
+                      </button>
                     </div>
                   </td>
                 </tr>

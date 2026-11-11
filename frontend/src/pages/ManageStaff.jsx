@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
+import {
+  Users,
+  UserCheck,
+  ShieldCheck,
+  Plus,
+  Lock,
+  Unlock,
+  CheckCircle2,
+  Edit
+} from 'lucide-react';
 import { getStaff, createStaff, updateStaff, toggleStaffLock } from '../services/staffService';
 import { useToast } from '../context/ToastContext';
 
@@ -153,21 +163,27 @@ export default function ManageStaff() {
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#6366f1' }}>👔</div>
+          <div className="stat-icon" style={{ color: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Users size={26} />
+          </div>
           <div>
             <div className="stat-val">{staffList.length}</div>
             <div className="stat-label">Tổng Nhân Sự</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#3b82f6' }}>👤</div>
+          <div className="stat-icon" style={{ color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <UserCheck size={26} />
+          </div>
           <div>
             <div className="stat-val">{staffList.filter(s => s.role === 'staff').length}</div>
             <div className="stat-label">Nhân Viên (Staff)</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#a855f7' }}>👑</div>
+          <div className="stat-icon" style={{ color: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ShieldCheck size={26} />
+          </div>
           <div>
             <div className="stat-val">{staffList.filter(s => s.role === 'admin').length}</div>
             <div className="stat-label">Quản Trị Viên (Admin)</div>
@@ -195,7 +211,9 @@ export default function ManageStaff() {
             <option value="locked">Locked (Khóa)</option>
           </select>
         </div>
-        <button className="btn-primary" onClick={handleOpenAdd}>➕ Thêm Nhân Viên Mới</button>
+        <button className="btn-primary" onClick={handleOpenAdd} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <Plus size={16} /> Thêm Nhân Viên Mới
+        </button>
       </div>
 
       <div className="panel-card">
@@ -220,17 +238,23 @@ export default function ManageStaff() {
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.email}</div>
                   </td>
                   <td>{s.phone || 'Chưa có'}</td>
-                  <td><span className={`role-tag ${s.role === 'admin' ? 'role-admin' : 'role-staff'}`}>{s.role === 'admin' ? '👑 Admin' : '👔 Staff'}</span></td>
                   <td>
-                    <span className={`badge ${s.status === 'locked' ? 'badge-locked' : 'badge-active'}`}>
-                      {s.status === 'locked' ? '🔒 Locked' : '✅ Active'}
+                    <span className={`role-tag ${s.role === 'admin' ? 'role-admin' : 'role-staff'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      {s.role === 'admin' ? <><ShieldCheck size={12} /> Admin</> : <><UserCheck size={12} /> Staff</>}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge ${s.status === 'locked' ? 'badge-locked' : 'badge-active'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      {s.status === 'locked' ? <><Lock size={12} /> Locked</> : <><CheckCircle2 size={12} /> Active</>}
                     </span>
                   </td>
                   <td>
                     <div className="action-buttons">
-                      <button className="btn-action" onClick={() => handleOpenEdit(s)}>✏️ Sửa Role</button>
-                      <button className={`btn-action ${s.status === 'locked' ? 'btn-unlock' : 'btn-lock'}`} onClick={() => handleToggleLock(s.userId)}>
-                        {s.status === 'locked' ? '🔓 Mở Khóa' : '🔒 Khóa TK'}
+                      <button className="btn-action" onClick={() => handleOpenEdit(s)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Edit size={13} /> Sửa Role
+                      </button>
+                      <button className={`btn-action ${s.status === 'locked' ? 'btn-unlock' : 'btn-lock'}`} onClick={() => handleToggleLock(s.userId)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        {s.status === 'locked' ? <><Unlock size={13} /> Mở Khóa</> : <><Lock size={13} /> Khóa TK</>}
                       </button>
                     </div>
                   </td>

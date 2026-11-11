@@ -19,4 +19,5 @@ public class StaffCreateReturnDTO {
     private String accountHolder;
     private String adminNote;
     private Boolean restock;
+    private String evidenceImages;
 }

@@ -36,7 +36,7 @@ export default function ReviewCenterPage() {
         <Link to="/shop/orders" className="review-center-back">← Đơn mua</Link>
         <p className="review-center-eyebrow">GÓC CHIA SẺ</p>
         <h1>{orderId ? `Đánh giá đơn hàng #${orderId}` : 'Sản phẩm đã mua'}</h1>
-        <p>Đánh giá chỉ mở cho đơn đã xác nhận và thanh toán.</p>
+        <p>Đánh giá sản phẩm giúp Fashion Store và khách hàng khác có trải nghiệm mua sắm tốt hơn.</p>
       </header>
 
       {loading ? (
@@ -49,7 +49,7 @@ export default function ReviewCenterPage() {
       ) : items.length === 0 ? (
         <div className="review-center-state">
           <h2>{orderId ? 'Đơn này chưa có sản phẩm đủ điều kiện đánh giá' : 'Chưa có sản phẩm để đánh giá'}</h2>
-          <p>{orderId ? 'Chỉ đơn đã xác nhận và thanh toán mới có thể được đánh giá.' : 'Sau khi đơn được xác nhận và thanh toán, sản phẩm sẽ xuất hiện ở đây.'}</p>
+          <p>{orderId ? 'Chỉ các đơn hàng đã nhận thành công và chưa hoàn trả mới có thể đánh giá sản phẩm.' : 'Sau khi nhận hàng thành công, sản phẩm sẽ xuất hiện ở đây để bạn đánh giá.'}</p>
           <Link to={orderId ? '/shop/orders' : '/shop'}>{orderId ? 'Quay lại đơn mua' : 'Khám phá sản phẩm'}</Link>
         </div>
       ) : (

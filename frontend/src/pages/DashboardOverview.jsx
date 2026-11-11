@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
+import { Banknote, ShoppingBag, Package, Users } from 'lucide-react';
 import { getDashboardOverview } from '../services/dashboardService';
 
 import {
@@ -113,7 +114,9 @@ export default function DashboardOverview() {
       {/* KPI Cards Grid */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#6366f1' }}>💵</div>
+          <div className="stat-icon" style={{ color: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Banknote size={26} />
+          </div>
           <div className="stat-info">
             <div className="stat-val" title={formatCurrency(data.totalRevenue)}>{formatCurrency(data.totalRevenue)}</div>
             <div className="stat-label">Tổng Doanh Thu</div>
@@ -121,7 +124,9 @@ export default function DashboardOverview() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#3b82f6' }}>🛍️</div>
+          <div className="stat-icon" style={{ color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ShoppingBag size={26} />
+          </div>
           <div className="stat-info">
             <div className="stat-val">{data.totalOrders || 0}</div>
             <div className="stat-label">Tổng Đơn Hàng</div>
@@ -129,7 +134,9 @@ export default function DashboardOverview() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#10b981' }}>📦</div>
+          <div className="stat-icon" style={{ color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Package size={26} />
+          </div>
           <div className="stat-info">
             <div className="stat-val">{data.totalProducts || 0}</div>
             <div className="stat-label">Sản Phẩm (Tồn kho: {data.totalStockQuantity || 0})</div>
@@ -137,7 +144,9 @@ export default function DashboardOverview() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#f59e0b' }}>👤</div>
+          <div className="stat-icon" style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Users size={26} />
+          </div>
           <div className="stat-info">
             <div className="stat-val">{data.totalUsers || 0}</div>
             <div className="stat-label">Khách Hàng (Customer: {data.customerCount || 0})</div>

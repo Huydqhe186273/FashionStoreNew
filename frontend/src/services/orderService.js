@@ -53,6 +53,21 @@ export const createReturnRequest = async (orderId, userId, payloadOrReason) => {
   return response.data;
 };
 
+export const acceptReturnRequest = async (orderId) => {
+  const response = await api.put(`/staff/orders/${orderId}/accept-return`);
+  return response.data;
+};
+
+export const receiveReturnedGoods = async (orderId) => {
+  const response = await api.put(`/staff/orders/${orderId}/receive-return`);
+  return response.data;
+};
+
+export const processRefund = async (orderId) => {
+  const response = await api.put(`/staff/orders/${orderId}/process-refund`);
+  return response.data;
+};
+
 export const approveReturn = async (orderId) => {
   const response = await api.put(`/staff/orders/${orderId}/approve-return`);
   return response.data;

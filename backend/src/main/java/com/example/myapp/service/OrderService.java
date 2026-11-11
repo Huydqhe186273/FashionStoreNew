@@ -447,12 +447,19 @@ public class OrderService {
 
     @Transactional
     public ReturnRequest createReturnRequest(Integer orderId, Integer userId, String reason) {
-        return createReturnRequest(orderId, userId, reason, null, null, null);
+        return createReturnRequest(orderId, userId, reason, null, null, null, null);
     }
 
     @Transactional
     public ReturnRequest createReturnRequest(Integer orderId, Integer userId, String reason,
                                              String bankName, String bankAccount, String accountHolder) {
+        return createReturnRequest(orderId, userId, reason, bankName, bankAccount, accountHolder, null);
+    }
+
+    @Transactional
+    public ReturnRequest createReturnRequest(Integer orderId, Integer userId, String reason,
+                                             String bankName, String bankAccount, String accountHolder,
+                                             String evidenceImages) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Đơn hàng #" + orderId + " không tồn tại."));
 
@@ -522,6 +529,10 @@ public class OrderService {
             request.setAccountHolder(accountHolder.trim().toUpperCase());
         }
 
+        if (evidenceImages != null && !evidenceImages.trim().isEmpty()) {
+            request.setEvidenceImages(evidenceImages.trim());
+        }
+
         ReturnRequest saved = returnRequestRepository.save(request);
 
         // Gửi thông báo cho khách hàng
@@ -586,6 +597,7 @@ public class OrderService {
         String returnBankName = null;
         String returnBankAccount = null;
         String returnAccountHolder = null;
+        String returnEvidenceImages = null;
         java.util.Optional<ReturnRequest> returnOpt = returnRequestRepository.findLatestByOrderId(order.getOrderId());
         if (returnOpt.isPresent()) {
             ReturnRequest rr = returnOpt.get();
@@ -595,6 +607,7 @@ public class OrderService {
             returnBankName = rr.getBankName();
             returnBankAccount = rr.getBankAccount();
             returnAccountHolder = rr.getAccountHolder();
+            returnEvidenceImages = rr.getEvidenceImages();
         }
 
         Payment payerPayment = paymentRepository.findSuccessfulPaymentsWithPayerAccount(order.getOrderId()).stream().findFirst().orElse(null);
@@ -650,8 +663,10 @@ public class OrderService {
         if ("delivered".equalsIgnoreCase(order.getOrderStatus()) && "unpaid".equalsIgnoreCase(resolvedPaymentStatus)) {
             resolvedPaymentStatus = "paid";
         }
-        if ("returned".equalsIgnoreCase(order.getOrderStatus()) && ("unpaid".equalsIgnoreCase(resolvedPaymentStatus) || "paid".equalsIgnoreCase(resolvedPaymentStatus))) {
-            resolvedPaymentStatus = "refunded";
+        if ("returned".equalsIgnoreCase(order.getOrderStatus())) {
+            if ("completed".equalsIgnoreCase(returnStatus) || "refunded".equalsIgnoreCase(returnStatus)) {
+                resolvedPaymentStatus = "refunded";
+            }
         }
         if (returnStatus != null && "unpaid".equalsIgnoreCase(resolvedPaymentStatus)) {
             resolvedPaymentStatus = "paid";
@@ -680,6 +695,7 @@ public class OrderService {
                 .returnBankName(returnBankName)
                 .returnBankAccount(returnBankAccount)
                 .returnAccountHolder(returnAccountHolder)
+                .returnEvidenceImages(returnEvidenceImages)
                 .payerBankName(resolvedPayerBankName)
                 .payerBankAccount(resolvedPayerBankAccount)
                 .payerAccountHolder(resolvedPayerAccountHolder)

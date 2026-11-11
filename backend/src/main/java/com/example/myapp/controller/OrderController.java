@@ -96,7 +96,8 @@ public class OrderController {
             String bankName = body != null ? body.get("bankName") : null;
             String bankAccount = body != null ? body.get("bankAccount") : null;
             String accountHolder = body != null ? body.get("accountHolder") : null;
-            ReturnRequest request = orderService.createReturnRequest(orderId, userId, reason, bankName, bankAccount, accountHolder);
+            String evidenceImages = body != null ? body.get("evidenceImages") : null;
+            ReturnRequest request = orderService.createReturnRequest(orderId, userId, reason, bankName, bankAccount, accountHolder, evidenceImages);
 
             Map<String, Object> result = new HashMap<>();
             result.put("message", "Đã gửi yêu cầu trả hàng & hoàn tiền thành công!");
@@ -106,6 +107,7 @@ public class OrderController {
             result.put("bankName", request != null && request.getBankName() != null ? request.getBankName() : "");
             result.put("bankAccount", request != null && request.getBankAccount() != null ? request.getBankAccount() : "");
             result.put("accountHolder", request != null && request.getAccountHolder() != null ? request.getAccountHolder() : "");
+            result.put("evidenceImages", request != null && request.getEvidenceImages() != null ? request.getEvidenceImages() : "");
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {

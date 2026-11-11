@@ -386,17 +386,85 @@ public class StaffOrderService {
         }
     }
 
-    public StaffOrderDetailDTO approveReturn(Integer orderId) {
+    @Transactional
+    public StaffOrderDetailDTO acceptReturnRequest(Integer orderId) {
         Order order = orderRepository.findByIdWithItems(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId));
 
-        java.util.Optional<com.example.myapp.entity.ReturnRequest> rrOpt = returnRequestRepository.findLatestByOrderId(orderId);
-        if (rrOpt.isEmpty() || !"pending".equalsIgnoreCase(rrOpt.get().getStatus())) {
-            throw new IllegalArgumentException("Đơn hàng này không có yêu cầu hoàn tiền nào đang chờ duyệt!");
+        ReturnRequest rr = returnRequestRepository.findLatestByOrderId(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Đơn hàng này không có yêu cầu hoàn trả nào!"));
+
+        if (!"pending".equalsIgnoreCase(rr.getStatus())) {
+            throw new IllegalArgumentException("Yêu cầu hoàn trả không ở trạng thái chờ duyệt! Trạng thái hiện tại: " + rr.getStatus());
         }
 
-        com.example.myapp.entity.ReturnRequest rr = rrOpt.get();
-        rr.setStatus("approved");
+        rr.setStatus("return_approved");
+        returnRequestRepository.save(rr);
+
+        try {
+            notificationService.createNotification(
+                    order.getUser().getUserId(),
+                    "order",
+                    "Shop đã đồng ý yêu cầu trả hàng cho đơn hàng #" + orderId + ". Vui lòng đóng gói và gửi hàng về địa chỉ shop để được kiểm tra và hoàn tiền."
+            );
+        } catch (Exception ignored) {}
+
+        return toDetailDTO(order);
+    }
+
+    @Transactional
+    public StaffOrderDetailDTO receiveReturnedGoods(Integer orderId) {
+        Order order = orderRepository.findByIdWithItems(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId));
+
+        ReturnRequest rr = returnRequestRepository.findLatestByOrderId(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Đơn hàng này không có yêu cầu hoàn trả nào!"));
+
+        String st = rr.getStatus();
+        if (!"return_approved".equalsIgnoreCase(st) && !"approved".equalsIgnoreCase(st) && !"pending".equalsIgnoreCase(st)) {
+            throw new IllegalArgumentException("Chỉ có thể tiếp nhận hàng hoàn khi yêu cầu đã được shop đồng ý! Trạng thái hiện tại: " + st);
+        }
+
+        // 1. Nhập lại tồn kho cho các sản phẩm trong đơn (lô hàng FIFO & tồn kho biến thể)
+        restockOrderItems(order, false);
+
+        // 2. Cập nhật trạng thái đơn hàng sang RETURNED
+        order.setOrderStatus("RETURNED");
+        order = orderRepository.save(order);
+
+        // 3. Cập nhật trạng thái phiếu trả hàng sang goods_received (Đã nhận hàng - Chờ hoàn tiền)
+        rr.setStatus("goods_received");
+        returnRequestRepository.save(rr);
+
+        try {
+            notificationService.createNotification(
+                    order.getUser().getUserId(),
+                    "order",
+                    "Shop đã tiếp nhận kiện hàng hoàn của đơn hàng #" + orderId + " và kiểm tra hợp lệ, đã nhập kho thành công. Shop đang tiến hành hoàn tiền cho bạn."
+            );
+        } catch (Exception ignored) {}
+
+        return toDetailDTO(order);
+    }
+
+    @Transactional
+    public StaffOrderDetailDTO processRefund(Integer orderId) {
+        Order order = orderRepository.findByIdWithItems(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId));
+
+        ReturnRequest rr = returnRequestRepository.findLatestByOrderId(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Đơn hàng này không có yêu cầu hoàn trả nào!"));
+
+        String st = rr.getStatus();
+        if ("COMPLETED".equalsIgnoreCase(st) || "refunded".equalsIgnoreCase(st)) {
+            throw new IllegalArgumentException("Đơn hàng này đã được hoàn tiền hoàn tất trước đó!");
+        }
+
+        // Đảm bảo đơn đã restock và chuyển sang RETURNED nếu chưa thực hiện ở bước nhận hàng
+        if (!"RETURNED".equalsIgnoreCase(normalizeStatus(order.getOrderStatus()))) {
+            restockOrderItems(order, false);
+            order.setOrderStatus("RETURNED");
+        }
 
         // Gọi dịch vụ hoàn tiền tự động dựa vào phương thức thanh toán (PayOS vs COD)
         PayOSRefundService.RefundExecutionResult refundResult = payOSRefundService.processRefund(
@@ -409,18 +477,31 @@ public class StaffOrderService {
         );
 
         if (refundResult != null && refundResult.getAdminNote() != null) {
-            rr.setAdminNote(refundResult.getAdminNote());
+            String combinedNote = (rr.getAdminNote() != null && !rr.getAdminNote().isBlank())
+                    ? (rr.getAdminNote() + " | " + refundResult.getAdminNote())
+                    : refundResult.getAdminNote();
+            rr.setAdminNote(combinedNote);
         }
+        rr.setStatus("COMPLETED");
         returnRequestRepository.save(rr);
 
-        // Hoàn lại tồn kho cho sản phẩm (FIFO)
-        restockOrderItems(order, false);
-
-        order.setOrderStatus("RETURNED");
         order.setPaymentStatus("refunded");
         order = orderRepository.save(order);
 
+        try {
+            notificationService.createNotification(
+                    order.getUser().getUserId(),
+                    "order",
+                    "Đơn hàng #" + orderId + " đã được hoàn tiền thành công số tiền "
+                            + (rr.getRefundAmount() != null ? rr.getRefundAmount() : order.getTotalAmount()) + " đ."
+            );
+        } catch (Exception ignored) {}
+
         return toDetailDTO(order);
+    }
+
+    public StaffOrderDetailDTO approveReturn(Integer orderId) {
+        return processRefund(orderId);
     }
 
     public StaffOrderDetailDTO markOrderRTO(Integer orderId, String note) {
@@ -533,6 +614,9 @@ public class StaffOrderService {
         if (dto.getAdminNote() != null && !dto.getAdminNote().trim().isEmpty()) {
             rr.setAdminNote(dto.getAdminNote().trim());
         }
+        if (dto.getEvidenceImages() != null && !dto.getEvidenceImages().trim().isEmpty()) {
+            rr.setEvidenceImages(dto.getEvidenceImages().trim());
+        }
         if (rr.getCreatedAt() == null) {
             rr.setCreatedAt(LocalDateTime.now());
         }
@@ -563,8 +647,8 @@ public class StaffOrderService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId));
 
         java.util.Optional<com.example.myapp.entity.ReturnRequest> rrOpt = returnRequestRepository.findLatestByOrderId(orderId);
-        if (rrOpt.isEmpty() || !"pending".equalsIgnoreCase(rrOpt.get().getStatus())) {
-            throw new IllegalArgumentException("Đơn hàng này không có yêu cầu hoàn tiền nào đang chờ duyệt!");
+        if (rrOpt.isEmpty() || "COMPLETED".equalsIgnoreCase(rrOpt.get().getStatus()) || "refunded".equalsIgnoreCase(rrOpt.get().getStatus())) {
+            throw new IllegalArgumentException("Đơn hàng này không có yêu cầu hoàn tiền nào đang chờ xử lý!");
         }
 
         com.example.myapp.entity.ReturnRequest rr = rrOpt.get();
@@ -706,6 +790,9 @@ public class StaffOrderService {
                         .bankAccount(rr.getBankAccount())
                         .accountHolder(rr.getAccountHolder())
                         .adminNote(rr.getAdminNote())
+                        .evidenceImages(rr.getEvidenceImages())
+                        .receiptImage(rr.getReceiptImage())
+                        .transactionRef(rr.getTransactionRef())
                         .build())
                 .orElse(null);
 

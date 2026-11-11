@@ -1,5 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Modal from './Modal';
+import {
+  Image as ImageIcon,
+  CloudUpload,
+  Link as LinkIcon,
+  Upload,
+  Trash2,
+  Star,
+  CheckCircle2,
+  Clock,
+  Plus,
+  X
+} from 'lucide-react';
 import { getProductImages, uploadProductImage, addProductImageUrl, setPrimaryImage, deleteProductImage } from '../services/productImageService';
 import { useToast } from '../context/ToastContext';
 
@@ -147,7 +159,7 @@ export default function ProductImageModal({ isOpen, onClose, product, onImagesUp
   return (
     <Modal
       isOpen={isOpen}
-      title={`🖼️ Quản Lý Hình Ảnh - #${product.productId} ${product.name}`}
+      title={`Quản Lý Hình Ảnh - #${product.productId} ${product.name}`}
       onClose={onClose}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -173,9 +185,13 @@ export default function ProductImageModal({ isOpen, onClose, product, onImagesUp
                 transition: 'all 0.2s',
                 backgroundColor: uploadMode === 'file' ? '#4f46e5' : '#e2e8f0',
                 color: uploadMode === 'file' ? '#ffffff' : '#475569',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px'
               }}
             >
-              ☁️ Tải File Lên Cloudinary
+              <CloudUpload size={16} /> Tải File Lên Cloudinary
             </button>
             <button
               type="button"
@@ -191,9 +207,13 @@ export default function ProductImageModal({ isOpen, onClose, product, onImagesUp
                 transition: 'all 0.2s',
                 backgroundColor: uploadMode === 'url' ? '#4f46e5' : '#e2e8f0',
                 color: uploadMode === 'url' ? '#ffffff' : '#475569',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px'
               }}
             >
-              🔗 Thêm Link Ảnh Trực Tiếp
+              <LinkIcon size={16} /> Thêm Link Ảnh Trực Tiếp
             </button>
           </div>
 
@@ -232,8 +252,8 @@ export default function ProductImageModal({ isOpen, onClose, product, onImagesUp
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                       }}
                     />
-                    <span style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 600 }}>
-                      ✓ Đã chọn: {selectedFile?.name} ({(selectedFile?.size / 1024).toFixed(1)} KB)
+                    <span style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <CheckCircle2 size={15} /> Đã chọn: {selectedFile?.name} ({(selectedFile?.size / 1024).toFixed(1)} KB)
                     </span>
                     <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
                       (Nhấn để chọn file khác)
@@ -241,7 +261,9 @@ export default function ProductImageModal({ isOpen, onClose, product, onImagesUp
                   </div>
                 ) : (
                   <div>
-                    <div style={{ fontSize: '2rem', marginBottom: '6px' }}>📤</div>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px', color: '#6366f1' }}>
+                      <Upload size={36} />
+                    </div>
                     <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.95rem' }}>
                       Nhấp để chọn ảnh hoặc kéo thả vào đây
                     </div>
@@ -280,7 +302,8 @@ export default function ProductImageModal({ isOpen, onClose, product, onImagesUp
                     gap: '6px'
                   }}
                 >
-                  {uploading ? '⏳ Đang tải lên...' : '🚀 Tải lên Cloudinary'}
+                  {uploading ? <Clock size={16} /> : <CloudUpload size={16} />}
+                  {uploading ? 'Đang tải lên...' : 'Tải lên Cloudinary'}
                 </button>
               </div>
             </form>
@@ -299,9 +322,10 @@ export default function ProductImageModal({ isOpen, onClose, product, onImagesUp
                   type="submit"
                   disabled={uploading}
                   className="btn-primary"
-                  style={{ whiteSpace: 'nowrap' }}
+                  style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
-                  {uploading ? '⏳ Đang lưu...' : '➕ Thêm Link'}
+                  {uploading ? <Clock size={15} /> : <Plus size={15} />}
+                  {uploading ? 'Đang lưu...' : 'Thêm Link'}
                 </button>
               </div>
               <div style={{ marginTop: '10px' }}>
@@ -336,7 +360,9 @@ export default function ProductImageModal({ isOpen, onClose, product, onImagesUp
               border: '1px solid #f1f5f9',
               color: '#64748b'
             }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🖼️</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px', color: '#94a3b8' }}>
+                <ImageIcon size={44} />
+              </div>
               <div style={{ fontWeight: 600, color: '#334155' }}>Sản phẩm này chưa có hình ảnh nào</div>
               <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>
                 Hãy tải ảnh lên Cloudinary để hiển thị trên website bán hàng
@@ -377,9 +403,12 @@ export default function ProductImageModal({ isOpen, onClose, product, onImagesUp
                       padding: '3px 8px',
                       borderRadius: '12px',
                       zIndex: 2,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '3px'
                     }}>
-                      ⭐ Ảnh Chính
+                      <Star size={11} fill="#ffffff" /> Ảnh Chính
                     </span>
                   )}
 
@@ -421,10 +450,14 @@ export default function ProductImageModal({ isOpen, onClose, product, onImagesUp
                           backgroundColor: '#f8fafc',
                           color: '#334155',
                           cursor: 'pointer',
-                          fontWeight: 600
+                          fontWeight: 600,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '3px'
                         }}
                       >
-                        ⭐ Đặt làm chính
+                        <Star size={12} /> Đặt làm chính
                       </button>
                     ) : (
                       <span style={{
@@ -451,10 +484,13 @@ export default function ProductImageModal({ isOpen, onClose, product, onImagesUp
                         backgroundColor: '#fef2f2',
                         color: '#ef4444',
                         cursor: 'pointer',
-                        fontWeight: 600
+                        fontWeight: 600,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}
                     >
-                      🗑️
+                      <Trash2 size={13} />
                     </button>
                   </div>
                 </div>

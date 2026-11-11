@@ -3,6 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
 import ProductImageModal from '../components/ProductImageModal';
+import {
+  Package,
+  CheckCircle2,
+  Ban,
+  AlertTriangle,
+  Plus,
+  Camera,
+  Image as ImageIcon,
+  Edit,
+  Upload,
+  Link as LinkIcon,
+  X,
+  Zap,
+  Sparkles,
+  CloudUpload
+} from 'lucide-react';
 import { getProducts, createProduct, updateProduct, toggleProductStatus } from '../services/productService';
 import { getVariants } from '../services/variantService';
 import { getCategories } from '../services/categoryService';
@@ -248,21 +264,27 @@ export default function ManageProducts() {
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#6366f1' }}>📦</div>
+          <div className="stat-icon" style={{ color: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Package size={26} />
+          </div>
           <div>
             <div className="stat-val">{products.length}</div>
             <div className="stat-label">Tổng Số Sản Phẩm</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#10b981' }}>✅</div>
+          <div className="stat-icon" style={{ color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CheckCircle2 size={26} />
+          </div>
           <div>
             <div className="stat-val">{products.filter(p => p.status === 'active').length}</div>
             <div className="stat-label">Đang Kinh Doanh</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#ef4444' }}>⛔</div>
+          <div className="stat-icon" style={{ color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Ban size={26} />
+          </div>
           <div>
             <div className="stat-val">{products.filter(p => p.status === 'inactive').length}</div>
             <div className="stat-label">Đã Ngừng Bán</div>
@@ -278,8 +300,12 @@ export default function ManageProducts() {
           }}
           title="Nhấp để lọc danh sách sản phẩm thiếu biến thể"
         >
-          <div className="stat-icon" style={{ color: products.filter(p => !p.variantCount || p.variantCount === 0).length > 0 ? '#dc2626' : '#10b981' }}>
-            {products.filter(p => !p.variantCount || p.variantCount === 0).length > 0 ? '⚠️' : '🎉'}
+          <div className="stat-icon" style={{ color: products.filter(p => !p.variantCount || p.variantCount === 0).length > 0 ? '#dc2626' : '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {products.filter(p => !p.variantCount || p.variantCount === 0).length > 0 ? (
+              <AlertTriangle size={26} />
+            ) : (
+              <CheckCircle2 size={26} />
+            )}
           </div>
           <div>
             <div className="stat-val" style={{ color: products.filter(p => !p.variantCount || p.variantCount === 0).length > 0 ? '#dc2626' : undefined }}>
@@ -311,11 +337,13 @@ export default function ManageProducts() {
             style={variantFilter === 'missing' ? { borderColor: '#ef4444', backgroundColor: '#fef2f2', color: '#b91c1c', fontWeight: 600 } : {}}
           >
             <option value="">Tất cả Biến Thể</option>
-            <option value="missing">⚠️ Chưa có biến thể ({products.filter(p => !p.variantCount || p.variantCount === 0).length})</option>
-            <option value="has">✅ Đã có biến thể ({products.filter(p => p.variantCount > 0).length})</option>
+            <option value="missing">Chưa có biến thể ({products.filter(p => !p.variantCount || p.variantCount === 0).length})</option>
+            <option value="has">Đã có biến thể ({products.filter(p => p.variantCount > 0).length})</option>
           </select>
         </div>
-        <button className="btn-primary" onClick={handleOpenAdd}>➕ Thêm Sản Phẩm Mới</button>
+        <button className="btn-primary" onClick={handleOpenAdd} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <Plus size={16} /> Thêm Sản Phẩm Mới
+        </button>
       </div>
 
       <div className="panel-card" style={{ padding: '16px' }}>
@@ -379,11 +407,10 @@ export default function ManageProducts() {
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
-                              e.currentTarget.parentElement.innerHTML = '📷';
                             }}
                           />
                         ) : (
-                          <span style={{ fontSize: '1.1rem', color: '#94a3b8' }}>📷</span>
+                          <span style={{ display: 'flex', color: '#94a3b8' }}><Camera size={18} /></span>
                         )}
                       </div>
                     </td>
@@ -455,12 +482,16 @@ export default function ManageProducts() {
                         onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
                         title="Nhấp để tạo ma trận hoặc xem biến thể sản phẩm này"
                       >
-                        {hasNoVariants ? '⚠️ 0 biến thể ↗' : `📦 ${p.variantCount} biến thể (${p.totalStock ?? 0} cái) ↗`}
+                        {hasNoVariants ? (
+                          <><AlertTriangle size={13} /> 0 biến thể ↗</>
+                        ) : (
+                          <><Package size={13} /> {p.variantCount} biến thể ({p.totalStock ?? 0} cái) ↗</>
+                        )}
                       </button>
                     </td>
                     <td style={{ padding: '10px 6px', whiteSpace: 'nowrap' }}>
-                      <span className={`badge ${isActive ? 'badge-active' : 'badge-inactive'}`} style={{ padding: '4px 8px', fontSize: '0.76rem' }}>
-                        {isActive ? '✅ Kinh doanh' : '⛔ Ngừng bán'}
+                      <span className={`badge ${isActive ? 'badge-active' : 'badge-inactive'}`} style={{ padding: '4px 8px', fontSize: '0.76rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        {isActive ? <><CheckCircle2 size={12} /> Kinh doanh</> : <><Ban size={12} /> Ngừng bán</>}
                       </span>
                     </td>
                     <td style={{ textAlign: 'center', padding: '10px 6px', whiteSpace: 'nowrap' }}>
@@ -469,25 +500,25 @@ export default function ManageProducts() {
                           className="btn-action"
                           onClick={() => setImageModalProduct(p)}
                           title="Tải ảnh lên Cloudinary & quản lý thư viện ảnh"
-                          style={{ backgroundColor: '#eef2ff', borderColor: '#c7d2fe', color: '#4f46e5', padding: '4px 8px', fontSize: '0.78rem' }}
+                          style={{ backgroundColor: '#eef2ff', borderColor: '#c7d2fe', color: '#4f46e5', padding: '4px 8px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
                         >
-                          🖼️ Ảnh {p.images && p.images.length > 0 ? `(${p.images.length})` : ''}
+                          <ImageIcon size={13} /> Ảnh {p.images && p.images.length > 0 ? `(${p.images.length})` : ''}
                         </button>
                         <button
                           className="btn-action"
                           onClick={() => handleOpenEdit(p)}
                           title="Chỉnh sửa sản phẩm"
-                          style={{ padding: '4px 8px', fontSize: '0.78rem' }}
+                          style={{ padding: '4px 8px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
                         >
-                          ✏️ Sửa
+                          <Edit size={13} /> Sửa
                         </button>
                         <button
                           className={`btn-action ${isActive ? 'btn-lock' : 'btn-unlock'}`}
                           onClick={() => handleToggleStatus(p.productId)}
                           title={isActive ? 'Ngừng bán sản phẩm' : 'Kích hoạt lại'}
-                          style={{ padding: '4px 8px', fontSize: '0.78rem' }}
+                          style={{ padding: '4px 8px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
                         >
-                          {isActive ? '⛔ Ngừng' : '✅ Bán'}
+                          {isActive ? <><Ban size={13} /> Ngừng</> : <><CheckCircle2 size={13} /> Bán</>}
                         </button>
                       </div>
                     </td>
@@ -568,7 +599,7 @@ export default function ManageProducts() {
           {/* Mục Thêm / Tải Ảnh Lên Cloudinary */}
           <div className="form-group" style={{ backgroundColor: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
             <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>
-              <span>🖼️ Hình Ảnh Sản Phẩm (Lưu trên Cloudinary)</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><ImageIcon size={16} /> Hình Ảnh Sản Phẩm (Lưu trên Cloudinary)</span>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button
                   type="button"
@@ -582,9 +613,12 @@ export default function ManageProducts() {
                     fontWeight: 600,
                     backgroundColor: imageInputMode === 'file' ? '#4f46e5' : '#e2e8f0',
                     color: imageInputMode === 'file' ? '#fff' : '#475569',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
                   }}
                 >
-                  📁 Chọn File
+                  <Upload size={12} /> Chọn File
                 </button>
                 <button
                   type="button"
@@ -598,9 +632,12 @@ export default function ManageProducts() {
                     fontWeight: 600,
                     backgroundColor: imageInputMode === 'url' ? '#4f46e5' : '#e2e8f0',
                     color: imageInputMode === 'url' ? '#fff' : '#475569',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
                   }}
                 >
-                  🔗 Nhập Link
+                  <LinkIcon size={12} /> Nhập Link
                 </button>
               </div>
             </label>
@@ -656,8 +693,8 @@ export default function ManageProducts() {
                         style={{ width: '60px', height: '60px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #cbd5e1' }}
                       />
                       <div style={{ textAlign: 'left', flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#10b981' }}>
-                          ✓ {productImageFile ? productImageFile.name : 'Ảnh đại diện hiện tại'}
+                        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <CheckCircle2 size={14} /> {productImageFile ? productImageFile.name : 'Ảnh đại diện hiện tại'}
                         </div>
                         <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
                           {productImageFile ? `(${(productImageFile.size / 1024).toFixed(1)} KB) - Tự động tải lên Cloudinary khi tạo` : 'Nhấp vào đây để chọn ảnh mới thay thế'}
@@ -671,15 +708,17 @@ export default function ManageProducts() {
                             setProductImageFile(null);
                             setProductImagePreview(editingProduct?.primaryImageUrl || null);
                           }}
-                          style={{ border: 'none', background: '#fee2e2', color: '#ef4444', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600 }}
+                          style={{ border: 'none', background: '#fee2e2', color: '#ef4444', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '3px' }}
                         >
-                          ✕ Hủy
+                          <X size={12} /> Hủy
                         </button>
                       )}
                     </div>
                   ) : (
                     <div>
-                      <div style={{ fontSize: '1.4rem', marginBottom: '2px' }}>☁️</div>
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4px', color: '#6366f1' }}>
+                        <CloudUpload size={28} />
+                      </div>
                       <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#334155' }}>
                         Nhấp để chọn ảnh tải lên Cloudinary
                       </div>
@@ -719,7 +758,7 @@ export default function ManageProducts() {
           <div className="modal-footer">
             <button type="button" className="btn-cancel" onClick={handleCloseModal} disabled={isSubmitting}>Hủy</button>
             <button type="submit" className="btn-primary" disabled={isSubmitting}>
-              {isSubmitting ? "⏳ Đang lưu & tải ảnh..." : (editingProduct ? "Lưu Thay Đổi" : "Tạo Sản Phẩm")}
+              {isSubmitting ? "Đang lưu & tải ảnh..." : (editingProduct ? "Lưu Thay Đổi" : "Tạo Sản Phẩm")}
             </button>
           </div>
         </form>
@@ -736,7 +775,7 @@ export default function ManageProducts() {
       {/* Modal Wizard: Nhắc nhở sinh biến thể ngay sau khi tạo sản phẩm thành công */}
       <Modal
         isOpen={Boolean(createdProductPrompt)}
-        title="🎉 Sản Phẩm Mới Đã Tạo Thành Công!"
+        title="Sản Phẩm Mới Đã Tạo Thành Công!"
         onClose={() => setCreatedProductPrompt(null)}
       >
         <div style={{ textAlign: 'center', padding: '16px 8px' }}>
@@ -748,10 +787,10 @@ export default function ManageProducts() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '2rem',
-            margin: '0 auto 16px'
+            margin: '0 auto 16px',
+            color: '#d97706'
           }}>
-            ⚡
+            <Zap size={32} />
           </div>
           <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
             Sinh Biến Thể Cho #{createdProductPrompt?.productId} - {createdProductPrompt?.name}
@@ -788,7 +827,7 @@ export default function ManageProducts() {
                 gap: '6px'
               }}
             >
-              ⚡ Tạo Ma Trận Biến Thể Ngay
+              <Zap size={16} /> Tạo Ma Trận Biến Thể Ngay
             </button>
           </div>
         </div>

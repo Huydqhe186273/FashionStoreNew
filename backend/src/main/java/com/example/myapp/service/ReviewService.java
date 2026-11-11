@@ -59,10 +59,35 @@ public class ReviewService {
             return List.of();
         }
 
+        // Lọc bỏ các đơn hàng đã bị hoàn hàng hoặc đang trong quy trình hoàn hàng
+        orderItems = orderItems.stream()
+                .filter(oi -> {
+                    com.example.myapp.entity.Order order = oi.getOrder();
+                    if (order == null) return false;
+                    String oStatus = order.getOrderStatus() == null ? "" : order.getOrderStatus().toLowerCase();
+                    if ("returned".equals(oStatus) || "cancelled".equals(oStatus)) {
+                        return false;
+                    }
+                    if (order.getReturnRequests() != null) {
+                        boolean hasReturn = order.getReturnRequests().stream().anyMatch(rr -> {
+                            String s = rr.getStatus() == null ? "" : rr.getStatus().toLowerCase();
+                            return "pending".equals(s) || "return_approved".equals(s) || "goods_received".equals(s) || "completed".equals(s) || "refunded".equals(s);
+                        });
+                        if (hasReturn) return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
+
+        if (orderItems.isEmpty()) {
+            return List.of();
+        }
+
         List<Integer> orderItemIds = orderItems.stream()
                 .map(OrderItem::getOrderItemId)
                 .collect(Collectors.toList());
         Map<Integer, Review> reviewsByOrderItemId = reviewRepository.findByOrderItemIdsAndUserId(orderItemIds, userId).stream()
+                .filter(review -> review != null && review.getOrderItem() != null && review.getOrderItem().getOrderItemId() != null)
                 .collect(Collectors.toMap(
                         review -> review.getOrderItem().getOrderItemId(),
                         Function.identity(),
@@ -70,15 +95,21 @@ public class ReviewService {
                                 && first.getCreatedAt().isAfter(second.getCreatedAt()) ? first : second));
 
         return orderItems.stream().map(orderItem -> {
+            if (orderItem.getVariant() == null || orderItem.getVariant().getProduct() == null) {
+                return null;
+            }
             Product product = orderItem.getVariant().getProduct();
-            ProductImage image = product.getProductImages().stream()
-                    .filter(candidate -> Boolean.TRUE.equals(candidate.getIsPrimary()))
-                    .findFirst()
-                    .orElseGet(() -> product.getProductImages().stream().findFirst().orElse(null));
+            ProductImage image = null;
+            if (product.getProductImages() != null && !product.getProductImages().isEmpty()) {
+                image = product.getProductImages().stream()
+                        .filter(candidate -> Boolean.TRUE.equals(candidate.getIsPrimary()))
+                        .findFirst()
+                        .orElseGet(() -> product.getProductImages().get(0));
+            }
             Review review = reviewsByOrderItemId.get(orderItem.getOrderItemId());
 
             return ReviewableProductDTO.builder()
-                    .orderId(orderItem.getOrder().getOrderId())
+                    .orderId(orderItem.getOrder() != null ? orderItem.getOrder().getOrderId() : null)
                     .orderItemId(orderItem.getOrderItemId())
                     .productId(product.getProductId())
                     .productName(product.getName())
@@ -90,7 +121,9 @@ public class ReviewService {
                     .comment(review != null ? review.getComment() : null)
                     .reviewedAt(review != null ? review.getCreatedAt() : null)
                     .build();
-        }).collect(Collectors.toList());
+        })
+        .filter(java.util.Objects::nonNull)
+        .collect(Collectors.toList());
     }
 
     @Transactional
@@ -102,16 +135,40 @@ public class ReviewService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng ID: " + userId));
         OrderItem orderItem = orderItemRepository.findReviewableItemByIdAndUserId(orderItemId, userId)
             .orElseThrow(() -> new IllegalArgumentException("Chỉ có thể đánh giá sản phẩm thuộc đơn đã xác nhận và thanh toán của bạn"));
+
+        if (orderItem.getVariant() == null || orderItem.getVariant().getProduct() == null) {
+            throw new IllegalArgumentException("Không tìm thấy thông tin sản phẩm của đơn hàng này.");
+        }
+
+        com.example.myapp.entity.Order order = orderItem.getOrder();
+        if (order != null) {
+            String oStatus = order.getOrderStatus() == null ? "" : order.getOrderStatus().toLowerCase();
+            if ("returned".equals(oStatus) || "cancelled".equals(oStatus)) {
+                throw new IllegalArgumentException("Đơn hàng này đã hoàn trả hoặc bị hủy, không thể đánh giá.");
+            }
+            if (order.getReturnRequests() != null) {
+                boolean hasReturn = order.getReturnRequests().stream().anyMatch(rr -> {
+                    String s = rr.getStatus() == null ? "" : rr.getStatus().toLowerCase();
+                    return "pending".equals(s) || "return_approved".equals(s) || "goods_received".equals(s) || "completed".equals(s) || "refunded".equals(s);
+                });
+                if (hasReturn) {
+                    throw new IllegalArgumentException("Đơn hàng đã yêu cầu trả hàng / hoàn tiền, không thể gửi đánh giá.");
+                }
+            }
+        }
+
         if (reviewRepository.existsByOrderItemIdAndUserId(orderItemId, userId)) {
             throw new IllegalArgumentException("Bạn đã đánh giá sản phẩm này rồi");
         }
+
+        String cleanComment = (comment != null && !comment.trim().isEmpty()) ? comment.trim() : null;
 
         Review r = new Review();
         r.setUser(user);
         r.setProduct(orderItem.getVariant().getProduct());
         r.setOrderItem(orderItem);
         r.setRating(rating);
-        r.setComment(comment);
+        r.setComment(cleanComment);
         r.setCreatedAt(LocalDateTime.now());
 
         return toDTO(reviewRepository.save(r));
@@ -121,14 +178,23 @@ public class ReviewService {
     public ReviewDTO update(Integer reviewId, Integer userId, Integer rating, String comment) {
         Review r = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá ID: " + reviewId));
-        if (!r.getUser().getUserId().equals(userId)) {
+        if (r.getUser() == null || !r.getUser().getUserId().equals(userId)) {
             throw new RuntimeException("Bạn không có quyền sửa đánh giá này");
+        }
+        if (r.getOrderItem() != null && r.getOrderItem().getOrder() != null) {
+            String oStatus = r.getOrderItem().getOrder().getOrderStatus() == null ? "" : r.getOrderItem().getOrder().getOrderStatus().toLowerCase();
+            if ("returned".equals(oStatus) || "cancelled".equals(oStatus)) {
+                throw new IllegalArgumentException("Đơn hàng đã hoàn trả hoặc bị hủy, không thể chỉnh sửa đánh giá.");
+            }
         }
         if (rating != null) {
             if (rating < 1 || rating > 5) throw new IllegalArgumentException("Rating phải từ 1 đến 5");
             r.setRating(rating);
         }
-        if (comment != null) r.setComment(comment);
+        if (comment != null) {
+            String cleanComment = !comment.trim().isEmpty() ? comment.trim() : null;
+            r.setComment(cleanComment);
+        }
         return toDTO(reviewRepository.save(r));
     }
 
@@ -136,20 +202,31 @@ public class ReviewService {
     public void delete(Integer reviewId, Integer userId) {
         Review r = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá ID: " + reviewId));
-        if (!r.getUser().getUserId().equals(userId)) {
+        if (r.getUser() == null || !r.getUser().getUserId().equals(userId)) {
             throw new RuntimeException("Bạn không có quyền xóa đánh giá này");
         }
         reviewRepository.delete(r);
     }
 
     private ReviewDTO toDTO(Review r) {
+        String authorName = null;
+        if (r.getUser() != null) {
+            if (r.getUser().getFullName() != null && !r.getUser().getFullName().isBlank()) {
+                authorName = r.getUser().getFullName();
+            } else if (r.getUser().getEmail() != null && !r.getUser().getEmail().isBlank()) {
+                authorName = r.getUser().getEmail();
+            } else {
+                authorName = "Khách hàng #" + r.getUser().getUserId();
+            }
+        }
+
         return ReviewDTO.builder()
                 .reviewId(r.getReviewId())
                 .rating(r.getRating())
                 .comment(r.getComment())
                 .createdAt(r.getCreatedAt())
                 .userId(r.getUser() != null ? r.getUser().getUserId() : null)
-                .userName(r.getUser() != null ? r.getUser().getFullName() : null)
+                .userName(authorName)
                 .productId(r.getProduct() != null ? r.getProduct().getProductId() : null)
                 .orderItemId(r.getOrderItem() != null ? r.getOrderItem().getOrderItemId() : null)
                 .build();

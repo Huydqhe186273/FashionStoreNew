@@ -1,16 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
+import {
+  Users,
+  CheckCircle2,
+  Lock,
+  Unlock,
+  Plus,
+  Edit,
+  AlertCircle
+} from 'lucide-react';
 import { getUsers, createUser, updateUser, toggleUserLock } from '../services/userService';
-
-const mockUsers = [
-  { userId: 1, fullName: "Nguyễn Văn A", email: "customer1@example.com", phone: "0987654321", role: "customer", status: "active", totalOrders: 5 },
-  { userId: 2, fullName: "Lê Hoàng C", email: "hoangc@example.com", phone: "0933445566", role: "customer", status: "active", totalOrders: 8 },
-  { userId: 3, fullName: "Phạm Minh D", email: "minhd@example.com", phone: "0977889900", role: "customer", status: "locked", totalOrders: 1 }
-];
+import { useToast } from '../context/ToastContext';
 
 export default function ManageUsers() {
-  const [users, setUsers] = useState(mockUsers);
+  const { toast } = useToast();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -18,6 +24,8 @@ export default function ManageUsers() {
   // Modal State (Gộp Thêm & Sửa làm 1)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null); // null: Thêm mới, object: Đang sửa
+  const [formError, setFormError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const initialForm = {
     fullName: '',
@@ -29,21 +37,16 @@ export default function ManageUsers() {
 
   const loadUsers = async () => {
     try {
+      setLoading(true);
       const data = await getUsers({ keyword: search, status: statusFilter });
-      setUsers(data);
+      setUsers(data || []);
       setIsLive(true);
     } catch (err) {
-      console.warn('Axios error, fallback mock users:', err);
+      console.error('Lỗi khi tải danh sách khách hàng:', err);
       setIsLive(false);
-      let filtered = mockUsers.filter(u => {
-        const matchSearch = !search || 
-          u.fullName.toLowerCase().includes(search.toLowerCase()) || 
-          u.email.toLowerCase().includes(search.toLowerCase()) ||
-          (u.phone && u.phone.includes(search));
-        const matchStatus = !statusFilter || u.status === statusFilter;
-        return matchSearch && matchStatus;
-      });
-      setUsers(filtered);
+      toast?.error?.('Không thể tải danh sách khách hàng từ máy chủ.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,18 +54,23 @@ export default function ManageUsers() {
     loadUsers();
   }, [search, statusFilter]);
 
-  const handleToggleLock = async (id) => {
+  const handleToggleLock = async (u) => {
+    const action = u.status === 'locked' ? 'Mở khóa' : 'Khóa';
+    if (!window.confirm(`Xác nhận ${action} tài khoản khách hàng #${u.userId} (${u.fullName})?`)) return;
     try {
-      await toggleUserLock(id);
+      await toggleUserLock(u.userId);
+      toast?.success?.(`Đã ${action.toLowerCase()} tài khoản khách hàng #${u.userId} thành công!`);
       loadUsers();
     } catch (err) {
-      setUsers(prev => prev.map(u => u.userId === id ? { ...u, status: u.status === 'locked' ? 'active' : 'locked' } : u));
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || `Lỗi khi ${action.toLowerCase()} tài khoản.`;
+      toast?.error?.(msg);
     }
   };
 
   const handleOpenAdd = () => {
     setEditingUser(null);
     setFormData(initialForm);
+    setFormError('');
     setIsModalOpen(true);
   };
 
@@ -74,6 +82,7 @@ export default function ManageUsers() {
       phone: user.phone || '',
       status: user.status || 'active'
     });
+    setFormError('');
     setIsModalOpen(true);
   };
 
@@ -81,44 +90,104 @@ export default function ManageUsers() {
     setIsModalOpen(false);
     setEditingUser(null);
     setFormData(initialForm);
+    setFormError('');
+    setSubmitting(false);
   };
 
   const handleSubmitUser = async (e) => {
     e.preventDefault();
+    setFormError('');
 
+    const cleanFullName = (formData.fullName || '').trim();
+    const cleanEmail = (formData.email || '').trim().toLowerCase();
+    const cleanPhone = (formData.phone || '').trim();
+
+    if (!cleanFullName) {
+      setFormError('Họ và tên khách hàng không được để trống!');
+      return;
+    }
+
+    if (!cleanEmail) {
+      setFormError('Email khách hàng không được để trống!');
+      return;
+    }
+
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,64}$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setFormError('Email không hợp lệ! Vui lòng nhập đúng định dạng (Ví dụ: customer@gmail.com).');
+      return;
+    }
+
+    if (cleanPhone) {
+      const phoneRegex = /^0[35789][0-9]{8}$/;
+      if (!phoneRegex.test(cleanPhone)) {
+        setFormError('Số điện thoại không hợp lệ! Vui lòng nhập đúng số điện thoại di động Việt Nam gồm chính xác 10 chữ số (bắt đầu bằng 03, 05, 07, 08 hoặc 09).');
+        return;
+      }
+    }
+
+    // 1. Kiểm tra trùng lặp email ở phía Client
+    const duplicateEmail = users.some(
+      u => (!editingUser || u.userId !== editingUser.userId) && (u.email || '').trim().toLowerCase() === cleanEmail
+    );
+    if (duplicateEmail) {
+      const msg = `Email "${formData.email.trim()}" đã tồn tại trong hệ thống! Không được phép thêm trùng lặp.`;
+      setFormError(msg);
+      toast?.error?.(msg);
+      return; // DỪNG LẠI, CHẶN TUYỆT ĐỐI KHÔNG ĐƯỢC PHÉP THÊM
+    }
+
+    // 2. Kiểm tra trùng lặp số điện thoại ở phía Client (nếu có nhập)
+    if (cleanPhone) {
+      const duplicatePhone = users.some(
+        u => (!editingUser || u.userId !== editingUser.userId) && (u.phone || '').trim() === cleanPhone
+      );
+      if (duplicatePhone) {
+        const msg = `Số điện thoại "${cleanPhone}" đã tồn tại trong hệ thống! Không được phép thêm trùng lặp.`;
+        setFormError(msg);
+        toast?.error?.(msg);
+        return; // DỪNG LẠI, CHẶN TUYỆT ĐỐI KHÔNG ĐƯỢC PHÉP THÊM
+      }
+    }
+
+    const payload = {
+      fullName: cleanFullName,
+      email: cleanEmail,
+      phone: cleanPhone || null,
+      role: 'customer',
+      status: formData.status || 'active'
+    };
+
+    setSubmitting(true);
     if (editingUser) {
       // Cập nhật người dùng hiện có
       try {
-        await updateUser(editingUser.userId, formData);
+        await updateUser(editingUser.userId, payload);
+        toast?.success?.(`Cập nhật thông tin khách hàng #${editingUser.userId} thành công!`);
         handleCloseModal();
         loadUsers();
       } catch (err) {
-        const msg = err.response?.data?.message || err.response?.data?.error || err.message;
-        alert("Lỗi khi cập nhật khách hàng: " + msg);
-        // Fallback offline mock update
-        setUsers(prev => prev.map(u => u.userId === editingUser.userId ? { ...u, ...formData } : u));
-        handleCloseModal();
+        const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Lỗi khi cập nhật khách hàng.';
+        setFormError(msg);
+        toast?.error?.(msg);
+        // KHÔNG cập nhật vào danh sách khi có lỗi, KHÔNG đóng modal
+      } finally {
+        setSubmitting(false);
       }
     } else {
       // Tạo mới người dùng
       try {
-        await createUser(formData);
+        await createUser(payload);
+        toast?.success?.(`Thêm khách hàng mới "${cleanFullName}" thành công!`);
         handleCloseModal();
         loadUsers();
       } catch (err) {
-        const msg = err.response?.data?.message || err.response?.data?.error || err.message;
-        alert("Lỗi khi tạo khách hàng: " + msg);
-        // Fallback offline mock add
-        setUsers(prev => [
-          {
-            ...formData,
-            userId: prev.length > 0 ? Math.max(...prev.map(u => u.userId)) + 1 : 1,
-            role: 'customer',
-            totalOrders: 0
-          },
-          ...prev
-        ]);
-        handleCloseModal();
+        const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Lỗi khi tạo khách hàng.';
+        setFormError(msg);
+        toast?.error?.(msg);
+        // KHÔNG thêm vào danh sách khi có lỗi, KHÔNG đóng modal
+      } finally {
+        setSubmitting(false);
       }
     }
   };
@@ -134,21 +203,27 @@ export default function ManageUsers() {
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#6366f1' }}>👥</div>
+          <div className="stat-icon" style={{ color: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Users size={26} />
+          </div>
           <div>
             <div className="stat-val">{users.length}</div>
             <div className="stat-label">Tổng Khách Hàng</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#10b981' }}>✅</div>
+          <div className="stat-icon" style={{ color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CheckCircle2 size={26} />
+          </div>
           <div>
             <div className="stat-val">{users.filter(u => u.status === 'active').length}</div>
             <div className="stat-label">Tài Khoản Active</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ color: '#ef4444' }}>🔒</div>
+          <div className="stat-icon" style={{ color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Lock size={26} />
+          </div>
           <div>
             <div className="stat-val">{users.filter(u => u.status === 'locked').length}</div>
             <div className="stat-label">Đang Bị Khóa</div>
@@ -173,7 +248,9 @@ export default function ManageUsers() {
             <option value="locked">Locked (Khóa)</option>
           </select>
         </div>
-        <button className="btn-primary" onClick={handleOpenAdd}>➕ Thêm Khách Hàng Mới</button>
+        <button className="btn-primary" onClick={handleOpenAdd} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <Plus size={16} /> Thêm Khách Hàng Mới
+        </button>
       </div>
 
       <div className="panel-card">
@@ -190,7 +267,13 @@ export default function ManageUsers() {
               </tr>
             </thead>
             <tbody>
-              {users.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
+                    Đang tải danh sách khách hàng...
+                  </td>
+                </tr>
+              ) : users.length === 0 ? (
                 <tr>
                   <td colSpan="6" style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
                     Không tìm thấy khách hàng nào phù hợp
@@ -206,16 +289,18 @@ export default function ManageUsers() {
                     </td>
                     <td>{u.phone || 'Chưa có'}</td>
                     <td>
-                      <span className={`badge ${u.status === 'locked' ? 'badge-locked' : 'badge-active'}`}>
-                        {u.status === 'locked' ? '🔒 Locked' : '✅ Active'}
+                      <span className={`badge ${u.status === 'locked' ? 'badge-locked' : 'badge-active'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        {u.status === 'locked' ? <><Lock size={12} /> Locked</> : <><CheckCircle2 size={12} /> Active</>}
                       </span>
                     </td>
                     <td><strong style={{ color: 'var(--primary)' }}>{u.totalOrders || 0}</strong> đơn</td>
                     <td>
                       <div className="action-buttons">
-                        <button className="btn-action" onClick={() => handleOpenEdit(u)}>✏️ Sửa</button>
-                        <button className={`btn-action ${u.status === 'locked' ? 'btn-unlock' : 'btn-lock'}`} onClick={() => handleToggleLock(u.userId)}>
-                          {u.status === 'locked' ? '🔓 Mở Khóa' : '🔒 Khóa TK'}
+                        <button className="btn-action" onClick={() => handleOpenEdit(u)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Edit size={13} /> Sửa
+                        </button>
+                        <button className={`btn-action ${u.status === 'locked' ? 'btn-unlock' : 'btn-lock'}`} onClick={() => handleToggleLock(u)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          {u.status === 'locked' ? <><Unlock size={13} /> Mở Khóa</> : <><Lock size={13} /> Khóa TK</>}
                         </button>
                       </div>
                     </td>
@@ -234,17 +319,38 @@ export default function ManageUsers() {
         onClose={handleCloseModal}
       >
         <form onSubmit={handleSubmitUser}>
+          {formError && (
+            <div style={{
+              backgroundColor: '#fef2f2',
+              color: '#b91c1c',
+              border: '1px solid #fecaca',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              fontSize: '0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <AlertCircle size={18} style={{ flexShrink: 0 }} />
+              <span>{formError}</span>
+            </div>
+          )}
+
           <div className="form-group">
-            <label>Email</label>
+            <label>Email <span style={{ color: '#ef4444' }}>*</span></label>
             <input 
               type="email" 
               className="input-control" 
               value={formData.email} 
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value });
+                if (formError) setFormError('');
+              }} 
               required 
               readOnly={!!editingUser}
-              style={editingUser ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
-              placeholder="ví dụ: customer@example.com"
+              style={editingUser ? { opacity: 0.7, cursor: 'not-allowed', backgroundColor: '#f1f5f9' } : {}}
+              placeholder="ví dụ: customer@gmail.com"
             />
             {editingUser && (
               <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Email định danh tài khoản không thể chỉnh sửa</small>
@@ -252,12 +358,15 @@ export default function ManageUsers() {
           </div>
 
           <div className="form-group">
-            <label>Họ và Tên</label>
+            <label>Họ và Tên <span style={{ color: '#ef4444' }}>*</span></label>
             <input 
               type="text" 
               className="input-control" 
               value={formData.fullName} 
-              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} 
+              onChange={(e) => {
+                setFormData({ ...formData, fullName: e.target.value });
+                if (formError) setFormError('');
+              }} 
               required 
               placeholder="ví dụ: Nguyễn Văn A..."
             />
@@ -269,12 +378,16 @@ export default function ManageUsers() {
               type="tel" 
               className="input-control" 
               value={formData.phone} 
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
+              onChange={(e) => {
+                setFormData({ ...formData, phone: e.target.value });
+                if (formError) setFormError('');
+              }} 
               placeholder="ví dụ: 0912345678 (10 chữ số)"
-              pattern="^0[35789][0-9]{8}$"
               maxLength={10}
-              title="Số điện thoại Việt Nam gồm đúng 10 chữ số bắt đầu bằng 03, 05, 07, 08 hoặc 09"
             />
+            <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
+              Số điện thoại di động Việt Nam gồm đúng 10 chữ số (bắt đầu bằng 03, 05, 07, 08 hoặc 09).
+            </small>
           </div>
 
           <div className="form-group">
@@ -290,9 +403,9 @@ export default function ManageUsers() {
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn-cancel" onClick={handleCloseModal}>Hủy</button>
-            <button type="submit" className="btn-primary">
-              {editingUser ? "Lưu Thay Đổi" : "Tạo Khách Hàng"}
+            <button type="button" className="btn-cancel" onClick={handleCloseModal} disabled={submitting}>Hủy</button>
+            <button type="submit" className="btn-primary" disabled={submitting}>
+              {submitting ? 'Đang xử lý...' : (editingUser ? "Lưu Thay Đổi" : "Tạo Khách Hàng")}
             </button>
           </div>
         </form>

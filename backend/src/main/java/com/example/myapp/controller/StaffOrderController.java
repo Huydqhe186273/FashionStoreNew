@@ -58,6 +58,21 @@ public class StaffOrderController {
         return ResponseEntity.ok(staffOrderService.markOrderRTO(id, note));
     }
 
+    @PutMapping("/{id}/accept-return")
+    public ResponseEntity<StaffOrderDetailDTO> acceptReturnRequest(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(staffOrderService.acceptReturnRequest(id));
+    }
+
+    @PutMapping("/{id}/receive-return")
+    public ResponseEntity<StaffOrderDetailDTO> receiveReturnedGoods(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(staffOrderService.receiveReturnedGoods(id));
+    }
+
+    @PutMapping("/{id}/process-refund")
+    public ResponseEntity<StaffOrderDetailDTO> processRefund(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(staffOrderService.processRefund(id));
+    }
+
     @PutMapping("/{id}/approve-return")
     public ResponseEntity<StaffOrderDetailDTO> approveReturn(@PathVariable("id") Integer id) {
         return ResponseEntity.ok(staffOrderService.approveReturn(id));

@@ -23,4 +23,7 @@ public class ReturnRequestDTO {
     private String bankAccount;
     private String accountHolder;
     private String adminNote;
+    private String evidenceImages;
+    private String receiptImage;
+    private String transactionRef;
 }

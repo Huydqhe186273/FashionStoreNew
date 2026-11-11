@@ -1,4 +1,5 @@
 import React from 'react';
+import { RefreshCw } from 'lucide-react';
 
 export default function Header({ title, subtitle, isLive, onRefresh }) {
   return (
@@ -16,8 +17,8 @@ export default function Header({ title, subtitle, isLive, onRefresh }) {
           {isLive ? 'Backend Live Axios Connected' : 'Demo Mode (Axios Fallback)'}
         </div>
         {onRefresh && (
-          <button className="btn-action" onClick={onRefresh} style={{ padding: '8px 16px' }}>
-            🔄 Làm Mới
+          <button className="btn-action" onClick={onRefresh} style={{ padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <RefreshCw size={14} /> Làm Mới
           </button>
         )}
       </div>
