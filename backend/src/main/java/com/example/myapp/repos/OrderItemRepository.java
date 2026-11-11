@@ -26,7 +26,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             "JOIN FETCH v.Product p " +
             "WHERE o.User.UserId = :userId " +
             "AND (:orderId IS NULL OR o.OrderId = :orderId) " +
-            "AND LOWER(o.OrderStatus) IN ('delivered', 'confirmed', 'completed') " +
+            "AND LOWER(o.OrderStatus) = 'delivered' " +
             "ORDER BY oi.OrderItemId DESC")
         List<OrderItem> findReviewableItemsByUserId(
             @Param("userId") Integer userId,
@@ -38,7 +38,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             "JOIN FETCH v.Product p " +
             "WHERE oi.OrderItemId = :orderItemId " +
             "AND o.User.UserId = :userId " +
-            "AND LOWER(o.OrderStatus) IN ('delivered', 'confirmed', 'completed')")
+            "AND LOWER(o.OrderStatus) = 'delivered'")
         Optional<OrderItem> findReviewableItemByIdAndUserId(
             @Param("orderItemId") Integer orderItemId,
             @Param("userId") Integer userId);
