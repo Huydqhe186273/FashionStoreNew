@@ -38,13 +38,7 @@ export default function AddressManager({ userId, selectedAddressId, onSelectAddr
       }
     } catch (err) {
       console.warn('Could not load addresses from server:', err);
-      const mock = [
-        { addressId: 1, recipientName: 'Nguyễn Văn A', phone: '0987654321', addressLine: '123 Đường Cầu Giấy, Phường Quan Hoa', city: 'Hà Nội', isDefault: true }
-      ];
-      setAddresses(mock);
-      if (selectable && onSelectAddress && !selectedAddressId) {
-        onSelectAddress(1);
-      }
+      setAddresses([]);
     } finally {
       setLoading(false);
     }

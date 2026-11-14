@@ -9,6 +9,12 @@ import {
   disableCoupon
 } from '../services/couponService';
 
+const getCurrentDateTimeLocal = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 export default function ManageCoupons() {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -150,6 +156,17 @@ export default function ManageCoupons() {
     if (formData.usageLimit !== '' && (Number(formData.usageLimit) <= 0 || !Number.isInteger(Number(formData.usageLimit)))) {
       setErrorMsg('Giới hạn lượt sử dụng phải là số nguyên lớn hơn 0!');
       return;
+    }
+
+    // Nghiệp vụ: Ngày bắt đầu không được trong quá khứ khi tạo mới mã
+    if (!editingCoupon && formData.startDate) {
+      const selectedStart = new Date(formData.startDate);
+      const now = new Date();
+      // Cho phép độ trễ 1 phút do thời gian thao tác biểu mẫu
+      if (selectedStart.getTime() < now.getTime() - 60000) {
+        setErrorMsg('Ngày bắt đầu hiệu lực không được trong quá khứ! Vui lòng chọn từ thời điểm hiện tại trở đi.');
+        return;
+      }
     }
 
     if (formData.startDate && formData.endDate && new Date(formData.endDate) < new Date(formData.startDate)) {
@@ -685,8 +702,16 @@ export default function ManageCoupons() {
                 type="datetime-local"
                 className="input-control"
                 value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                min={!editingCoupon ? getCurrentDateTimeLocal() : undefined}
+                max={formData.endDate || undefined}
+                onChange={(e) => {
+                  setFormData({ ...formData, startDate: e.target.value });
+                  if (errorMsg) setErrorMsg('');
+                }}
               />
+              <small style={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
+                {!editingCoupon ? '* Chỉ có thể chọn từ thời điểm hiện tại trở đi' : '* Thời gian bắt đầu hiệu lực'}
+              </small>
             </div>
 
             <div className="form-group">
@@ -697,8 +722,15 @@ export default function ManageCoupons() {
                 type="datetime-local"
                 className="input-control"
                 value={formData.endDate}
-                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                min={formData.startDate || (!editingCoupon ? getCurrentDateTimeLocal() : undefined)}
+                onChange={(e) => {
+                  setFormData({ ...formData, endDate: e.target.value });
+                  if (errorMsg) setErrorMsg('');
+                }}
               />
+              <small style={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
+                * Phải sau ngày bắt đầu hiệu lực
+              </small>
             </div>
           </div>
 

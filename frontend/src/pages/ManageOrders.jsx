@@ -61,71 +61,8 @@ import {
   processRefund
 } from '../services/orderService';
 
-const mockOrders = [
-  {
-    orderId: 101,
-    customerName: "Nguyễn Văn An",
-    customerEmail: "an.nguyen@gmail.com",
-    customerPhone: "0909123456",
-    orderStatus: "PENDING",
-    paymentStatus: "unpaid",
-    totalAmount: 649000,
-    itemCount: 2,
-    createdAt: "2026-10-16T14:30:00",
-    shippingAddress: "Số 123 Đường Cầu Giấy, Hà Nội"
-  },
-  {
-    orderId: 102,
-    customerName: "Lê Thị Mai",
-    customerEmail: "mai.le@gmail.com",
-    customerPhone: "0918765432",
-    orderStatus: "PROCESSING",
-    paymentStatus: "PAID",
-    totalAmount: 1100000,
-    itemCount: 2,
-    createdAt: "2026-10-16T11:15:00",
-    shippingAddress: "Toà nhà Landmark 81, P. 22, Bình Thạnh, TP.HCM"
-  },
-  {
-    orderId: 103,
-    customerName: "Trần Quang Huy",
-    customerEmail: "huy.tran@gmail.com",
-    customerPhone: "0987654321",
-    orderStatus: "SHIPPED",
-    paymentStatus: "unpaid",
-    totalAmount: 480000,
-    itemCount: 1,
-    createdAt: "2026-10-15T09:45:00",
-    shippingAddress: "Số 45 Lê Duẩn, Hải Châu, Đà Nẵng"
-  },
-  {
-    orderId: 104,
-    customerName: "Phạm Thu Hương",
-    customerEmail: "huong.pham@gmail.com",
-    customerPhone: "0934567890",
-    orderStatus: "DELIVERED",
-    paymentStatus: "PAID",
-    totalAmount: 850000,
-    itemCount: 1,
-    createdAt: "2026-10-14T16:20:00",
-    shippingAddress: "78 Nguyễn Trãi, Thanh Xuân, Hà Nội"
-  },
-  {
-    orderId: 105,
-    customerName: "Đỗ Minh Tuấn",
-    customerEmail: "tuan.do@gmail.com",
-    customerPhone: "0977889900",
-    orderStatus: "CANCELLED",
-    paymentStatus: "unpaid",
-    totalAmount: 550000,
-    itemCount: 1,
-    createdAt: "2026-10-14T10:00:00",
-    shippingAddress: "Số 12 Quang Trung, Hà Đông, Hà Nội"
-  }
-];
-
 export default function ManageOrders() {
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState([]);
   const [isLive, setIsLive] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -187,21 +124,12 @@ export default function ManageOrders() {
       if (statusFilter) params.status = statusFilter;
       if (search) params.keyword = search;
       const data = await getStaffOrders(params);
-      setOrders(data);
+      setOrders(Array.isArray(data) ? data : []);
       setIsLive(true);
     } catch (err) {
-      console.warn('Axios error loading orders, fallback to mock:', err);
+      console.warn('Axios error loading orders:', err);
       setIsLive(false);
-      let filtered = mockOrders.filter(o => {
-        const matchSearch = !search ||
-          String(o.orderId).includes(search) ||
-          o.customerName.toLowerCase().includes(search.toLowerCase()) ||
-          o.customerEmail.toLowerCase().includes(search.toLowerCase()) ||
-          o.customerPhone.includes(search);
-        const matchStatus = !statusFilter || o.orderStatus === statusFilter;
-        return matchSearch && matchStatus;
-      });
-      setOrders(filtered);
+      setOrders([]);
     }
   };
 
@@ -220,29 +148,9 @@ export default function ManageOrders() {
       const detail = await getStaffOrderDetail(orderId);
       setSelectedOrder(detail);
     } catch (err) {
-      console.warn('Could not load order detail from server, fallback to local:', err);
-      const found = orders.find(o => o.orderId === orderId);
-      if (found) {
-        setSelectedOrder({
-          ...found,
-          recipientName: found.customerName,
-          recipientPhone: found.customerPhone,
-          items: [
-            {
-              orderItemId: 1,
-              productId: 1,
-              productName: "Sản phẩm thời trang cao cấp",
-              size: "M",
-              color: "Đen",
-              sku: "PRD-BLK-M",
-              quantity: found.itemCount || 1,
-              priceAtPurchase: found.totalAmount / (found.itemCount || 1),
-              subtotal: found.totalAmount,
-              currentStockQuantity: 10
-            }
-          ]
-        });
-      }
+      console.error('Could not load order detail from server:', err);
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Không thể tải chi tiết đơn hàng từ máy chủ.';
+      setActionError(msg);
     } finally {
       setLoadingDetail(false);
     }
@@ -1202,32 +1110,14 @@ export default function ManageOrders() {
                     </div>
                   </div>
 
-                  {/* Dynamic Instructions & Action Banner for the Current Step */}
+                  {/* Dynamic Instructions Banner for the Current Step */}
                   {isStep1Current && (
                     <div style={{ padding: '12px 14px', borderRadius: '8px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', marginBottom: '14px' }}>
                       <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#92400e', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <AlertCircle size={16} /> Bước 1: Nhân viên kiểm tra yêu cầu trả hàng từ khách
                       </div>
-                      <div style={{ fontSize: '0.82rem', color: '#78350f', lineHeight: 1.5, marginBottom: '10px' }}>
-                        Vui lòng kiểm tra kỹ <strong>Lý do</strong> và <strong>Ảnh chụp bằng chứng</strong> của khách hàng bên dưới. Nếu đủ điều kiện, bấm <strong>"Đồng Ý Trả Hàng"</strong> để hướng dẫn khách đóng gói gửi hàng về kho; hoặc bấm <strong>"Từ Chối"</strong> nếu không hợp lệ.
-                      </div>
-                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <button
-                          type="button"
-                          className="btn-primary"
-                          style={{ backgroundColor: '#10b981', borderColor: '#10b981', padding: '8px 18px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                          onClick={() => handleAcceptReturn(selectedOrder.orderId)}
-                        >
-                          <Check size={15} /> Đồng Ý Trả Hàng (Bước 1)
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-action btn-lock"
-                          style={{ borderColor: 'rgba(239,68,68,0.4)', color: '#dc2626', backgroundColor: '#ffffff', padding: '8px 18px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                          onClick={() => handleOpenRejectModal(selectedOrder.orderId)}
-                        >
-                          <XCircle size={15} /> Từ Chối Yêu Cầu
-                        </button>
+                      <div style={{ fontSize: '0.82rem', color: '#78350f', lineHeight: 1.5 }}>
+                        Vui lòng kiểm tra kỹ <strong>Lý do</strong> và <strong>Ảnh chụp bằng chứng</strong> của khách hàng bên dưới. Nếu đủ điều kiện, bấm nút <strong>"Đồng Ý Trả Hàng (Bước 1)"</strong> ở bên dưới để hướng dẫn khách đóng gói gửi hàng về kho; hoặc bấm <strong>"Từ Chối"</strong> nếu không hợp lệ.
                       </div>
                     </div>
                   )}
@@ -1237,26 +1127,8 @@ export default function ManageOrders() {
                       <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0369a1', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Truck size={16} /> Bước 2: Chờ nhận hàng gửi về kho & kiểm tra hàng hóa
                       </div>
-                      <div style={{ fontSize: '0.82rem', color: '#0c4a6e', lineHeight: 1.5, marginBottom: '10px' }}>
-                        Shop đã đồng ý yêu cầu trả hàng. Khi kiện hàng được bưu tá chuyển về tới cửa hàng, nhân viên mở kiểm tra nguyên vẹn tem mác. Sau khi kiểm tra đạt chuẩn, bấm <strong>"Tiếp Nhận Hàng Hoàn & Nhập Kho FIFO"</strong> để hệ thống tự động cộng lại số lượng vào tồn kho biến thể và các lô hàng FIFO cũ nhất.
-                      </div>
-                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <button
-                          type="button"
-                          className="btn-primary"
-                          style={{ backgroundColor: '#ea580c', borderColor: '#c2410c', padding: '8px 18px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                          onClick={() => handleReceiveReturnedGoods(selectedOrder.orderId)}
-                        >
-                          <Package size={15} /> Tiếp Nhận Hàng Hoàn & Nhập Kho FIFO (Bước 2)
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-action btn-lock"
-                          style={{ borderColor: 'rgba(239,68,68,0.4)', color: '#dc2626', backgroundColor: '#ffffff', padding: '8px 18px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                          onClick={() => handleOpenRejectModal(selectedOrder.orderId)}
-                        >
-                          <XCircle size={15} /> Từ Chối (Hàng không hợp lệ / Tráo hàng)
-                        </button>
+                      <div style={{ fontSize: '0.82rem', color: '#0c4a6e', lineHeight: 1.5 }}>
+                        Shop đã đồng ý yêu cầu trả hàng. Khi kiện hàng được bưu tá chuyển về tới cửa hàng, nhân viên mở kiểm tra nguyên vẹn tem mác. Sau khi kiểm tra đạt chuẩn, bấm nút <strong>"Tiếp Nhận Hàng Hoàn & Nhập Kho FIFO (Bước 2)"</strong> ở bên dưới để hệ thống tự động cộng lại số lượng vào tồn kho biến thể và các lô hàng FIFO cũ nhất.
                       </div>
                     </div>
                   )}
@@ -1266,29 +1138,8 @@ export default function ManageOrders() {
                       <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#7e22ce', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Package size={16} /> Bước 3: Đã tiếp nhận & hoàn kho FIFO - Tiến hành hoàn tiền
                       </div>
-                      <div style={{ fontSize: '0.82rem', color: '#581c87', lineHeight: 1.5, marginBottom: '10px' }}>
-                        Toàn bộ sản phẩm trong đơn đã được cộng lại vào tồn kho hàng thành công. Hãy thực hiện chuyển tiền hoàn cho khách hàng {formatCurrency(refundAmt)}.
-                      </div>
-                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        {isPayOS ? (
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            style={{ backgroundColor: '#10b981', borderColor: '#10b981', padding: '8px 18px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                            onClick={() => handleApproveReturn(selectedOrder.orderId)}
-                          >
-                            <Zap size={15} /> Duyệt & Chuyển Hoàn Tiền PayOS (Bước 3)
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            style={{ backgroundColor: '#10b981', borderColor: '#10b981', padding: '8px 18px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                            onClick={() => handleOpenApproveRefundModal(selectedOrder)}
-                          >
-                            <Banknote size={15} /> Hoàn Tiền Chuyển Khoản (Quét Mã VietQR) (Bước 3)
-                          </button>
-                        )}
+                      <div style={{ fontSize: '0.82rem', color: '#581c87', lineHeight: 1.5 }}>
+                        Toàn bộ sản phẩm trong đơn đã được cộng lại vào tồn kho hàng thành công. Hãy bấm nút hoàn tiền ở bên dưới để hoàn tất chuyển tiền hoàn {formatCurrency(refundAmt)} cho khách hàng.
                       </div>
                     </div>
                   )}

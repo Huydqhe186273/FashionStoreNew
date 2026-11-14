@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
+import { AlertCircle } from 'lucide-react';
 import { getReportsSummary } from '../services/reportService';
+import { useToast } from '../context/ToastContext';
 
 export default function ManageReports() {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'revenue', 'orders', 'bestsellers'
   const [loading, setLoading] = useState(false);
   const [isLive, setIsLive] = useState(false);
@@ -10,6 +13,7 @@ export default function ManageReports() {
   // Date range filters
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [dateError, setDateError] = useState('');
 
   // Report Data
   const [summaryData, setSummaryData] = useState(null);
@@ -27,6 +31,8 @@ export default function ManageReports() {
     } catch (err) {
       console.error('Lỗi khi tải báo cáo thống kê:', err);
       setIsLive(false);
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Lỗi khi tải dữ liệu báo cáo';
+      toast?.error?.(msg);
     } finally {
       setLoading(false);
     }
@@ -36,12 +42,38 @@ export default function ManageReports() {
     loadReports();
   }, []);
 
+  const handleStartDateChange = (val) => {
+    setStartDate(val);
+    if (val && endDate && val > endDate) {
+      setDateError('Khoảng thời gian không hợp lệ: Ngày bắt đầu không được sau ngày kết thúc!');
+    } else {
+      setDateError('');
+    }
+  };
+
+  const handleEndDateChange = (val) => {
+    setEndDate(val);
+    if (startDate && val && val < startDate) {
+      setDateError('Khoảng thời gian không hợp lệ: Ngày kết thúc không thể trước ngày bắt đầu!');
+    } else {
+      setDateError('');
+    }
+  };
+
   const handleApplyFilter = (e) => {
     e?.preventDefault();
+    if (startDate && endDate && startDate > endDate) {
+      const errMsg = 'Khoảng thời gian không hợp lệ: Ngày kết thúc không thể trước ngày bắt đầu!';
+      setDateError(errMsg);
+      toast?.error?.(errMsg);
+      return;
+    }
+    setDateError('');
     loadReports(startDate, endDate);
   };
 
   const handleQuickPreset = (preset) => {
+    setDateError('');
     const today = new Date();
     const pad = (n) => String(n).padStart(2, '0');
     const toDateStr = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -111,9 +143,10 @@ export default function ManageReports() {
               <input
                 type="date"
                 className="input-control"
-                style={{ width: 'auto' }}
+                style={{ width: 'auto', borderColor: dateError ? '#ef4444' : undefined }}
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                max={endDate || undefined}
+                onChange={(e) => handleStartDateChange(e.target.value)}
               />
             </div>
 
@@ -122,9 +155,10 @@ export default function ManageReports() {
               <input
                 type="date"
                 className="input-control"
-                style={{ width: 'auto' }}
+                style={{ width: 'auto', borderColor: dateError ? '#ef4444' : undefined }}
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                min={startDate || undefined}
+                onChange={(e) => handleEndDateChange(e.target.value)}
               />
             </div>
 
@@ -172,6 +206,24 @@ export default function ManageReports() {
             </button>
           </div>
         </form>
+
+        {dateError && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            backgroundColor: '#fef2f2',
+            color: '#b91c1c',
+            border: '1px solid #fecaca',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            fontWeight: '500'
+          }}>
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <span>{dateError}</span>
+          </div>
+        )}
 
         {/* Tab Switcher */}
         <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #e5e7eb', paddingTop: '12px', overflowX: 'auto' }}>

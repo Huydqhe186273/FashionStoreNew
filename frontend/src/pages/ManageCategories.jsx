@@ -5,16 +5,9 @@ import { Folder, Plus, Edit, Trash2 } from 'lucide-react';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../services/categoryService';
 import { useToast } from '../context/ToastContext';
 
-const mockCategories = [
-  { categoryId: 1, name: "Áo", gender: "unisex", season: "Tất cả", parentId: null, parentName: null, productCount: 15 },
-  { categoryId: 2, name: "Quần", gender: "unisex", season: "Tất cả", parentId: null, parentName: null, productCount: 12 },
-  { categoryId: 3, name: "Váy", gender: "nu", season: "Xuân Hè", parentId: null, parentName: null, productCount: 8 },
-  { categoryId: 4, name: "Áo sơ mi nam", gender: "nam", season: "Thu Đông", parentId: 1, parentName: "Áo", productCount: 5 }
-];
-
 export default function ManageCategories() {
   const { toast, confirm } = useToast();
-  const [categories, setCategories] = useState(mockCategories);
+  const [categories, setCategories] = useState([]);
   const [isLive, setIsLive] = useState(false);
   const [search, setSearch] = useState('');
   const [genderFilter, setGenderFilter] = useState('');
@@ -29,17 +22,12 @@ export default function ManageCategories() {
   const loadCategories = async () => {
     try {
       const data = await getCategories({ keyword: search, gender: genderFilter });
-      setCategories(data);
+      setCategories(Array.isArray(data) ? data : []);
       setIsLive(true);
     } catch (err) {
-      console.warn('Axios error, fallback mock categories:', err);
+      console.warn('Axios error loading categories:', err);
       setIsLive(false);
-      let filtered = mockCategories.filter(c => {
-        const matchSearch = !search || c.name.toLowerCase().includes(search.toLowerCase());
-        const matchGender = !genderFilter || c.gender === genderFilter;
-        return matchSearch && matchGender;
-      });
-      setCategories(filtered);
+      setCategories([]);
     }
   };
 

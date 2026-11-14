@@ -27,43 +27,26 @@ ChartJS.register(
   Filler
 );
 
-const mockOverview = {
-  totalRevenue: 245800000,
-  totalOrders: 148,
-  totalProducts: 45,
-  totalUsers: 82,
-  pendingOrders: 15,
-  confirmedOrders: 28,
-  shippingOrders: 32,
-  deliveredOrders: 65,
-  cancelledOrders: 8,
-  totalStockQuantity: 1250,
-  customerCount: 75,
-  staffCount: 5,
-  revenueChart: [
-    { label: 'Tháng 1', revenue: 12000000 },
-    { label: 'Tháng 2', revenue: 18500000 },
-    { label: 'Tháng 3', revenue: 15000000 },
-    { label: 'Tháng 4', revenue: 22000000 },
-    { label: 'Tháng 5', revenue: 28000000 },
-    { label: 'Tháng 6', revenue: 35000000 },
-    { label: 'Tháng 7', revenue: 31000000 },
-    { label: 'Tháng 8', revenue: 42000000 },
-    { label: 'Tháng 9', revenue: 42300000 }
-  ],
-  recentOrders: [
-    { orderId: 108, customerName: 'Nguyễn Văn A', totalAmount: 1250000, orderStatus: 'pending', createdAt: '2026-09-19T22:30:00' },
-    { orderId: 107, customerName: 'Trần Thị B', totalAmount: 890000, orderStatus: 'shipping', createdAt: '2026-09-19T21:15:00' },
-    { orderId: 106, customerName: 'Lê Hoàng C', totalAmount: 2100000, orderStatus: 'delivered', createdAt: '2026-09-19T18:45:00' }
-  ],
-  topProducts: [
-    { productId: 1, name: 'Áo Polo Nam Premium Flex', categoryName: 'Áo', basePrice: 350000, discountPrice: 299000, soldCount: 142 },
-    { productId: 2, name: 'Quần Jean Slimfit Co Giãn', categoryName: 'Quần', basePrice: 550000, discountPrice: 480000, soldCount: 98 }
-  ]
+const emptyOverview = {
+  totalRevenue: 0,
+  totalOrders: 0,
+  totalProducts: 0,
+  totalUsers: 0,
+  pendingOrders: 0,
+  confirmedOrders: 0,
+  shippingOrders: 0,
+  deliveredOrders: 0,
+  cancelledOrders: 0,
+  totalStockQuantity: 0,
+  customerCount: 0,
+  staffCount: 0,
+  revenueChart: [],
+  recentOrders: [],
+  topProducts: []
 };
 
 export default function DashboardOverview() {
-  const [data, setData] = useState(mockOverview);
+  const [data, setData] = useState(emptyOverview);
   const [isLive, setIsLive] = useState(false);
 
   const formatCurrency = (val) => {
@@ -73,11 +56,11 @@ export default function DashboardOverview() {
   const loadData = async () => {
     try {
       const res = await getDashboardOverview();
-      setData(res);
+      setData(res || emptyOverview);
       setIsLive(true);
     } catch (err) {
-      console.warn('Axios call failed, using mock data:', err);
-      setData(mockOverview);
+      console.warn('Axios call failed:', err);
+      setData(emptyOverview);
       setIsLive(false);
     }
   };

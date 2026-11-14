@@ -7,20 +7,12 @@ import { getProducts } from '../services/productService';
 import { useToast } from '../context/ToastContext';
 import { Boxes } from 'lucide-react';
 
-const mockVariants = [
-  { variantId: 1, productId: 1, productName: "Áo Polo Nam Premium Flex", size: "M", color: "Đen", sku: "POLO-BLK-M", stockQuantity: 45 },
-  { variantId: 2, productId: 1, productName: "Áo Polo Nam Premium Flex", size: "L", color: "Đen", sku: "POLO-BLK-L", stockQuantity: 30 },
-  { variantId: 3, productId: 1, productName: "Áo Polo Nam Premium Flex", size: "M", color: "Trắng", sku: "POLO-WHT-M", stockQuantity: 50 },
-  { variantId: 4, productId: 2, productName: "Quần Jean Slimfit Co Giãn", size: "30", color: "Xanh Đậm", sku: "JEAN-BLU-30", stockQuantity: 20 },
-  { variantId: 5, productId: 2, productName: "Quần Jean Slimfit Co Giãn", size: "31", color: "Xanh Đậm", sku: "JEAN-BLU-31", stockQuantity: 0 }
-];
-
 export default function ManageVariants() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialProdParam = searchParams.get('productId') || '';
 
-  const [variants, setVariants] = useState(mockVariants);
+  const [variants, setVariants] = useState([]);
   const [products, setProducts] = useState([]);
   const [isLive, setIsLive] = useState(false);
   const [search, setSearch] = useState('');
@@ -85,21 +77,12 @@ export default function ManageVariants() {
       if (productFilter) params.productId = productFilter;
       if (search) params.keyword = search;
       const data = await getVariants(params);
-      setVariants(data);
+      setVariants(Array.isArray(data) ? data : []);
       setIsLive(true);
     } catch (err) {
-      console.warn('Axios error, fallback mock variants:', err);
+      console.warn('Axios error loading variants:', err);
       setIsLive(false);
-      let filtered = mockVariants.filter(v => {
-        const matchSearch = !search || 
-          v.sku.toLowerCase().includes(search.toLowerCase()) || 
-          v.color.toLowerCase().includes(search.toLowerCase()) || 
-          v.size.toLowerCase().includes(search.toLowerCase()) ||
-          (v.productName && v.productName.toLowerCase().includes(search.toLowerCase()));
-        const matchProduct = !productFilter || String(v.productId) === String(productFilter);
-        return matchSearch && matchProduct;
-      });
-      setVariants(filtered);
+      setVariants([]);
     }
   };
 

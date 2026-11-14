@@ -1,0 +1,23 @@
+{
+  "name": "fashionstorenew",
+  "version": "1.0.0",
+  "description": "Dự án Hệ thống bán quần áo trực tuyến tích hợp AI cá nhân hóa.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Huydqhe186273/FashionStoreNew.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Huydqhe186273/FashionStoreNew/issues"
+  },
+  "homepage": "https://github.com/Huydqhe186273/FashionStoreNew#readme"
+}

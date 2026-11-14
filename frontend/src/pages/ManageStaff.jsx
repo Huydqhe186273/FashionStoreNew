@@ -14,14 +14,9 @@ import {
 import { getStaff, createStaff, updateStaff, toggleStaffLock } from '../services/staffService';
 import { useToast } from '../context/ToastContext';
 
-const mockStaff = [
-  { userId: 1, fullName: "Admin Hệ Thống", email: "admin@fashionstore.vn", phone: "0901234567", role: "admin", status: "active" },
-  { userId: 2, fullName: "Trần Thị B", email: "staff_thib@fashionstore.vn", phone: "0912345678", role: "staff", status: "active" }
-];
-
 export default function ManageStaff() {
   const { toast } = useToast();
-  const [staffList, setStaffList] = useState(mockStaff);
+  const [staffList, setStaffList] = useState([]);
   const [isLive, setIsLive] = useState(false);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -37,18 +32,12 @@ export default function ManageStaff() {
   const loadStaff = async () => {
     try {
       const data = await getStaff({ keyword: search, role: roleFilter, status: statusFilter });
-      setStaffList(data);
+      setStaffList(Array.isArray(data) ? data : []);
       setIsLive(true);
     } catch (err) {
-      console.warn('Axios error, fallback mock staff:', err);
+      console.error('Lỗi khi tải danh sách nhân viên từ server:', err);
       setIsLive(false);
-      let filtered = mockStaff.filter(s => {
-        const matchSearch = !search || s.fullName.toLowerCase().includes(search.toLowerCase()) || s.email.toLowerCase().includes(search.toLowerCase());
-        const matchRole = !roleFilter || s.role === roleFilter;
-        const matchStatus = !statusFilter || s.status === statusFilter;
-        return matchSearch && matchRole && matchStatus;
-      });
-      setStaffList(filtered);
+      setStaffList([]);
     }
   };
 
@@ -110,16 +99,11 @@ export default function ManageStaff() {
 
     if (editingStaff) {
       try {
+        // Chỉ cho phép cập nhật Role và Status — không được sửa Email/Mật khẩu/SĐT
         const payload = {
-          fullName: formData.fullName,
-          email: formData.email.trim(),
-          phone: formData.phone || '',
           role: formData.role,
           status: formData.status
         };
-        if (formData.password && formData.password.trim() !== '') {
-          payload.password = formData.password.trim();
-        }
         await updateStaff(editingStaff.userId, payload);
         toast?.success?.('Cập nhật nhân viên thành công!') || alert('Cập nhật nhân viên thành công!');
         handleCloseModal();
@@ -272,76 +256,84 @@ export default function ManageStaff() {
         onClose={handleCloseModal}
       >
         <form onSubmit={handleSubmitStaff}>
-          <div className="form-group">
-            <label>Họ và Tên</label>
-            <input
-              type="text"
-              className="input-control"
-              value={formData.fullName}
-              onChange={e => setFormData({ ...formData, fullName: e.target.value })}
-              required
-              placeholder="ví dụ: Nguyễn Văn A..."
-              minLength={2}
-              maxLength={100}
-            />
-          </div>
-          <div className="form-group">
-            <label>Email Đăng Nhập</label>
-            <input
-              type="email"
-              className="input-control"
-              value={formData.email}
-              onChange={e => setFormData({ ...formData, email: e.target.value })}
-              required
-              placeholder="ví dụ: staff@gmail.com"
-            />
-            {editingStaff && (
-              <small style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>
-                * Có thể sửa email đăng nhập (hệ thống sẽ kiểm tra trùng lặp tự động).
-              </small>
-            )}
-          </div>
-          {!editingStaff ? (
-            <div className="form-group">
-              <label>Mật Khẩu Ban Đầu</label>
-              <input
-                type="password"
-                className="input-control"
-                value={formData.password}
-                onChange={e => setFormData({ ...formData, password: e.target.value })}
-                required
-                minLength={6}
-                maxLength={32}
-                placeholder="Tối thiểu 6 ký tự..."
-              />
-            </div>
-          ) : (
-            <div className="form-group">
-              <label>Đặt Lại Mật Khẩu (Để trống nếu giữ nguyên)</label>
-              <input
-                type="password"
-                className="input-control"
-                value={formData.password}
-                onChange={e => setFormData({ ...formData, password: e.target.value })}
-                minLength={6}
-                maxLength={32}
-                placeholder="Nhập tối thiểu 6 ký tự nếu muốn đổi mật khẩu..."
-              />
+          {/* ───── Thêm mới: hiện đầy đủ các trường ───── */}
+          {!editingStaff && (
+            <>
+              <div className="form-group">
+                <label>Họ và Tên <span style={{ color: '#ef4444' }}>*</span></label>
+                <input
+                  type="text"
+                  className="input-control"
+                  value={formData.fullName}
+                  onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+                  required
+                  placeholder="ví dụ: Nguyễn Văn A..."
+                  minLength={2}
+                  maxLength={100}
+                />
+              </div>
+              <div className="form-group">
+                <label>Email Đăng Nhập <span style={{ color: '#ef4444' }}>*</span></label>
+                <input
+                  type="email"
+                  className="input-control"
+                  value={formData.email}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
+                  required
+                  placeholder="ví dụ: staff@gmail.com"
+                />
+              </div>
+              <div className="form-group">
+                <label>Mật Khẩu Ban Đầu <span style={{ color: '#ef4444' }}>*</span></label>
+                <input
+                  type="password"
+                  className="input-control"
+                  value={formData.password}
+                  onChange={e => setFormData({ ...formData, password: e.target.value })}
+                  required
+                  minLength={6}
+                  maxLength={32}
+                  placeholder="Tối thiểu 6 ký tự..."
+                />
+              </div>
+              <div className="form-group">
+                <label>Số Điện Thoại</label>
+                <input
+                  type="tel"
+                  className="input-control"
+                  value={formData.phone}
+                  onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="ví dụ: 0912345678 (10 chữ số)"
+                  pattern="^0[35789][0-9]{8}$"
+                  maxLength={10}
+                  title="Số điện thoại Việt Nam gồm đúng 10 chữ số bắt đầu bằng 03, 05, 07, 08 hoặc 09"
+                />
+              </div>
+            </>
+          )}
+
+          {/* ───── Đang sửa: chỉ hiện thông tin tham khảo + Role + Trạng thái ───── */}
+          {editingStaff && (
+            <div style={{
+              backgroundColor: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              padding: '12px 14px',
+              marginBottom: '16px',
+              fontSize: '0.85rem',
+              color: '#475569'
+            }}>
+              <div style={{ marginBottom: '4px' }}>
+                <span style={{ color: '#94a3b8', fontWeight: 500 }}>Email: </span>
+                <strong>{editingStaff.email}</strong>
+              </div>
+              <div style={{ marginBottom: '4px' }}>
+                <span style={{ color: '#94a3b8', fontWeight: 500 }}>SĐT: </span>
+                <strong>{editingStaff.phone || 'Chưa có'}</strong>
+              </div>
+
             </div>
           )}
-          <div className="form-group">
-            <label>Số Điện Thoại</label>
-            <input
-              type="tel"
-              className="input-control"
-              value={formData.phone}
-              onChange={e => setFormData({ ...formData, phone: e.target.value })}
-              placeholder="ví dụ: 0912345678 (10 chữ số)"
-              pattern="^0[35789][0-9]{8}$"
-              maxLength={10}
-              title="Số điện thoại Việt Nam gồm đúng 10 chữ số bắt đầu bằng 03, 05, 07, 08 hoặc 09"
-            />
-          </div>
           <div className="form-group">
             <label>Phân Quyền Vai Trò</label>
             <select

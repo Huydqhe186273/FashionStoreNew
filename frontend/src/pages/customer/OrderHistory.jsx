@@ -1176,26 +1176,66 @@ export default function OrderHistory() {
                     <span>Tên Ngân Hàng</span>
                     {Boolean(orderToReturn.payerBankAccount) && <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>(<Lock size={10} /> Khóa)</span>}
                   </label>
-                  <input
-                    type="text"
-                    placeholder="VD: TPBank, Vietcombank, MBBank..."
-                    value={returnBankName}
-                    readOnly={Boolean(orderToReturn.payerBankAccount)}
-                    disabled={Boolean(orderToReturn.payerBankAccount)}
-                    onChange={(e) => setReturnBankName(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '8px 10px',
-                      borderRadius: '8px',
-                      border: '1px solid #cbd5e1',
-                      fontSize: '0.85rem',
-                      boxSizing: 'border-box',
-                      backgroundColor: orderToReturn.payerBankAccount ? '#f1f5f9' : '#ffffff',
-                      color: orderToReturn.payerBankAccount ? '#334155' : '#0f172a',
-                      cursor: orderToReturn.payerBankAccount ? 'not-allowed' : 'text',
-                      fontWeight: orderToReturn.payerBankAccount ? '600' : 'normal'
-                    }}
-                  />
+                  {Boolean(orderToReturn.payerBankAccount) ? (
+                    <input
+                      type="text"
+                      value={returnBankName}
+                      readOnly
+                      disabled
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '0.85rem',
+                        boxSizing: 'border-box',
+                        backgroundColor: '#f1f5f9',
+                        color: '#334155',
+                        cursor: 'not-allowed',
+                        fontWeight: '600'
+                      }}
+                    />
+                  ) : (
+                    <select
+                      value={returnBankName}
+                      onChange={(e) => setReturnBankName(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '0.85rem',
+                        boxSizing: 'border-box',
+                        backgroundColor: '#ffffff',
+                        color: returnBankName ? '#0f172a' : '#94a3b8',
+                        cursor: 'pointer',
+                        appearance: 'auto'
+                      }}
+                    >
+                      <option value="">-- Chọn Ngân Hàng --</option>
+                      <option value="Vietcombank">Vietcombank (VCB)</option>
+                      <option value="BIDV">BIDV</option>
+                      <option value="Agribank">Agribank</option>
+                      <option value="VietinBank">VietinBank (CTG)</option>
+                      <option value="Techcombank">Techcombank</option>
+                      <option value="MB Bank">MB Bank</option>
+                      <option value="TPBank">TPBank</option>
+                      <option value="VPBank">VPBank</option>
+                      <option value="ACB">ACB</option>
+                      <option value="Sacombank">Sacombank</option>
+                      <option value="SHB">SHB</option>
+                      <option value="MSB">MSB</option>
+                      <option value="HDBank">HDBank</option>
+                      <option value="Eximbank">Eximbank</option>
+                      <option value="OCB">OCB</option>
+                      <option value="SeABank">SeABank</option>
+                      <option value="LienVietPostBank">LienVietPostBank</option>
+                      <option value="VIB">VIB</option>
+                      <option value="NamABank">Nam A Bank</option>
+                      <option value="BacABank">Bắc Á Bank</option>
+                      <option value="PGBank">PGBank</option>
+                    </select>
+                  )}
                 </div>
                 <div>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem', fontWeight: '600', color: '#334155', marginBottom: '4px' }}>

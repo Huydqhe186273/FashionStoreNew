@@ -208,6 +208,13 @@ public class CouponService {
             throw new IllegalArgumentException("Giới hạn số lần sử dụng phải lớn hơn 0!");
         }
 
+        if (existingId == null && dto.getStartDate() != null) {
+            // Cho phép độ trễ 2 phút do thời gian thao tác và truyền nhận mạng
+            if (dto.getStartDate().isBefore(LocalDateTime.now().minusMinutes(2))) {
+                throw new IllegalArgumentException("Ngày bắt đầu hiệu lực không được trong quá khứ! Vui lòng chọn từ thời điểm hiện tại trở đi.");
+            }
+        }
+
         if (dto.getStartDate() != null && dto.getEndDate() != null && dto.getEndDate().isBefore(dto.getStartDate())) {
             throw new IllegalArgumentException("Ngày kết thúc không được trước ngày bắt đầu!");
         }

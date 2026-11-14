@@ -25,16 +25,9 @@ import { getCategories } from '../services/categoryService';
 import { uploadProductImage, addProductImageUrl } from '../services/productImageService';
 import { useToast } from '../context/ToastContext';
 
-const mockProducts = [
-  { productId: 1, name: "Áo Polo Nam Premium Flex", categoryId: 1, categoryName: "Áo", basePrice: 350000, discountPrice: 299000, status: "active", soldCount: 142, description: "Áo Polo cotton thoáng mát" },
-  { productId: 2, name: "Quần Jean Slimfit Co Giãn", categoryId: 2, categoryName: "Quần", basePrice: 550000, discountPrice: 480000, status: "active", soldCount: 98, description: "Quần Jean co giãn 4 chiều" },
-  { productId: 3, name: "Váy Dáng Xòe Floral Spring", categoryId: 3, categoryName: "Váy", basePrice: 620000, discountPrice: 550000, status: "active", soldCount: 76, description: "Váy hoa nhí Hàn Quốc" },
-  { productId: 4, name: "Áo Khoác Bomber Minimalist", categoryId: 1, categoryName: "Áo", basePrice: 850000, discountPrice: 750000, status: "inactive", soldCount: 24, description: "Áo khoác Bomber cao cấp" }
-];
-
 export default function ManageProducts() {
   const navigate = useNavigate();
-  const [products, setProducts] = useState(mockProducts);
+  const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [isLive, setIsLive] = useState(false);
   const [search, setSearch] = useState('');
@@ -103,14 +96,9 @@ export default function ManageProducts() {
       setProducts(enriched);
       setIsLive(true);
     } catch (err) {
-      console.warn('Axios error, fallback mock products:', err);
+      console.warn('Axios error loading products:', err);
       setIsLive(false);
-      let filtered = mockProducts.filter(p => {
-        const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
-        const matchStatus = !statusFilter || p.status === statusFilter;
-        return matchSearch && matchStatus;
-      });
-      setProducts(filtered);
+      setProducts([]);
     }
   };
 
