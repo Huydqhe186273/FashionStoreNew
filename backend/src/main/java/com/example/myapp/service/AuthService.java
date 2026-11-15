@@ -150,7 +150,7 @@ public class AuthService {
         if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("Email này đã được sử dụng!");
         }
-        emailService.sendOtpEmail(email);
+        emailService.sendOtpEmail(email, "Fashion Store - Mã OTP đăng ký tài khoản");
     }
 
     public void registerUserWithOtp(RegisterRequest signUpRequest, String otp) {
@@ -238,7 +238,7 @@ public class AuthService {
         if (!userRepository.existsByEmail(email)) {
             throw new RuntimeException("Không tìm thấy email này trong hệ thống.");
         }
-        emailService.sendOtpEmail(email);
+        emailService.sendOtpEmail(email, "Fashion Store - Mã OTP đặt lại mật khẩu");
     }
 
     public void verifyOtp(String email, String otp) {

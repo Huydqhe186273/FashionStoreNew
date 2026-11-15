@@ -46,6 +46,12 @@ spring:
           timeout: 10000
           writetimeout: 10000
 
+google:
+  gmail:
+    client-id: ${GOOGLE_CLIENT_ID:}
+    client-secret: ${GOOGLE_CLIENT_SECRET:}
+    refresh-token: ${GOOGLE_REFRESH_TOKEN:}
+
 server:
   port: 8080
   servlet:
