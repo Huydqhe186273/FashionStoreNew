@@ -11,22 +11,29 @@ import java.util.Collections;
 public class CustomUserDetails implements UserDetails {
     private final Integer id;
     private final String email;
+    private final String fullName;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
     private final String status;
 
-    public CustomUserDetails(Integer id, String email, String password, String role, String status) {
+    public CustomUserDetails(Integer id, String email, String fullName, String password, String role, String status) {
         this.id = id;
         this.email = email;
+        this.fullName = fullName;
         this.password = password;
         this.authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
         this.status = status;
+    }
+
+    public CustomUserDetails(Integer id, String email, String password, String role, String status) {
+        this(id, email, null, password, role, status);
     }
 
     public static CustomUserDetails build(User user) {
         return new CustomUserDetails(
                 user.getUserId(),
                 user.getEmail(),
+                user.getFullName(),
                 user.getPasswordHash(),
                 user.getRole(),
                 user.getStatus()
@@ -35,6 +42,10 @@ public class CustomUserDetails implements UserDetails {
 
     public Integer getId() {
         return id;
+    }
+
+    public String getFullName() {
+        return fullName;
     }
 
     @Override

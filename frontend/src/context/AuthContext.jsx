@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import api from '../services/api';
 
 export const AuthContext = createContext();
 
@@ -14,11 +15,15 @@ const getUserFromToken = () => {
             }
             // Restore fullName from localStorage if available (set during login)
             const savedFullName = localStorage.getItem('fullName');
+            const validFullName = (savedFullName && !savedFullName.includes('@'))
+                ? savedFullName
+                : (decoded.fullName && !decoded.fullName.includes('@') ? decoded.fullName : undefined);
+
             return {
                 id: decoded.userId,
                 email: decoded.sub,
                 role: decoded.role ? decoded.role.replace('ROLE_', '').toLowerCase() : '',
-                fullName: savedFullName || undefined
+                fullName: validFullName
             };
         } else {
             localStorage.removeItem('token');
@@ -43,6 +48,22 @@ export const AuthProvider = ({ children }) => {
         const currentUser = getUserFromToken();
         setUser(currentUser);
         setLoading(false);
+
+        // Tự động đồng bộ thông tin tài khoản (đặc biệt fullName) từ backend
+        const token = localStorage.getItem('token');
+        if (token && currentUser) {
+            api.get('/profile')
+                .then((res) => {
+                    const profileFullName = res.data?.fullName;
+                    if (profileFullName && !profileFullName.includes('@')) {
+                        localStorage.setItem('fullName', profileFullName);
+                        setUser((prev) => (prev ? { ...prev, fullName: profileFullName } : prev));
+                    }
+                })
+                .catch(() => {
+                    // Bỏ qua lỗi ngầm nếu token hết hạn hoặc chưa sẵn sàng
+                });
+        }
     }, []);
 
     const login = (token, userData) => {
@@ -52,13 +73,31 @@ export const AuthProvider = ({ children }) => {
         } else {
             localStorage.removeItem('userId');
         }
-        // Save fullName to localStorage so it survives page refresh
-        if (userData?.fullName) {
-            localStorage.setItem('fullName', userData.fullName);
+
+        // Lấy tên người dùng hợp lệ (tránh chuỗi email)
+        const cleanFullName = (userData?.fullName && !userData.fullName.includes('@'))
+            ? userData.fullName
+            : null;
+
+        if (cleanFullName) {
+            localStorage.setItem('fullName', cleanFullName);
         } else {
             localStorage.removeItem('fullName');
         }
-        setUser(userData);
+
+        setUser({ ...userData, fullName: cleanFullName || undefined });
+
+        // Nếu chưa có tên hợp lệ, gọi /profile ngay để cập nhật tên đầy đủ
+        if (!cleanFullName) {
+            api.get('/profile')
+                .then((res) => {
+                    if (res.data?.fullName) {
+                        localStorage.setItem('fullName', res.data.fullName);
+                        setUser((prev) => (prev ? { ...prev, fullName: res.data.fullName } : prev));
+                    }
+                })
+                .catch(() => {});
+        }
     };
 
     const logout = () => {

@@ -101,14 +101,23 @@ export default function CustomerNavbar() {
                 <span>Giỏ hàng</span>
               </Link>
 
-              <Link to="/profile" className="navbar-action-pill user-pill" title="Trang cá nhân & Cài đặt">
-                <span className="navbar-user-avatar-badge">
-                  {(user.fullName || (user.email ? user.email.split('@')[0] : 'U')).charAt(0).toUpperCase()}
-                </span>
-                <span className="navbar-user-name">
-                  {user.fullName || (user.email ? user.email.split('@')[0] : 'Tài khoản')}
-                </span>
-              </Link>
+              {(() => {
+                const displayName = (user.fullName && !user.fullName.includes('@'))
+                  ? user.fullName
+                  : (user.email ? user.email.split('@')[0] : 'Tài khoản');
+                const avatarLetter = displayName.charAt(0).toUpperCase();
+
+                return (
+                  <Link to="/profile" className="navbar-action-pill user-pill" title="Trang cá nhân & Cài đặt">
+                    <span className="navbar-user-avatar-badge">
+                      {avatarLetter}
+                    </span>
+                    <span className="navbar-user-name">
+                      {displayName}
+                    </span>
+                  </Link>
+                );
+              })()}
 
               <button 
                 onClick={logout} 

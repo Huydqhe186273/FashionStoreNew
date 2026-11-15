@@ -25,6 +25,9 @@ export default function Profile() {
       if (user && setUser) {
         setUser({ ...user, fullName: response.data.fullName });
       }
+      if (response.data?.fullName && !response.data.fullName.includes('@')) {
+        localStorage.setItem('fullName', response.data.fullName);
+      }
     } catch (err) {
       setError('Failed to load profile');
     } finally {
@@ -61,6 +64,9 @@ export default function Profile() {
       setMessage('Profile updated successfully');
       if (user && setUser) {
         setUser({ ...user, fullName: response.data.fullName, email: response.data.email });
+      }
+      if (response.data?.fullName && !response.data.fullName.includes('@')) {
+        localStorage.setItem('fullName', response.data.fullName);
       }
     } catch (err) {
       const errorData = err.response?.data;

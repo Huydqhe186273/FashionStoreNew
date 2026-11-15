@@ -35,8 +35,11 @@ public class AuthController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
             String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "").toLowerCase();
+            String displayName = (userDetails.getFullName() != null && !userDetails.getFullName().isBlank())
+                    ? userDetails.getFullName()
+                    : userDetails.getEmail();
 
-            return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getEmail(), role, userDetails.getUsername()));
+            return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getEmail(), role, displayName));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
